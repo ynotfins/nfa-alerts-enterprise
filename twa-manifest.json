@@ -1,0 +1,111 @@
+{
+  "packageId": "com.nfaalerts.app",
+  "host": "your-app.vercel.app",
+  "name": "NFA Alerts",
+  "launcherName": "NFA Alerts",
+  "display": "standalone",
+  "orientation": "portrait",
+  "themeColor": "#3b82f6",
+  "backgroundColor": "#ffffff",
+  "startUrl": "/",
+  "iconUrl": "https://your-app.vercel.app/icon-512.png",
+  "maskableIconUrl": "https://your-app.vercel.app/icon-512.png",
+  "shortcuts": [
+    {
+      "name": "New Incident",
+      "short_name": "New Incident",
+      "url": "/incidents/new",
+      "icons": [
+        {
+          "src": "https://your-app.vercel.app/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Chat",
+      "short_name": "Chat", 
+      "url": "/chat",
+      "icons": [
+        {
+          "src": "https://your-app.vercel.app/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "generatorApp": "PWABuilder",
+  "webManifestUrl": "https://your-app.vercel.app/manifest.json",
+  "features": {
+    "locationDelegation": {
+      "enabled": true
+    },
+    "playBilling": {
+      "enabled": false
+    }
+  },
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "nfa-alerts-key"
+  },
+  "appVersion": "1.0.0",
+  "appVersionCode": 1,
+  "enableNotifications": true,
+  "enableSiteSettingsShortcut": true,
+  "enableUrlBarHiding": true,
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": {
+      "enabled": true
+    },
+    "googlePlayBilling": {
+      "enabled": false  
+    }
+  },
+  "permissions": [
+    {
+      "name": "android.permission.INTERNET",
+      "enabled": true
+    },
+    {
+      "name": "android.permission.ACCESS_NETWORK_STATE", 
+      "enabled": true
+    },
+    {
+      "name": "android.permission.WAKE_LOCK",
+      "enabled": true
+    },
+    {
+      "name": "android.permission.VIBRATE",
+      "enabled": true
+    },
+    {
+      "name": "android.permission.ACCESS_FINE_LOCATION",
+      "enabled": true
+    },
+    {
+      "name": "android.permission.ACCESS_COARSE_LOCATION", 
+      "enabled": true
+    },
+    {
+      "name": "android.permission.CAMERA",
+      "enabled": true
+    },
+    {
+      "name": "android.permission.RECORD_AUDIO",
+      "enabled": true
+    },
+    {
+      "name": "android.permission.WRITE_EXTERNAL_STORAGE",
+      "enabled": true
+    },
+    {
+      "name": "android.permission.READ_EXTERNAL_STORAGE",
+      "enabled": true
+    },
+    {
+      "name": "android.permission.POST_NOTIFICATIONS",
+      "enabled": true
+    }
+  ]
+}

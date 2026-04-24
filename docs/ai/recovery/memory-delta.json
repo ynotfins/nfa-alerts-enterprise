@@ -1,0 +1,25 @@
+{
+  "generated": "2026-04-24T00:00:00Z",
+  "session": "AGENT Executioner — RISK-003 Rate Limiting",
+  "new_decisions": [
+    {
+      "id": "DEC-005",
+      "title": "Next.js 16 proxy convention (not middleware)",
+      "summary": "src/proxy.ts with export function proxy is the correct Next.js 16 convention. middleware.ts with export function middleware is deprecated. Codemod: npx @next/codemod@latest middleware-to-proxy ."
+    },
+    {
+      "id": "DEC-006",
+      "title": "IP resolution via x-forwarded-for (not request.ip)",
+      "summary": "request.ip was removed in Next.js 16. The official replacement is @vercel/functions ipAddress() but that package is not in this project. x-forwarded-for header is the correct no-dep approach, consistent with existing webhook route.ts line 49."
+    }
+  ],
+  "new_patterns": [
+    {
+      "id": "PAT-008",
+      "title": "Rate limiting: in-memory sliding window in proxy.ts",
+      "summary": "Module-level Map<string, number[]> in src/proxy.ts. Key = pathname:ip. Timestamps filtered to window. Bounded by limit per key. Per-replica only (no Redis). Config: RATE_LIMITS record maps pathname to {limit, windowMs}."
+    }
+  ],
+  "resolved_blockers": ["RISK-003"],
+  "open_blockers": ["SEC-001", "RISK-008"]
+}

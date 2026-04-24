@@ -1,0 +1,196 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function getProfile() {
+      return get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data;
+    }
+
+    function isSupe() {
+      return isAuthenticated() && getProfile().role in ['supe', 'admin'];
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && getProfile().role == 'admin';
+    }
+
+    // Helper: check if a field is being changed
+    function fieldChanged(field) {
+      return request.resource.data[field] != resource.data[field];
+    }
+
+    // Helper: check if user is trying to change restricted profile fields (role, suspension, ban, warnings)
+    function isChangingRestrictedProfileFields() {
+      return fieldChanged('role') || 
+             fieldChanged('suspension') || 
+             fieldChanged('ban') || 
+             fieldChanged('warnings');
+    }
+
+    // Helper: check if user is a responder on the incident
+    function isResponder() {
+      return request.auth.uid in resource.data.responderIds;
+    }
+
+    // Helper: check if user is trying to change supervisor-only incident fields
+    // Supervisor-only: status, closedAt, closedById, securedById, securedAt, displayId, location, type, description, alarmLevel, departmentNumber
+    function isChangingSupeOnlyIncidentFields() {
+      return fieldChanged('status') ||
+             fieldChanged('closedAt') ||
+             fieldChanged('closedById') ||
+             fieldChanged('securedById') ||
+             fieldChanged('securedAt') ||
+             fieldChanged('displayId') ||
+             fieldChanged('location') ||
+             fieldChanged('type') ||
+             fieldChanged('description') ||
+             fieldChanged('alarmLevel') ||
+             fieldChanged('departmentNumber');
+    }
+
+    match /profiles/{profileId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(profileId);
+      // Owner can update their own profile EXCEPT restricted fields (role, suspension, ban, warnings)
+      // Admin can update any fields including restricted ones
+      allow update: if isAdmin() || (isOwner(profileId) && !isChangingRestrictedProfileFields());
+      allow delete: if isAdmin();
+
+      match /activities/{activityId} {
+        allow read: if isOwner(profileId) || isSupe();
+        allow write: if isOwner(profileId);
+      }
+
+      match /locations/{locationId} {
+        allow read: if isOwner(profileId) || isSupe();
+        allow write: if isOwner(profileId);
+      }
+    }
+
+    match /incidents/{incidentId} {
+      allow read: if isAuthenticated();
+      allow create: if isSupe();
+      // Least-privilege updates:
+      // - Supe/admin can update any fields
+      // - Responders (chasers assigned to incident) can update operational fields only (homeowner, emergencyServicesStatus, responderIds, respondedAt, updatedAt, activityCount, responderCount)
+      // - Non-responders cannot update incidents
+      allow update: if isSupe() || (isAuthenticated() && isResponder() && !isChangingSupeOnlyIncidentFields());
+      allow delete: if isAdmin();
+
+      match /notes/{noteId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+        allow update, delete: if isAuthenticated() && resource.data.authorId == request.auth.uid;
+      }
+
+      match /documents/{docId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+        allow delete: if isSupe();
+      }
+
+      match /signatures/{sigId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+      }
+
+      match /activities/{activityId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+      }
+
+      match /chaserSubmissions/{chaserId} {
+        allow read: if isAuthenticated() && (request.auth.uid == chaserId || isSupe());
+        allow write: if isAuthenticated() && request.auth.uid == chaserId;
+
+        match /signedDocuments/{docId} {
+          allow read: if isAuthenticated() && (request.auth.uid == chaserId || isSupe());
+          allow write: if isAuthenticated() && request.auth.uid == chaserId;
+        }
+
+        match /documents/{docId} {
+          allow read: if isAuthenticated() && (request.auth.uid == chaserId || isSupe());
+          allow write: if isAuthenticated() && request.auth.uid == chaserId;
+        }
+      }
+    }
+
+    match /threads/{threadId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid in resource.data.participants ||
+        request.auth.uid in resource.data.chaserIds ||
+        (resource.data.type == 'chaser_to_supes' && isSupe())
+      );
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        request.auth.uid in resource.data.participants ||
+        (resource.data.type == 'chaser_to_supes' && isSupe())
+      );
+
+      match /messages/{messageId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+        allow update: if isAuthenticated();
+      }
+    }
+
+    match /userIncidents/{docId} {
+      allow read: if isAuthenticated() && resource.data.odm_profileId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.odm_profileId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.odm_profileId == request.auth.uid;
+    }
+
+    match /presence/{presenceId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(presenceId);
+    }
+
+    match /appNotifications/{notifId} {
+      allow read: if isAuthenticated() && resource.data.profileId == request.auth.uid;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && resource.data.profileId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.profileId == request.auth.uid;
+    }
+
+    match /webhookLogs/{logId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /counters/{counterId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    match /signedDocuments/{docId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && resource.data.profileId == request.auth.uid;
+    }
+
+    match /changeRequests/{requestId} {
+      allow read: if isAuthenticated() && (resource.data.requesterId == request.auth.uid || isSupe());
+      allow create: if isAuthenticated();
+      allow update: if isSupe();
+      allow delete: if isAdmin();
+    }
+
+    match /bannedDevices/{deviceId} {
+      allow read: if isAuthenticated();
+      allow write: if isSupe();
+    }
+
+    // Collection group query for notes across all incidents
+    match /{path=**}/notes/{noteId} {
+      allow read: if isAuthenticated();
+    }
+  }
+}

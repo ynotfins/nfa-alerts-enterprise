@@ -1,0 +1,4 @@
+Deployment test - timestamp: 2025-11-15 11:45 PM
+This file confirms the latest deployment is live.
+Commit: d6f75d4 - Remove mobile-only block
+

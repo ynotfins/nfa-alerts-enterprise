@@ -1,0 +1,47 @@
+{
+  "generated": "2026-04-24T00:00:00Z",
+  "blockers": [
+    {
+      "id": "SEC-001",
+      "severity": "CRITICAL",
+      "category": "security",
+      "title": "Firebase Admin SDK private key committed to git",
+      "description": "service-account.json was Added (status A) in commit 42fde63 (2025-11-27). File is in current HEAD and has been pushed to github.com/ynotfins/nfa-alert. File size: 2392 bytes (consistent with real private key). File IS in .gitignore but was committed before the gitignore rule was effective.",
+      "remediation": [
+        "1. Rotate key NOW in Firebase Console > Project Settings > Service Accounts > Generate New Private Key > delete old key",
+        "2. Remove from git history: git filter-repo --invert-paths --path service-account.json",
+        "3. Force-push: git push origin main --force (coordinate with team)",
+        "4. Update firebase-admin.ts to load from GOOGLE_APPLICATION_CREDENTIALS_JSON env var only",
+        "5. Store new key as base64 JSON string in .env (gitignored)"
+      ],
+      "status": "open",
+      "detected": "2026-04-23",
+      "detected_by": "AGENT Bootstrap session"
+    },
+    {
+      "id": "RISK-008",
+      "severity": "MEDIUM",
+      "category": "reliability",
+      "title": "~3% test coverage — only webhook parser tested",
+      "description": "40 tests cover only webhook parser. incidents.ts (799 LOC), chat.ts, auth-context.tsx, all components are untested.",
+      "remediation": [
+        "Add integration tests for incidents service using Firebase emulator",
+        "Add auth context tests",
+        "Target: 40% coverage on services"
+      ],
+      "status": "open",
+      "detected": "Pre-existing (documented ENGINEERING_QUALITY.md)",
+      "detected_by": "AGENT Bootstrap session"
+    }
+  ],
+  "resolved": [
+    {
+      "id": "RISK-003",
+      "severity": "HIGH",
+      "title": "No rate limiting on /api/webhook and /api/notifications/send",
+      "resolved_in": "2026-04-24",
+      "resolved_by": "AGENT Executioner session",
+      "resolution": "src/proxy.ts created with sliding window rate limiter: /api/webhook (10 req/min), /api/notifications/send (20 req/min). Uses x-forwarded-for for IP resolution. No new dependencies."
+    }
+  ]
+}

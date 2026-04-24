@@ -1,0 +1,103 @@
+# NFA Alerts - Project Intelligence Rules
+
+## Critical Implementation Paths
+
+### Firebase Service Pattern
+Always use this pattern for Firestore operations:
+```typescript
+export async function getDocument(id: string) {
+  const ref = doc(db, "collection", id);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return null;
+  return { _id: snap.id, ...snap.data() };
+}
+```
+
+### Auth Guard Pattern
+Protected routes must check auth state:
+```typescript
+const { user, profile, loading } = useAuthContext();
+if (loading) return <Skeleton />;
+if (!user) redirect("/login");
+```
+
+### Form Pattern
+Use React Hook Form + Zod always:
+```typescript
+const schema = z.object({ ... });
+type FormData = z.infer<typeof schema>;
+const form = useForm<FormData>({ resolver: zodResolver(schema) });
+```
+
+## Type Safety Rules (STRICT)
+
+1. **NO type assertions** - Never use `as`, `satisfies`, `<Type>`
+2. **Zod inference** - Always `z.infer<typeof schema>`
+3. **No any** - Properly type all values
+4. **Utility types** - Use `Pick`, `Omit`, `Partial`, `ReturnType`
+
+## Code Quality Rules
+
+1. **NO comments** - Code must be self-documenting
+2. **NO dead code** - Remove unused imports/functions
+3. **Direct implementations** - Avoid unnecessary abstractions
+4. **Minimal changes** - Only modify what's needed
+
+## Icon Usage
+- Phosphor Icons: Use `Icon` suffix (e.g., `CaretLeftIcon` not `CaretLeft`)
+- Import from `@phosphor-icons/react`
+- Lucide for additional icons when Phosphor lacks them
+
+## Layout Components
+Always use layout primitives:
+- `<Header title="..." back actions={...} />`
+- `<PageContent className="p-4">`
+- `<PageTabs>` with `<PageTab active={...}>`
+
+## File Storage Pattern
+```typescript
+// Upload
+const storageRef = ref(storage, `path/${filename}`);
+await uploadBytes(storageRef, file);
+const url = await getDownloadURL(storageRef);
+
+// Save URL to Firestore
+await updateDoc(docRef, { fileUrl: url });
+```
+
+## Error Handling
+- API routes: Return HTTP status codes (400, 401, 422, 500)
+- Components: try/catch with `toast.error()`
+- Forms: Display via React Hook Form errors object
+
+## User Workflow Preferences
+
+### Before Any Edit
+1. Read the target file first
+2. Check for existing patterns in similar files
+3. Make minimal, focused changes
+
+### Quality Gates
+Run before committing:
+1. `pnpm lint` - Fix all ESLint errors
+2. `pnpm test` - Ensure tests pass
+3. `pnpm build` - Verify build succeeds
+
+## Project-Specific Decisions
+
+### Mobile-First
+- Max viewport: 448px
+- All components must be responsive
+- Touch-friendly targets (min 44px)
+
+### Real-Time Updates
+- TanStack Query handles caching and refetching
+- Use `queryClient.invalidateQueries()` after mutations
+- Optimistic updates for better UX
+
+### PWA Requirements
+- Service Worker for offline support
+- Web Push for notifications
+- Manifest for installability
+
+

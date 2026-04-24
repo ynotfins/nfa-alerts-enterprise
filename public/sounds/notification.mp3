@@ -1,0 +1,2 @@
+This is a placeholder file. Replace with actual notification sound MP3.
+For now, we'll use Web Audio API to generate a simple beep sound in the browser.
