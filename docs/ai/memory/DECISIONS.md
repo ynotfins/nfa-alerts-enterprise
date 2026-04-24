@@ -18,9 +18,9 @@
 
 **Date**: 2026-04-23  
 **Session**: AGENT Bootstrap (observed, not changed)  
-**Current behavior**: `firebase-admin.ts` reads `GOOGLE_APPLICATION_CREDENTIALS_JSON` env var OR falls back to `service-account.json` file.  
-**Required change**: After key rotation (RISK-001), remove file fallback. Load only from env var. Store key as base64 JSON string in `GOOGLE_APPLICATION_CREDENTIALS_JSON`.  
-**Status**: PENDING — awaiting key rotation
+**Current behavior**: Clean repo `firebase-admin.ts` loads Firebase Admin credentials from server environment variables only. It supports `FIREBASE_SERVICE_ACCOUNT_JSON`, `GOOGLE_APPLICATION_CREDENTIALS_JSON`, or the `FIREBASE_PROJECT_ID` / `FIREBASE_CLIENT_EMAIL` / `FIREBASE_PRIVATE_KEY` triplet.
+**Required change**: Old repo key rotation and git history cleanup remain required for RISK-001. Do not restore file-based credential loading.
+**Status**: CODE-FIXED in clean repo — old repo rotation/history cleanup still required
 
 ---
 

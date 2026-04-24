@@ -1,26 +1,24 @@
 # HANDOFF
 
 **Last updated**: 2026-04-24  
-**Session type**: AGENT Executioner — RISK-003 Rate Limiting  
-**Status**: COMPLETE — `src/proxy.ts` created, all validation gates pass
+**Session type**: AGENT Executioner — Phase 1 Firebase Admin Credential Fix
+**Status**: COMPLETE — clean repo no longer depends on `service-account.json`; all validation gates pass
 
 ---
 
 ## What happened this session
 
-Added IP-based sliding window rate limiting to `/api/webhook` (10 req/min) and `/api/notifications/send` (20 req/min) via `src/proxy.ts`. No existing files modified. No new dependencies added.
-
-**Key discovery**: Next.js 16 deprecated `middleware.ts` in favor of `proxy.ts` (export function renamed from `middleware` to `proxy`). Used the correct convention to avoid deprecation warnings. Context7 confirmed `request.ip` was removed in Next.js 16; rate limiter uses `x-forwarded-for` header (consistent with existing webhook route line 49).
+Removed the static Firebase Admin `service-account.json` import from the clean repo. Admin credentials now load from server env vars only, and clean local builds pass without copying secrets into the repository.
 
 ## 🔴 CRITICAL — Requires Immediate Human Action
 
-**`service-account.json` is committed to git and on GitHub.** (SEC-001 — unchanged)
+**`service-account.json` is committed to the old repo git history and on GitHub.** (SEC-001 — code-fixed in clean repo, old repo remediation still required)
 
 **Do this NOW**:
 1. Rotate the Firebase service account key in Firebase Console
 2. Remove file from git history: `git filter-repo --invert-paths --path service-account.json`
 3. Force-push to remote
-4. Update `firebase-admin.ts` to use env var only
+4. Configure clean repo/runtime Firebase Admin credentials through server env vars only
 
 ---
 
@@ -28,18 +26,17 @@ Added IP-based sliding window rate limiting to `/api/webhook` (10 req/min) and `
 
 | ID | Severity | Summary | Owner |
 |----|----------|---------|-------|
-| SEC-001 | CRITICAL | service-account.json committed to git | Human/PLAN |
+| SEC-001 | CRITICAL | Old repo key rotation + history cleanup still required | Human |
 | RISK-008 | MEDIUM | ~3% test coverage | PLAN |
 
-RISK-003 — **RESOLVED this session** via `src/proxy.ts`.
+RISK-003 — **RESOLVED previously** via `src/proxy.ts`.
 
 ---
 
 ## Git State (validated 2026-04-24)
 
-- Branch: `main`, HEAD: `a5d8ec2`
-- 1 commit ahead of remote (unpushed) + `src/proxy.ts` newly untracked
-- Dirty tracked: `.env`, `.gitignore`, `package.json`, `pnpm-lock.yaml`
+- Branch: `main`, clean repo baseline: `53a834d74bac056b27523bcea614652fbb28af3a`
+- Phase 1 fix verified locally; push remains blocked until explicitly approved
 
 ---
 
@@ -47,15 +44,15 @@ RISK-003 — **RESOLVED this session** via `src/proxy.ts`.
 
 | Command | Result |
 |---------|--------|
-| `pnpm lint:ci` | PASS — 20 warnings, 0 errors |
-| `pnpm typecheck` | PASS — 0 errors |
-| `pnpm build` | PASS — 34 routes + Proxy active, no deprecation warning |
+| `pnpm run typecheck` | PASS — 0 errors |
+| `pnpm run lint:ci` | PASS — 20 warnings, 0 errors |
+| `pnpm run test:unit` | PASS — 40/40 tests |
+| `pnpm run build` | PASS — app routes compiled + Proxy active |
 
 ---
 
 ## What PLAN should do next
 
-1. **SEC-001 CRITICAL**: Rotate Firebase key + remove from git history
-2. **Commit & deploy**: `git add src/proxy.ts docs/ai/ && git commit -m "feat: IP rate limiting via Next.js 16 proxy (RISK-003)"` then push + Vercel redeploy
+1. **SEC-001 CRITICAL**: Rotate old Firebase key + remove `service-account.json` from old repo git history
+2. **Push**: Do not push the clean repo until the user explicitly approves
 3. **RISK-008**: Next safe task — integration tests for incidents service
-4. **DEC-002**: After SEC-001, remove `service-account.json` file fallback from `firebase-admin.ts`

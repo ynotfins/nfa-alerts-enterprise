@@ -1,8 +1,8 @@
 # Codebase Validation Report
 
-**Generated**: 2026-04-23  
-**Session**: AGENT Bootstrap  
-**Git HEAD**: `a5d8ec28879848733c6e76c2ba8fa2039c261441`
+**Generated**: 2026-04-24
+**Session**: AGENT Executioner — Phase 1 Firebase Admin Credential Fix
+**Git baseline**: `53a834d74bac056b27523bcea614652fbb28af3a`
 
 ---
 
@@ -10,19 +10,19 @@
 
 | Command | Outcome | Notes |
 |---------|---------|-------|
-| `pnpm lint:ci` | ✅ PASS | 20 warnings, 0 errors (budget: 25) |
-| `pnpm typecheck` | ✅ PASS | 0 TypeScript errors |
-| `pnpm test:unit` | ✅ PASS | 40/40 tests, 2 files |
-| `pnpm build` | ✅ PASS | 34 routes compiled, 0 errors |
+| `pnpm run typecheck` | PASS | 0 TypeScript errors |
+| `pnpm run lint:ci` | PASS | 20 warnings, 0 errors (budget: 25) |
+| `pnpm run test:unit` | PASS | 40/40 tests, 2 files |
+| `pnpm run build` | PASS | App routes compiled; Proxy active |
 
-**Overall: CLEAN BUILD** — production-ready at current HEAD.
+**Overall: CLEAN BUILD** — Phase 1 clean-repo credential fix verified locally.
 
 ---
 
-## pnpm lint:ci — PASS (20 warnings)
+## pnpm run lint:ci — PASS (20 warnings)
 
-**Command**: `pnpm lint:ci` (eslint --max-warnings 25)  
-**Result**: 0 errors, 20 warnings  
+**Command**: `pnpm run lint:ci` (eslint --max-warnings 25)
+**Result**: 0 errors, 20 warnings
 **Budget**: 25 (5-warning buffer remaining)
 
 ### Warning Breakdown
@@ -46,19 +46,19 @@
 
 ---
 
-## pnpm typecheck — PASS
+## pnpm run typecheck — PASS
 
-**Command**: `pnpm typecheck` (tsc --noEmit)  
-**Result**: 0 errors, clean exit  
-**Note**: TypeScript strict mode is enabled.
+**Command**: `pnpm run typecheck` (tsc --noEmit)
+**Result**: 0 errors, clean exit
+**Note**: The previous missing `service-account.json` module error is resolved.
 
 ---
 
-## pnpm test:unit — PASS
+## pnpm run test:unit — PASS
 
-**Command**: `pnpm test:unit` (vitest run)  
-**Result**: 40/40 tests passed, 2 test files  
-**Duration**: ~354ms total
+**Command**: `pnpm run test:unit` (vitest run)
+**Result**: 40/40 tests passed, 2 test files
+**Duration**: ~315ms total
 
 | File | Tests | Status |
 |------|-------|--------|
@@ -71,18 +71,19 @@
 
 ---
 
-## pnpm build — PASS
+## pnpm run build — PASS
 
-**Command**: `pnpm build` (next build)  
-**Result**: All 34 routes compiled, 0 errors  
+**Command**: `pnpm run build` (next build)
+**Result**: Production build completed successfully
 **Build artifacts**: `.next/` directory
+**Note**: Build emitted sanitized Firebase Admin unavailable warnings because no Admin credential env vars are configured in the clean local environment. No credential values were printed.
 
 ### Route Summary
 
 | Type | Count | Routes |
 |------|-------|--------|
-| Static (○) | ~20 | /incidents, /chat, /login, /signup/*, /profile, etc. |
-| Dynamic (ƒ) | ~14 | /incidents/[id], /chat/[threadId], /chasers/[chaserId], /api/* |
+| Static (○) | Multiple | /incidents, /chat, /login, /signup/*, /profile, etc. |
+| Dynamic (ƒ) | Multiple | /incidents/[id], /chat/[threadId], /chasers/[chaserId], /api/* |
 
 **Note**: A `.next/` build directory exists and is current. Do not delete it unless rebuilding.
 

@@ -1,8 +1,8 @@
 # NFA Alerts — AI State
 
 **Last updated**: 2026-04-24  
-**Session type**: AGENT Executioner — Safe Repository Migration  
-**Status**: IN PROGRESS — clean baseline extraction to `D:/github/nfa-alerts-enterprise`
+**Session type**: AGENT Executioner — Phase 1 Firebase Admin Credential Fix
+**Status**: COMPLETE — clean repo credential-loading fix verified; push still blocked pending explicit approval
 
 ---
 
@@ -14,17 +14,17 @@ Added IP-based sliding window rate limiting to `/api/webhook` (10 req/min) and `
 
 ## 🔴 CRITICAL — Requires Immediate Human Action
 
-**`service-account.json` is committed to git and on GitHub.** (SEC-001 — unchanged from prior session)
+**`service-account.json` is committed to the old repo git history and on GitHub.** (SEC-001 — partially mitigated)
 
 - Commit: `42fde63` (Nov 27 2025, status: Added)
-- Current HEAD: file still present
-- Remote: `github.com/ynotfins/nfa-alert` (pushed)
+- Old repo remote: `github.com/ynotfins/nfa-alert` (pushed)
+- Clean repo code: no longer imports or falls back to `service-account.json`
 
 **Do this NOW**:
 1. Rotate the Firebase service account key in Firebase Console
 2. Remove file from git history: `git filter-repo --invert-paths --path service-account.json`
 3. Force-push to remote
-4. Update `firebase-admin.ts` to use env var (not file)
+4. Configure clean repo/runtime Firebase Admin credentials through server env vars only
 
 See `RISK_REGISTER.md` RISK-001.
 
@@ -34,7 +34,7 @@ See `RISK_REGISTER.md` RISK-001.
 
 | ID | Severity | Summary | Owner |
 |----|----------|---------|-------|
-| SEC-001 | CRITICAL | service-account.json committed to git | Human/PLAN |
+| SEC-001 | CRITICAL | Old repo key rotation + history cleanup still required | Human |
 | RISK-008 | MEDIUM | ~3% test coverage | PLAN |
 
 RISK-003 (rate limiting) — **RESOLVED this session**.
@@ -79,11 +79,10 @@ RISK-003 (rate limiting) — **RESOLVED this session**.
 
 ## What PLAN should do next
 
-1. **Security**: Rotate Firebase service account key + remove from git history (SEC-001 — CRITICAL, unchanged)
-2. **Commit**: `git add src/proxy.ts docs/ai/ && git commit -m "feat: add IP rate limiting via Next.js 16 proxy (RISK-003)"`
-3. **Deploy**: Push + redeploy to Vercel so rate limiting takes effect in production
+1. **Security**: Rotate old Firebase service account key + remove `service-account.json` from old repo git history (SEC-001 — CRITICAL residual)
+2. **Push**: Do not push the clean repo until explicitly approved
+3. **Deploy**: Configure runtime env vars before any Vercel redeploy
 4. **Test coverage**: Next safe task is RISK-008 — add integration tests for incidents service
-5. **DEC-002 pending**: After SEC-001 key rotation, remove `service-account.json` file fallback from `firebase-admin.ts`
 
 ---
 
@@ -135,9 +134,9 @@ RISK-003 (rate limiting) — **RESOLVED this session**.
 
 ---
 
-## Session 2026-04-24 (Migration) — Clean Repo Extraction
+## Session 2026-04-24 (Migration + Phase 1 Security Fix) — Clean Repo Extraction
 
-**Status**: IN PROGRESS — clean target copied, secret-bearing files excluded from baseline.
+**Status**: COMPLETE — clean target copied, baseline committed, Firebase Admin file dependency removed, and local verification passed.
 
 ### Checklist
 
@@ -146,8 +145,9 @@ RISK-003 (rate limiting) — **RESOLVED this session**.
 - [x] Excluded `.env`, service account JSON, Firebase Admin SDK JSON, `.firebaserc`, logs, `.git`, `.next`, `node_modules`, `.cursor`, and `.serena`
 - [x] Strengthened `.gitignore` for local secrets, deploy bindings, logs, tool state, and migration artifacts
 - [x] Generated value-free `.env.example` from source environment variable references
-- [ ] Initialize and commit clean baseline
-- [ ] Run local verification
+- [x] Initialize and commit clean baseline
+- [x] Replace static Firebase Admin `service-account.json` import with env-based credential loading
+- [x] Run local verification
 - [ ] Push only after a new GitHub repo URL is provided
 - [ ] Restore old workspace only after human confirms exact known-good target
 
@@ -155,10 +155,20 @@ RISK-003 (rate limiting) — **RESOLVED this session**.
 
 - Old app branch at freeze: `main`
 - Old app HEAD at freeze: `a5d8ec28879848733c6e76c2ba8fa2039c261441`
+- New repo baseline commit: `53a834d74bac056b27523bcea614652fbb28af3a`
 - Backup record: `D:/github/nfa-alerts-migration-backups/20260424-185639/RESTORE_RECORD.txt`
 - Secret scan is path-only; values were not printed. Strong scan still flags existing public Firebase web config and test/source token references for review.
+- `pnpm install --frozen-lockfile` passed using existing `pnpm 10.24.0`.
+- Initial `pnpm run typecheck` failed because `src/lib/firebase-admin.ts` imported `../../service-account.json`, which is intentionally absent from the clean repo.
+- Phase 1 fix: `src/lib/firebase-admin.ts` now loads Firebase Admin credentials from `FIREBASE_SERVICE_ACCOUNT_JSON`, `GOOGLE_APPLICATION_CREDENTIALS_JSON`, or the `FIREBASE_PROJECT_ID` / `FIREBASE_CLIENT_EMAIL` / `FIREBASE_PRIVATE_KEY` env triplet.
+- `.env.example` contains variable names only; no credential values were added.
+- `pnpm run typecheck` passed.
+- `pnpm run lint:ci` passed with 20 warnings and 0 errors.
+- `pnpm run test:unit` passed: 40/40 tests.
+- `pnpm run build` passed. Build emitted sanitized Firebase Admin unavailable warnings because no Admin credentials are configured in the clean local environment.
 
 ### Still Broken / Blocked
 
+- SEC-001 is only code-fixed in the clean repo. The old repo still requires Firebase key rotation and git history cleanup.
 - New GitHub repo URL is not provided yet, so push must stop before remote setup.
 - Old workspace restoration is blocked until the new repo is verified and a human confirms the exact known-good commit/tag/branch.

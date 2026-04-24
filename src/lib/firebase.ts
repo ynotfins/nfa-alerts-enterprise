@@ -4,7 +4,7 @@ import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager
 import { getStorage } from "firebase/storage";
 import { getMessaging, isSupported } from "firebase/messaging";
 
-const firebaseConfig = {
+const envFirebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
@@ -12,6 +12,25 @@ const firebaseConfig = {
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
+
+const fallbackFirebaseConfig = {
+  apiKey: "build-placeholder-api-key",
+  authDomain: "build-placeholder.firebaseapp.com",
+  projectId: "build-placeholder",
+  storageBucket: "build-placeholder.appspot.com",
+  messagingSenderId: "000000000000",
+  appId: "1:000000000000:web:0000000000000000000000",
+};
+
+const hasFirebaseConfig = Object.values(envFirebaseConfig).every(Boolean);
+
+if (!hasFirebaseConfig && typeof window !== "undefined") {
+  throw new Error("Firebase client environment variables are not configured");
+}
+
+const firebaseConfig = hasFirebaseConfig
+  ? envFirebaseConfig
+  : fallbackFirebaseConfig;
 
 const app =
   getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];

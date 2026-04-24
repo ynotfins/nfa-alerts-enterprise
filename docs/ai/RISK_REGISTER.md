@@ -12,7 +12,7 @@
 | Field | Value |
 |-------|-------|
 | **Severity** | CRITICAL — Data Breach Risk |
-| **Status** | OPEN — Requires immediate remediation |
+| **Status** | PARTIAL — clean repo code dependency fixed; old repo key rotation/history cleanup still required |
 | **Detected** | 2026-04-23 (AGENT Bootstrap session) |
 | **Evidence** | `git show 42fde63 --name-status -- service-account.json` → status `A` (Added) |
 | **Commit** | `42fde63 refactor: remove deprecated files and clean up environment configuration` (Nov 27 2025) |
@@ -27,10 +27,12 @@
 2. Download the new key and store it securely (Secret Manager or env var as base64)
 3. Remove the committed file from git history: `git filter-repo --invert-paths --path service-account.json`
 4. Force-push to remote (coordinate with team): `git push origin main --force`
-5. Update `firebase-admin.ts` to load credentials from env var, not file
+5. ✅ Clean repo: update `firebase-admin.ts` to load credentials from env vars, not file
 6. Verify `.gitignore` entry covers `service-account.json`
 
 **Note**: The `nfa-alerts-v2-firebase-adminsdk-*.json` file also exists locally but IS gitignored via `.gitignore:24:*-firebase-adminsdk-*.json`. However, since a key was committed, rotate all keys as a precaution.
+
+**Clean repo Phase 1 status (2026-04-24)**: `D:/github/nfa-alerts-enterprise` no longer requires `service-account.json` in product code. Firebase Admin now uses server environment variables. This does **not** rotate the exposed old key or clean old repository history.
 
 ---
 

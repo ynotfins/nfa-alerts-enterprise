@@ -148,9 +148,9 @@ Registration (src/app/layout.tsx):
 
 ```
 src/lib/firebase-admin.ts
-  → Reads GOOGLE_APPLICATION_CREDENTIALS_JSON env var
-    OR falls back to service-account.json file (⚠ SECURITY RISK — see RISK_REGISTER.md RISK-001)
-  → initializeApp({ credential: cert(serviceAccount) })
+  → Reads FIREBASE_SERVICE_ACCOUNT_JSON or GOOGLE_APPLICATION_CREDENTIALS_JSON env var
+    OR FIREBASE_PROJECT_ID + FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY
+  → initializeApp({ credential: cert(firebaseServiceAccount) })
   → adminDb = getFirestore(adminApp)
   → adminMessaging = getMessaging(adminApp)
 ```
@@ -182,7 +182,8 @@ public/android.apk
 |-----|------|---------|
 | `FIREBASE_PROJECT_ID` | Server | firebase-admin.ts |
 | `FIREBASE_CLIENT_EMAIL` | Server | firebase-admin.ts |
-| `FIREBASE_PRIVATE_KEY` | Server | firebase-admin.ts (alt to service-account.json) |
+| `FIREBASE_PRIVATE_KEY` | Server | firebase-admin.ts |
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | Server | firebase-admin.ts |
 | `GOOGLE_APPLICATION_CREDENTIALS_JSON` | Server | firebase-admin.ts |
 | `NEXT_PUBLIC_FIREBASE_API_KEY` | Client | firebase.ts |
 | `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Client | firebase.ts |

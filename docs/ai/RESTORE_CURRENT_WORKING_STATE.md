@@ -8,9 +8,9 @@
 
 ## ⚠ CRITICAL WARNING BEFORE RESTORING
 
-**`service-account.json` is committed to git HEAD.** The Firebase Admin SDK private key is exposed in the git repository (commit `42fde63`, present on GitHub remote). Before restoring or sharing this repo, rotate the Firebase service account key in the Firebase Console and remove the file from git history.
+**`service-account.json` is committed to the old repo git HEAD.** The Firebase Admin SDK private key is exposed in the old repository (commit `42fde63`, present on GitHub remote). Before restoring or sharing the old repo, rotate the Firebase service account key in the Firebase Console and remove the file from git history.
 
-Do NOT run `git push` until the key is rotated and the file is removed from history.
+The clean repo at `D:/github/nfa-alerts-enterprise` must not restore or copy `service-account.json`. Firebase Admin credentials are loaded from server environment variables instead.
 
 ---
 
@@ -116,7 +116,7 @@ pnpm build            # Expect: all routes compile
 | File | Reason |
 |------|--------|
 | `.env` | Live Firebase, OpenAI, Google Maps, VAPID, webhook secret credentials |
-| `service-account.json` | Firebase Admin SDK private key (CRITICAL — must be rotated then deleted) |
+| `service-account.json` | Old repo Firebase Admin SDK private key (CRITICAL — do not restore to clean repo; rotate then delete from old repo history) |
 | `nfa-alerts-v2-firebase-adminsdk-*.json` | Firebase Admin SDK key (alternate name — gitignored) |
 | `.firebaserc` | Firebase project binding (`nfa-alerts-v2`) |
 | `firestore.rules` | Production Firestore security rules (deployed) |
@@ -154,7 +154,8 @@ git branch -a
 ## Environment Surfaces (do not hardcode)
 
 The app reads these env vars from `.env`:
-- `FIREBASE_*` — server-side Firebase Admin SDK
+- `FIREBASE_SERVICE_ACCOUNT_JSON` or `GOOGLE_APPLICATION_CREDENTIALS_JSON` — server-side Firebase Admin SDK service account JSON (raw or base64)
+- `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` — alternate server-side Firebase Admin SDK triplet
 - `NEXT_PUBLIC_FIREBASE_*` — client-side Firebase SDK (safe to expose but restrict API key scope)
 - `OPENAI_API_KEY` — OpenAI GPT-4o-mini
 - `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` — Google Maps (restrict in Google Cloud console)
