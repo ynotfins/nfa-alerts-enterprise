@@ -1,12 +1,65 @@
 # NFA Alerts — AI State
 
 **Last updated**: 2026-04-25  
-**Session type**: AGENT Executioner — GitHub Repository Setup
-**Status**: COMPLETE — clean repository successfully published to private GitHub repo
+**Session type**: AGENT Executioner — Development Environment Setup
+**Status**: COMPLETE — dependencies installed, dev server running, validation passed
 
 ---
 
-## What happened this session (2026-04-25)
+## What happened this session (2026-04-25 — Development Environment Setup)
+
+Set up and validated the local Cursor Cloud development environment for the Next.js app:
+
+1. **Dependency install**: Ran `pnpm install --frozen-lockfile` with pnpm 10.33.0; 1056 packages installed from `pnpm-lock.yaml`.
+2. **Toolchain verified**: Node `v22.22.2`, npm `10.9.7`, Corepack `0.34.6`, pnpm `10.33.0`.
+3. **Static validation**: `pnpm run typecheck` passed; `pnpm run lint:ci` passed with the existing 20 warnings and 0 errors.
+4. **Unit validation**: `pnpm run test:unit` passed with 40/40 tests.
+5. **Production build**: `env -u NODE_ENV pnpm run build` passed. A first build attempt failed because the persisted shell had `NODE_ENV=development`, which Next.js warns is invalid for `next build`; unsetting it let Next set production mode correctly.
+6. **Dev server**: Started `pnpm run dev --hostname 0.0.0.0 --port 3000` in tmux session `nfa-next-dev` with non-secret local Firebase placeholder values.
+7. **HTTP verification**: Confirmed `/` returns `307` to `/login`; confirmed `/login` returns `200`.
+8. **Browser verification**: Confirmed the app intentionally shows the desktop "Mobile Only" screen and renders the NFA Alerts sign-in form under mobile viewport emulation.
+
+**Walkthrough artifacts**:
+
+- `/opt/cursor/artifacts/next_dev_login_page_running.mp4`
+- `/opt/cursor/artifacts/nfa_login_mobile_dev.webp`
+
+### Checklist
+
+- [x] Read setup files: `package.json`, `README.md`, `.env.example`, `next.config.ts`, `tsconfig.json`
+- [x] Installed dependencies from lockfile
+- [x] Ran TypeScript validation
+- [x] Ran ESLint CI validation
+- [x] Ran unit tests
+- [x] Ran production build with a clean `NODE_ENV`
+- [x] Started the dev app
+- [x] Verified HTTP responses
+- [x] Captured browser walkthrough evidence
+- [x] Left dev server running for follow-up testing
+
+### Evidence
+
+| Check | Result |
+| --- | --- |
+| `pnpm install --frozen-lockfile` | PASS |
+| `pnpm run typecheck` | PASS |
+| `pnpm run lint:ci` | PASS — 20 warnings, 0 errors |
+| `pnpm run test:unit` | PASS — 40/40 tests |
+| `env -u NODE_ENV pnpm run build` | PASS — build completed; Firebase Admin credentials unavailable warnings only |
+| `curl -i http://127.0.0.1:3000/` | PASS — `307 Temporary Redirect` to `/login` |
+| `curl -i http://127.0.0.1:3000/login` | PASS — `200 OK` |
+| Browser walkthrough | PASS — mobile login page rendered |
+
+### What is still broken / blocked
+
+1. **Runtime credentials**: Real Firebase client/admin credentials are not configured in this Cloud VM; the dev server was started with non-secret public Firebase placeholder values only to prove the app boots and renders.
+2. **Shell environment caveat**: Do not run `next build` with `NODE_ENV=development`; use `env -u NODE_ENV pnpm run build` if the shell has a persisted `NODE_ENV`.
+3. **Existing lint debt**: `lint:ci` passes inside the configured warning budget but still reports 20 pre-existing warnings.
+4. **Security blocker remains**: Old repo Firebase service-account key rotation/history cleanup from SEC-001 remains a human-owned blocker.
+
+---
+
+## Previous Session (2026-04-25 — GitHub Repository Setup)
 
 Successfully published the clean NFA Alerts Enterprise repository to GitHub with comprehensive security validation:
 
