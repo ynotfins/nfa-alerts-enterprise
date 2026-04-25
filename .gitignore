@@ -73,3 +73,7 @@ CLAUDE.md
 *.patch
 *.diff
 nfa-alerts-migration-backups/
+
+# OpenMemory - IDE/Assistant specific rules
+.cursor\rules\openmemory.mdc
+CLAUDE.md
