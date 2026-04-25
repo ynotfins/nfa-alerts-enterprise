@@ -2,7 +2,7 @@
 
 **Last updated**: 2026-04-25  
 **Session type**: AGENT Executioner — Cloud Agent Readiness Hardening
-**Status**: IN PROGRESS — Cloud Agent docs and build wrapper added; validation pending
+**Status**: COMPLETE — Cloud Agent docs, build hardening, and validation passed
 
 ---
 
@@ -18,6 +18,7 @@ Audited and hardened this repo for future Cursor Cloud Agents:
 6. **Operating policy**: Added `docs/ai/AGENT_OPERATING_MODE.md` and root `AGENTS.md` so future Cloud Agents find repo-specific operating rules automatically.
 7. **Bitwarden workflow**: Added `scripts/with-bitwarden-env.sh`, a placeholder-only wrapper around `bws run --project-id "$BWS_PROJECT_ID"` that requires `BWS_ACCESS_TOKEN` and never prints secrets.
 8. **Docs alignment**: Updated `docs/ai/INDEX.md` to point at Cloud Agent docs and fixed stale web push env names in `docs/ai/SYSTEM_WIRING.md`.
+9. **Validation**: Full install/typecheck/lint/test/build suite passed with the Cloud environment still injecting `NODE_ENV=development`, proving `pnpm run build` now handles that bad secret safely.
 
 ### Checklist
 
@@ -30,8 +31,8 @@ Audited and hardened this repo for future Cursor Cloud Agents:
 - [x] Add Cloud Agent setup docs
 - [x] Add autonomous operating mode docs
 - [x] Add Bitwarden wrapper
-- [ ] Run full validation suite after commit/push
-- [ ] Update PR
+- [x] Run full validation suite after commit/push
+- [x] Update PR
 
 ### Evidence
 
@@ -43,6 +44,12 @@ Audited and hardened this repo for future Cursor Cloud Agents:
 | `ListMcpResources` | WARN — no MCP resources exposed to this Cloud session |
 | `gh auth status` | PASS — GitHub CLI authenticated |
 | `firebase --version` | WARN — Firebase CLI not installed in this VM |
+| `pnpm install --frozen-lockfile` | PASS |
+| `pnpm run typecheck` | PASS |
+| `pnpm run lint:ci` | PASS — 20 warnings, 0 errors |
+| `pnpm run test:unit` | PASS — 40/40 tests |
+| `pnpm run build` | PASS — wrapper ignored inherited `NODE_ENV=development`; Next.js build completed |
+| `bash -n scripts/with-bitwarden-env.sh` | PASS |
 
 ### What is still broken / blocked
 
@@ -50,7 +57,7 @@ Audited and hardened this repo for future Cursor Cloud Agents:
 2. **Manual dashboard setting**: Set default repository to `ynotfins/nfa-alerts-enterprise`, base branch to `main`, and add routing keywords for this app.
 3. **MCP availability**: Context7/Firebase/Vercel/Playwright/shadcn/GitHub MCPs should be configured in Cursor dashboard or local Cursor settings; none are visible in this Cloud session.
 4. **Bitwarden**: Wrapper is ready, but real use requires manual `BWS_ACCESS_TOKEN` and `BWS_PROJECT_ID` secret setup.
-5. **Validation**: Full command suite is pending for this revision.
+5. **Existing lint debt**: `lint:ci` passes inside the configured warning budget but still reports 20 pre-existing warnings.
 
 ---
 
