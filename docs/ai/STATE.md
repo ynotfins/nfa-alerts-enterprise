@@ -1,16 +1,16 @@
 # NFA Alerts — AI State
 
 **Last updated**: 2026-04-24  
-**Session type**: AGENT Executioner — Phase 1 Firebase Admin Credential Fix
-**Status**: COMPLETE — clean repo credential-loading fix verified; push still blocked pending explicit approval
+**Session type**: AGENT Executioner — Pre-push Firebase env hygiene hardening
+**Status**: COMPLETE — validation passed; this commit is the pre-push hardening commit
 
 ---
 
 ## What happened this session
 
-Added IP-based sliding window rate limiting to `/api/webhook` (10 req/min) and `/api/notifications/send` (20 req/min) via `src/proxy.ts`. No existing files modified. No new dependencies added.
+Pre-push audit after commit `be1ceb9ff5f8c6dbb07e069960449b335174fbc2` confirmed the Firebase Admin static `service-account.json` dependency is removed. This session hardens the remaining client Firebase placeholder behavior so missing `NEXT_PUBLIC_FIREBASE_*` values can only use placeholders during `next build`, not in real app runtime.
 
-**Key discovery**: Next.js 16 deprecated `middleware.ts` in favor of `proxy.ts` (`export function proxy`). Created the file using the correct Next.js 16 convention to avoid deprecation warnings. Context7 also confirmed `request.ip` was removed in Next.js 16; rate limiter uses `x-forwarded-for` header (consistent with existing webhook route).
+During readonly inspection, `.env.example` had an uncommitted credential-like service-account value in the working tree. It was removed before validation and must not be committed with real values.
 
 ## 🔴 CRITICAL — Requires Immediate Human Action
 
@@ -21,6 +21,7 @@ Added IP-based sliding window rate limiting to `/api/webhook` (10 req/min) and `
 - Clean repo code: no longer imports or falls back to `service-account.json`
 
 **Do this NOW**:
+
 1. Rotate the Firebase service account key in Firebase Console
 2. Remove file from git history: `git filter-repo --invert-paths --path service-account.json`
 3. Force-push to remote
@@ -30,59 +31,75 @@ See `RISK_REGISTER.md` RISK-001.
 
 ---
 
+## Pre-push Checklist
+
+- [x] Reconfirmed `git status --short`
+- [x] Reconfirmed `git show --stat be1ceb9`
+- [x] Inspected `src/lib/firebase-admin.ts`, `src/lib/firebase.ts`, `.gitignore`, `openmemory.md`, `docs/ai/STATE.md`, `docs/ai/RISK_REGISTER.md`, `docs/ai/CODEBASE_VALIDATION_REPORT.md`, and `package.json`
+- [x] Kept Firebase Admin env-based credential loading
+- [x] Removed uncommitted credential value from `.env.example`
+- [x] Hardened client Firebase placeholder fallback to build-only behavior
+- [x] Cleaned local-agent ignores for `openmemory.md` and `CLAUDE.md`
+- [x] Run `pnpm run typecheck`
+- [x] Run `pnpm run lint:ci`
+- [x] Run `pnpm run test:unit`
+- [x] Run `pnpm run build`
+- [x] Commit only if all validation passes
+
+---
+
 ## Active Blockers
 
 | ID | Severity | Summary | Owner |
-|----|----------|---------|-------|
+| --- | --- | --- | --- |
 | SEC-001 | CRITICAL | Old repo key rotation + history cleanup still required | Human |
+| PUSH-001 | HIGH | Clean repo push requires explicit approval and confirmed GitHub repo URL/visibility | Human |
 | RISK-008 | MEDIUM | ~3% test coverage | PLAN |
 
-RISK-003 (rate limiting) — **RESOLVED this session**.
+Recommended target for later push, pending human confirmation: `ynotfins/nfa-alerts-enterprise`, visibility `private`.
 
 ---
 
-## Git State (validated 2026-04-24)
+## Git State (validated 2026-04-24 pre-push audit)
 
-- Branch: `main`, HEAD: `a5d8ec2`
-- **1 commit ahead of remote** (unpushed) + `src/proxy.ts` untracked (new)
-- Dirty tracked: `.env`, `.gitignore`, `package.json`, `pnpm-lock.yaml`
-- Untracked: `.firebaserc`, `PRODUCT_MODEL.md`, `firestore-debug.log`, `pnpm-workspace.yaml`, `src/proxy.ts`
+- Branch: `main`
+- Expected audited commit: `be1ceb9ff5f8c6dbb07e069960449b335174fbc2`
+- Readonly starting dirty state: `.env.example`, `.gitignore`, and untracked empty `openmemory.md`
+- `openmemory.md` is local assistant state and must remain uncommitted
+- No push, remote creation, or deployment is part of this session
 
 ---
 
-## Validation (all PASS)
+## Validation
 
 | Command | Result |
-|---------|--------|
-| `pnpm lint:ci` | PASS — 20 warnings, 0 errors (unchanged) |
-| `pnpm typecheck` | PASS |
-| `pnpm build` | PASS — 34 routes + Proxy active, no deprecation warning |
+| --- | --- |
+| `pnpm run typecheck` | PASS |
+| `pnpm run lint:ci` | PASS — 20 warnings, 0 errors |
+| `pnpm run test:unit` | PASS — 40/40 tests |
+| `pnpm run build` | PASS — Next.js 16.1.1 build completed; sanitized Firebase Admin unavailable warnings only |
 
 ---
 
 ## Files Changed This Session
 
 | File | Action | Summary |
-|------|--------|---------|
-| `src/proxy.ts` | CREATED | IP sliding window rate limiter for /api/webhook + /api/notifications/send |
-| `docs/ai/STATE.md` | UPDATED | Session 2026-04-24 added |
-| `docs/ai/HANDOFF.md` | UPDATED | This file |
-| `docs/ai/recovery/current-state.json` | UPDATED | RISK-003 resolved |
-| `docs/ai/recovery/active-blockers.json` | UPDATED | RISK-003 removed |
-| `docs/ai/recovery/session-summary.md` | UPDATED | Session added |
-| `docs/ai/recovery/memory-delta.json` | UPDATED | New decisions/patterns |
-| `docs/ai/memory/DECISIONS.md` | UPDATED | DEC-005, DEC-006 added |
-| `docs/ai/memory/PATTERNS.md` | UPDATED | PAT-008 added |
-| `docs/ai/context/AGENT_EXECUTION_LEDGER.md` | UPDATED | Session block appended |
+| --- | --- | --- |
+| `.env.example` | CLEANED | Restored value-free Firebase Admin credential placeholder |
+| `.gitignore` | UPDATED | Keeps `.cursor/` broad ignore and intentionally ignores `openmemory.md` + `CLAUDE.md` |
+| `src/lib/firebase.ts` | UPDATED | Allows placeholder Firebase client config only during `next build`; runtime without public env now fails fast |
+| `docs/ai/STATE.md` | UPDATED | Current checklist, evidence, blockers, and validation status |
+| `docs/ai/CODEBASE_VALIDATION_REPORT.md` | UPDATED | Fresh validation evidence for this hardening pass |
+| `docs/ai/RISK_REGISTER.md` | UPDATED | Current validation date and clean-repo env hygiene note |
 
 ---
 
-## What PLAN should do next
+## What is still broken / blocked
 
-1. **Security**: Rotate old Firebase service account key + remove `service-account.json` from old repo git history (SEC-001 — CRITICAL residual)
+1. **Security**: Rotate old Firebase service account key and remove `service-account.json` from old repo git history (SEC-001 — CRITICAL residual)
 2. **Push**: Do not push the clean repo until explicitly approved
-3. **Deploy**: Configure runtime env vars before any Vercel redeploy
-4. **Test coverage**: Next safe task is RISK-008 — add integration tests for incidents service
+3. **GitHub repo**: Confirm final repo URL and private visibility before remote setup
+4. **Runtime config**: Configure public Firebase client env vars and server Firebase Admin credentials in deployment before running the app
 
 ---
 
@@ -129,6 +146,7 @@ RISK-003 (rate limiting) — **RESOLVED this session**.
 - **Reload Cursor** to activate all new MCP servers: `Ctrl+Shift+P` → `Developer: Reload Window`
 - Authenticate Vercel MCP on first use (OAuth prompt)
 - Verify all 4 servers appear in Cursor chat: "What MCP tools do you have available?"
+
 </contents>
 </invoke>
 

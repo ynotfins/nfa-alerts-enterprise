@@ -1,7 +1,7 @@
 # Risk Register — NFA Alerts
 
 **Generated**: 2026-04-23  
-**Last validated**: 2026-04-23 (AGENT Bootstrap session)
+**Last validated**: 2026-04-24 (pre-push Firebase env hygiene hardening)
 
 ---
 
@@ -10,7 +10,7 @@
 ### RISK-001: Firebase Admin SDK Private Key Committed to Git
 
 | Field | Value |
-|-------|-------|
+| --- | --- |
 | **Severity** | CRITICAL — Data Breach Risk |
 | **Status** | PARTIAL — clean repo code dependency fixed; old repo key rotation/history cleanup still required |
 | **Detected** | 2026-04-23 (AGENT Bootstrap session) |
@@ -23,6 +23,7 @@
 **Impact**: Anyone with access to the GitHub repo can extract the private key and gain admin-level Firebase access (Firestore full read/write, Auth admin, Storage admin, FCM send to all users).
 
 **Remediation (in order)**:
+
 1. **Rotate the key NOW** — Firebase Console → Project Settings → Service Accounts → Generate New Private Key → delete the old key
 2. Download the new key and store it securely (Secret Manager or env var as base64)
 3. Remove the committed file from git history: `git filter-repo --invert-paths --path service-account.json`
@@ -34,6 +35,8 @@
 
 **Clean repo Phase 1 status (2026-04-24)**: `D:/github/nfa-alerts-enterprise` no longer requires `service-account.json` in product code. Firebase Admin now uses server environment variables. This does **not** rotate the exposed old key or clean old repository history.
 
+**Pre-push hygiene status (2026-04-24)**: `.env.example` is value-free again after removing an uncommitted credential-like working-tree value. Client Firebase placeholder config is restricted to `next build`; real runtime now requires configured `NEXT_PUBLIC_FIREBASE_*` values.
+
 ---
 
 ## 🔴 HIGH — Security
@@ -41,7 +44,7 @@
 ### RISK-002: Overly Permissive Firestore Rules for Incidents
 
 | Field | Value |
-|-------|-------|
+| --- | --- |
 | **Severity** | HIGH |
 | **Status** | Partially mitigated (PR #12 deployed) |
 | **Evidence** | `firestore.rules:46 allow update: if isAuthenticated()` (pre-fix) |
@@ -53,7 +56,7 @@
 ### RISK-003: No Rate Limiting on API Routes
 
 | Field | Value |
-|-------|-------|
+| --- | --- |
 | **Severity** | HIGH |
 | **Status** | OPEN |
 | **Affected routes** | `/api/webhook`, `/api/notifications/send` |
@@ -64,7 +67,7 @@
 ### RISK-004: No CSRF Protection on Notification API
 
 | Field | Value |
-|-------|-------|
+| --- | --- |
 | **Severity** | MEDIUM |
 | **Status** | OPEN |
 | **Route** | `/api/notifications/send` |
@@ -76,7 +79,7 @@
 ### RISK-005: N+1 Query in Chat Notification Loop
 
 | Field | Value |
-|-------|-------|
+| --- | --- |
 | **Severity** | MEDIUM |
 | **Status** | OPEN |
 | **Evidence** | `src/services/chat.ts:213-221` — queries ALL supes on every message |
@@ -86,7 +89,7 @@
 ### RISK-006: No Pagination
 
 | Field | Value |
-|-------|-------|
+| --- | --- |
 | **Severity** | MEDIUM |
 | **Status** | OPEN |
 
@@ -99,7 +102,7 @@ Incident list hard-capped at 50. Chat loads all messages. No cursor-based pagina
 ### RISK-007: Dual Service Worker Registration
 
 | Field | Value |
-|-------|-------|
+| --- | --- |
 | **Severity** | MEDIUM |
 | **Status** | OPEN |
 | **Evidence** | `src/app/layout.tsx` registers both `/sw.js` and `/firebase-messaging-sw.js` |
@@ -109,7 +112,7 @@ Incident list hard-capped at 50. Chat loads all messages. No cursor-based pagina
 ### RISK-008: Near-Zero Test Coverage (~3%)
 
 | Field | Value |
-|-------|-------|
+| --- | --- |
 | **Severity** | MEDIUM |
 | **Status** | OPEN |
 | **Coverage** | Only webhook parser (40 tests). No incidents, chat, auth, components. |
@@ -137,7 +140,7 @@ Within budget (25) but need incremental resolution. See ENGINEERING_QUALITY.md r
 ## Closed / Mitigated
 
 | Risk | Resolution |
-|------|-----------|
+| --- | --- |
 | Full table scan in favorites (`getIncidentsWithNotes`) | Fixed Dec 1 2025 — collection group query |
 | OpenAI live API calls in tests | Fixed PR #9 — mocked with `tests/__mocks__/ai.ts` |
 | 28 lint errors | Fixed PR #8 — zero errors |

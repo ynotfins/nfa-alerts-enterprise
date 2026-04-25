@@ -65,6 +65,8 @@ logs/
 # local agent/tool state
 .cursor/
 .serena/
+openmemory.md
+CLAUDE.md
 
 # migration artifacts
 *.zip

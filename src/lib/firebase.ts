@@ -1,10 +1,29 @@
-import { initializeApp, getApps } from "firebase/app";
+import { initializeApp, getApps, type FirebaseOptions } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+} from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getMessaging, isSupported } from "firebase/messaging";
 
-const envFirebaseConfig = {
+const NEXT_PHASE_ENV_KEY = "NEXT_PHASE";
+const NEXT_PHASE_PRODUCTION_BUILD = "phase-production-build";
+
+const requiredFirebaseEnv = [
+  ["apiKey", "NEXT_PUBLIC_FIREBASE_API_KEY"],
+  ["authDomain", "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN"],
+  ["projectId", "NEXT_PUBLIC_FIREBASE_PROJECT_ID"],
+  ["storageBucket", "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET"],
+  ["messagingSenderId", "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"],
+  ["appId", "NEXT_PUBLIC_FIREBASE_APP_ID"],
+] as const;
+
+type FirebaseConfigKey = (typeof requiredFirebaseEnv)[number][0];
+type CompleteFirebaseConfig = Record<FirebaseConfigKey, string>;
+
+const envFirebaseConfig: Record<FirebaseConfigKey, string | undefined> = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
@@ -13,7 +32,7 @@ const envFirebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const fallbackFirebaseConfig = {
+const buildOnlyFirebaseConfig: FirebaseOptions = {
   apiKey: "build-placeholder-api-key",
   authDomain: "build-placeholder.firebaseapp.com",
   projectId: "build-placeholder",
@@ -22,15 +41,38 @@ const fallbackFirebaseConfig = {
   appId: "1:000000000000:web:0000000000000000000000",
 };
 
-const hasFirebaseConfig = Object.values(envFirebaseConfig).every(Boolean);
+const missingFirebaseEnvKeys = requiredFirebaseEnv
+  .filter(([configKey]) => !envFirebaseConfig[configKey])
+  .map(([, envKey]) => envKey);
 
-if (!hasFirebaseConfig && typeof window !== "undefined") {
-  throw new Error("Firebase client environment variables are not configured");
+const isBrowserRuntime = typeof window !== "undefined";
+const isNextProductionBuild =
+  !isBrowserRuntime &&
+  process.env[NEXT_PHASE_ENV_KEY] === NEXT_PHASE_PRODUCTION_BUILD;
+
+function hasCompleteFirebaseConfig(
+  config: Record<FirebaseConfigKey, string | undefined>,
+): config is CompleteFirebaseConfig {
+  return missingFirebaseEnvKeys.length === 0;
 }
 
-const firebaseConfig = hasFirebaseConfig
-  ? envFirebaseConfig
-  : fallbackFirebaseConfig;
+function getFirebaseConfig(): FirebaseOptions {
+  if (hasCompleteFirebaseConfig(envFirebaseConfig)) {
+    return envFirebaseConfig;
+  }
+
+  if (isNextProductionBuild) {
+    return buildOnlyFirebaseConfig;
+  }
+
+  throw new Error(
+    `Firebase client environment variables are not configured: ${missingFirebaseEnvKeys.join(
+      ", ",
+    )}. Set all NEXT_PUBLIC_FIREBASE_* values before running the app.`,
+  );
+}
+
+const firebaseConfig = getFirebaseConfig();
 
 const app =
   getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
