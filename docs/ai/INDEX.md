@@ -11,15 +11,17 @@ Central directory for all AI-assisted development documentation in NFA Alerts v2
 ### New to this project?
 
 1. Read [STATE.md](STATE.md) - Current project state and recent changes
-2. Read [CURSOR_MCP_AND_TOOLS.md](CURSOR_MCP_AND_TOOLS.md) - Available MCP servers
-3. Read [MCP_QUICK_REFERENCE.md](MCP_QUICK_REFERENCE.md) - Common commands
-4. Read [tabs/TAB_BOOTSTRAP_PROMPTS.md](tabs/TAB_BOOTSTRAP_PROMPTS.md) - Session setup
+2. Read [CLOUD_AGENTS.md](CLOUD_AGENTS.md) - Cursor Cloud Agent setup and validation
+3. Read [AGENT_OPERATING_MODE.md](AGENT_OPERATING_MODE.md) - Autonomous agent workflow policy
+4. Read [CURSOR_MCP_AND_TOOLS.md](CURSOR_MCP_AND_TOOLS.md) - Available MCP servers
+5. Read [MCP_QUICK_REFERENCE.md](MCP_QUICK_REFERENCE.md) - Common commands
 
 ### Starting a coding session?
 
 1. Check [STATE.md](STATE.md) for current blockers and progress
-2. Review [HANDOFF.md](HANDOFF.md) for immediate context
-3. Use bootstrap prompts from [tabs/TAB_BOOTSTRAP_PROMPTS.md](tabs/TAB_BOOTSTRAP_PROMPTS.md)
+2. Review [CLOUD_AGENTS.md](CLOUD_AGENTS.md) for Cloud Agent settings and commands
+3. Review [AGENT_OPERATING_MODE.md](AGENT_OPERATING_MODE.md) before implementation
+4. Review [HANDOFF.md](HANDOFF.md) for immediate context
 
 ---
 
@@ -52,6 +54,14 @@ Central directory for all AI-assisted development documentation in NFA Alerts v2
   - Pro tips for combining MCP servers
 
 ### Workflow & Processes
+
+- **[CLOUD_AGENTS.md](CLOUD_AGENTS.md)** - Cursor Cloud Agent readiness guide
+  - Dashboard settings
+  - Secrets and Bitwarden strategy
+  - Validation and troubleshooting
+
+- **[AGENT_OPERATING_MODE.md](AGENT_OPERATING_MODE.md)** - Autonomous agent operating policy
+  - Planning, decision, testing, PR, and secret handling rules
 
 - **[tabs/TAB_BOOTSTRAP_PROMPTS.md](tabs/TAB_BOOTSTRAP_PROMPTS.md)** - 5-tab model setup
   - PLAN, AGENT, DEBUG, ASK, ARCHIVE tab prompts

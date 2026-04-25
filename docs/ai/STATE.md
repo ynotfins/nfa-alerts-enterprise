@@ -1,12 +1,60 @@
 # NFA Alerts — AI State
 
 **Last updated**: 2026-04-25  
-**Session type**: AGENT Executioner — Development Environment Setup
-**Status**: COMPLETE — dependencies installed, dev server running, validation passed
+**Session type**: AGENT Executioner — Cloud Agent Readiness Hardening
+**Status**: IN PROGRESS — Cloud Agent docs and build wrapper added; validation pending
 
 ---
 
-## What happened this session (2026-04-25 — Development Environment Setup)
+## What happened this session (2026-04-25 — Cloud Agent Readiness Hardening)
+
+Audited and hardened this repo for future Cursor Cloud Agents:
+
+1. **Cloud readiness audit**: Confirmed the checked-out repo is `ynotfins/nfa-alerts-enterprise`, GitHub CLI is authenticated, Node `v22.22.2`, npm `10.9.7`, pnpm `10.33.0`, and current Cloud secrets expose `NODE_ENV=development` plus `PORT=3000`.
+2. **Tooling caveat**: MCP resources are not exposed in this Cloud session, and `firebase` CLI is not installed. Fallback used: repository inspection, Cursor docs, Bitwarden docs, GitHub CLI, and web research.
+3. **Build hardening**: Changed `pnpm run build` to run `scripts/next-build.mjs`, which removes only inherited `NODE_ENV=development` before delegating to framework-standard `next build`.
+4. **Environment template**: Removed `NODE_ENV` from `.env.example`; it should not be configured as an app secret.
+5. **Cloud Agent docs**: Added `docs/ai/CLOUD_AGENTS.md` with dashboard recommendations, required secrets, validation commands, MCP/plugin guidance, Bitwarden strategy, and troubleshooting.
+6. **Operating policy**: Added `docs/ai/AGENT_OPERATING_MODE.md` and root `AGENTS.md` so future Cloud Agents find repo-specific operating rules automatically.
+7. **Bitwarden workflow**: Added `scripts/with-bitwarden-env.sh`, a placeholder-only wrapper around `bws run --project-id "$BWS_PROJECT_ID"` that requires `BWS_ACCESS_TOKEN` and never prints secrets.
+8. **Docs alignment**: Updated `docs/ai/INDEX.md` to point at Cloud Agent docs and fixed stale web push env names in `docs/ai/SYSTEM_WIRING.md`.
+
+### Checklist
+
+- [x] Inspect current repo, git remote, Node/npm/pnpm versions, and exposed env caveats
+- [x] Confirm MCP resources unavailable in this session and record fallback path
+- [x] Research Cursor Cloud Agent setup/settings/Slack routing docs
+- [x] Research Bitwarden Secrets Manager CLI/access-token docs
+- [x] Add build wrapper for invalid inherited `NODE_ENV=development`
+- [x] Remove `NODE_ENV` from `.env.example`
+- [x] Add Cloud Agent setup docs
+- [x] Add autonomous operating mode docs
+- [x] Add Bitwarden wrapper
+- [ ] Run full validation suite after commit/push
+- [ ] Update PR
+
+### Evidence
+
+| Check | Result |
+| --- | --- |
+| `git remote -v` | PASS — origin points at `ynotfins/nfa-alerts-enterprise` |
+| `node --version && npm --version && pnpm --version` | PASS — `v22.22.2`, `10.9.7`, `10.33.0` |
+| `printf 'NODE_ENV=%s PORT=%s\n' "$NODE_ENV" "$PORT"` | WARN — Cloud secrets currently inject `NODE_ENV=development` |
+| `ListMcpResources` | WARN — no MCP resources exposed to this Cloud session |
+| `gh auth status` | PASS — GitHub CLI authenticated |
+| `firebase --version` | WARN — Firebase CLI not installed in this VM |
+
+### What is still broken / blocked
+
+1. **Manual dashboard setting**: Remove the `NODE_ENV` Cursor secret; the build wrapper prevents failure, but the secret remains incorrect for a Next.js repo.
+2. **Manual dashboard setting**: Set default repository to `ynotfins/nfa-alerts-enterprise`, base branch to `main`, and add routing keywords for this app.
+3. **MCP availability**: Context7/Firebase/Vercel/Playwright/shadcn/GitHub MCPs should be configured in Cursor dashboard or local Cursor settings; none are visible in this Cloud session.
+4. **Bitwarden**: Wrapper is ready, but real use requires manual `BWS_ACCESS_TOKEN` and `BWS_PROJECT_ID` secret setup.
+5. **Validation**: Full command suite is pending for this revision.
+
+---
+
+## Previous Session (2026-04-25 — Development Environment Setup)
 
 Set up and validated the local Cursor Cloud development environment for the Next.js app:
 
