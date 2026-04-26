@@ -1,12 +1,58 @@
 # NFA Alerts — AI State
 
-**Last updated**: 2026-04-25  
-**Session type**: AGENT Executioner — Cloud Agent Readiness Hardening
-**Status**: COMPLETE — Cloud Agent docs, build hardening, and validation passed
+**Last updated**: 2026-04-26  
+**Session type**: AGENT Executioner — Cloud/Bugbot/VPS Platform Hardening
+**Status**: COMPLETE — platform docs, scripts, CI, and validation passed
 
 ---
 
-## What happened this session (2026-04-25 — Cloud Agent Readiness Hardening)
+## What happened this session (2026-04-26 — Cloud/Bugbot/VPS Platform Hardening)
+
+Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
+
+1. **Bugbot rules**: Added `.cursor/BUGBOT.md` and `docs/ai/BUGBOT_RULES.md` focused on runtime errors, Next.js boundaries, API failures, Firebase issues, deployment risks, and secret leaks while avoiding style noise.
+2. **Cloud Agent hardening**: Updated `AGENTS.md` and `docs/ai/CLOUD_AGENTS.md` with exact dashboard steps, runtime/PORT behavior, production smoke tests, Bugbot activation, and My Machines guidance.
+3. **VPS setup**: Added `scripts/vps-hostinger-setup.sh`, `scripts/vps-deploy.sh`, and `docs/ai/VPS_HOSTINGER.md` for Ubuntu/Hostinger setup with Node.js 22, pnpm 10.33.0, nginx, PM2, UFW, env-file handling, deployment, restart, and logs.
+4. **CI automation**: Added `.github/workflows/ci.yml` to run install, typecheck, lint, unit tests, and build on PRs and pushes to `main`.
+5. **Runtime config**: Confirmed existing production scripts already force `NODE_ENV=production`; no build/start script changes were made in this pass.
+
+### Checklist
+
+- [x] Preserve verified `NODE_ENV` build/start wrappers
+- [x] Add Bugbot repo rules and activation instructions
+- [x] Add VPS setup/deploy scripts
+- [x] Add My Machines/self-hosted guidance
+- [x] Add GitHub Actions CI workflow
+- [x] Run validation commands
+- [x] Commit, push, and update PR
+
+### Evidence
+
+| Check | Result |
+| --- | --- |
+| `git status --short --branch` | PASS — on `cursor/setup-dev-environment-cc8b` |
+| `printf 'NODE_ENV=%s PORT=%s\n' "$NODE_ENV" "$PORT"` | WARN — Cloud still injects `NODE_ENV=development`; production scripts force production mode |
+| `bash -n scripts/vps-hostinger-setup.sh` | PASS |
+| `bash -n scripts/vps-deploy.sh` | PASS |
+| `bash -n scripts/with-bitwarden-env.sh` | PASS |
+| `pnpm install --frozen-lockfile` | PASS |
+| `pnpm run typecheck` | PASS |
+| `pnpm run lint:ci` | PASS — 20 warnings, 0 errors |
+| `pnpm run test:unit` | PASS — 40/40 tests |
+| `pnpm run build` | PASS — wrapper forced production mode despite injected `NODE_ENV=development` |
+| `curl -i http://127.0.0.1:3001/login` | PASS — `200 OK` from existing production server |
+
+### What is still broken / blocked
+
+1. **Manual UI action**: Bugbot must be enabled in Cursor/GitHub UI; repo files cannot authorize the GitHub app.
+2. **Manual UI action**: Cursor Cloud dashboard settings still need default repo/base branch/routing/secrets review.
+3. **Manual VPS action**: Hostinger server setup requires a real domain, DNS, runtime secrets, and optional HTTPS certificate installation.
+4. **My Machines**: Not recommended unless Cloud Agents need private-network/VPS-local access; enabling requires `agent login` or a team/service-account API key on the target machine.
+5. **Existing lint debt**: `lint:ci` passes inside the configured warning budget but still reports 20 pre-existing warnings.
+
+---
+
+## Previous Session (2026-04-25 — Cloud Agent Readiness Hardening)
 
 Audited and hardened this repo for future Cursor Cloud Agents:
 

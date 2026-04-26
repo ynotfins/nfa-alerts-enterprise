@@ -32,6 +32,19 @@ Recommended settings:
 
 If Slack is used, mention the repo explicitly for important tasks: `@Cursor in ynotfins/nfa-alerts-enterprise, ...`.
 
+Manual dashboard steps:
+
+1. Open Cursor Dashboard > Cloud Agents.
+2. Set Default repository to `ynotfins/nfa-alerts-enterprise`.
+3. Set Base branch to `main`.
+4. Keep Branch prefix as `cursor/`.
+5. Keep Create PRs as Always.
+6. Keep PR review destination as GitHub.
+7. Keep Network access as Allow all network access unless a production security policy requires allowlisting.
+8. Remove the `NODE_ENV` secret. Keep `PORT` only when a fixed port is required.
+9. Add routing keywords `nfa`, `nfa-alerts`, `firebase`, `incidents`, and `chasers` for this repository.
+10. If Slack is used, enable completion/failure notifications only; for solo dashboard-driven work, Slack can stay disabled.
+
 ## Required secrets
 
 Add real values through Cursor Cloud Agent Secrets or Bitwarden Secrets Manager. Do not commit `.env*` files with real values.
@@ -79,11 +92,22 @@ Validation before PR:
 - `pnpm run test:unit`
 - `pnpm run build`
 
+GitHub Actions runs the same validation on `main` and PRs through `.github/workflows/ci.yml`.
+
 Local app smoke test:
 
 - Start: `pnpm run dev --hostname 0.0.0.0 --port 3000`
 - Check: `curl -i http://127.0.0.1:3000/login`
 - Browser: use mobile viewport emulation; desktop intentionally shows "Mobile Only".
+
+Production smoke test:
+
+- Build: `pnpm run build`
+- Start on default port: `pnpm run start`
+- Start on alternate port when 3000 is busy: `PORT=3001 pnpm run start`
+- Check: `curl -i http://127.0.0.1:${PORT:-3000}/login`
+
+`PORT` is read by Next.js. If unset, Next.js uses port 3000. This repo does not require global env injection for build or start; production scripts force `NODE_ENV=production`.
 
 ## Recommended MCPs and plugins
 
@@ -103,6 +127,27 @@ Local app smoke test:
 | Serena / thinking-patterns | Optional if Cloud supports them | Useful for semantic code inspection and structured decisions, but not guaranteed in Cloud Agents. |
 
 If an MCP is unavailable in Cloud, announce it and use fallback search, repository inspection, and official web docs.
+
+## Bugbot setup
+
+Tracked rules:
+
+- `.cursor/BUGBOT.md` is the active Bugbot rules file.
+- `docs/ai/BUGBOT_RULES.md` mirrors the same priorities for human review and copy-paste.
+
+Enable Bugbot manually:
+
+1. Open Cursor Dashboard > Integrations.
+2. Connect GitHub or manage the existing GitHub connection.
+3. In GitHub, authorize the Cursor GitHub app for `ynotfins/nfa-alerts-enterprise`.
+4. Open Cursor Dashboard > Bugbot.
+5. Enable Bugbot for `ynotfins/nfa-alerts-enterprise`.
+6. Enable reviews on non-draft PRs; keep draft PR reviews off unless explicitly needed.
+7. Keep Autofix off until Bugbot review quality is proven on this repo.
+8. Merge `.cursor/BUGBOT.md` to `main`; Bugbot reads rules from the default branch.
+9. Open or update a PR.
+10. Verify Bugbot comments appear. To force a run, comment `cursor review` or `bugbot run` on the PR.
+11. If no review appears, comment `cursor review verbose=true` and use the returned request ID for troubleshooting.
 
 ## Bitwarden secrets strategy
 

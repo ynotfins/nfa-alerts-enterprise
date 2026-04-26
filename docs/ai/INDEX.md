@@ -13,15 +13,18 @@ Central directory for all AI-assisted development documentation in NFA Alerts v2
 1. Read [STATE.md](STATE.md) - Current project state and recent changes
 2. Read [CLOUD_AGENTS.md](CLOUD_AGENTS.md) - Cursor Cloud Agent setup and validation
 3. Read [AGENT_OPERATING_MODE.md](AGENT_OPERATING_MODE.md) - Autonomous agent workflow policy
-4. Read [CURSOR_MCP_AND_TOOLS.md](CURSOR_MCP_AND_TOOLS.md) - Available MCP servers
-5. Read [MCP_QUICK_REFERENCE.md](MCP_QUICK_REFERENCE.md) - Common commands
+4. Read [BUGBOT_RULES.md](BUGBOT_RULES.md) - Bugbot review focus and activation steps
+5. Read [VPS_HOSTINGER.md](VPS_HOSTINGER.md) - Hostinger VPS deployment and worker guidance
+6. Read [CURSOR_MCP_AND_TOOLS.md](CURSOR_MCP_AND_TOOLS.md) - Available MCP servers
+7. Read [MCP_QUICK_REFERENCE.md](MCP_QUICK_REFERENCE.md) - Common commands
 
 ### Starting a coding session?
 
 1. Check [STATE.md](STATE.md) for current blockers and progress
 2. Review [CLOUD_AGENTS.md](CLOUD_AGENTS.md) for Cloud Agent settings and commands
 3. Review [AGENT_OPERATING_MODE.md](AGENT_OPERATING_MODE.md) before implementation
-4. Review [HANDOFF.md](HANDOFF.md) for immediate context
+4. Review [BUGBOT_RULES.md](BUGBOT_RULES.md) before PR-impacting changes
+5. Review [HANDOFF.md](HANDOFF.md) for immediate context
 
 ---
 
