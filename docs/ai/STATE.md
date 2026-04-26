@@ -12,13 +12,14 @@ Audited and hardened this repo for future Cursor Cloud Agents:
 
 1. **Cloud readiness audit**: Confirmed the checked-out repo is `ynotfins/nfa-alerts-enterprise`, GitHub CLI is authenticated, Node `v22.22.2`, npm `10.9.7`, pnpm `10.33.0`, and current Cloud secrets expose `NODE_ENV=development` plus `PORT=3000`.
 2. **Tooling caveat**: MCP resources are not exposed in this Cloud session, and `firebase` CLI is not installed. Fallback used: repository inspection, Cursor docs, Bitwarden docs, GitHub CLI, and web research.
-3. **Build hardening**: Changed `pnpm run build` to run `scripts/next-build.mjs`, which removes only inherited `NODE_ENV=development` before delegating to framework-standard `next build`.
+3. **Build hardening**: Changed `pnpm run build` to run `scripts/next-build.mjs`, which explicitly runs `next build` with `NODE_ENV=production` even when Cursor injects `NODE_ENV=development`.
 4. **Environment template**: Removed `NODE_ENV` from `.env.example`; it should not be configured as an app secret.
 5. **Cloud Agent docs**: Added `docs/ai/CLOUD_AGENTS.md` with dashboard recommendations, required secrets, validation commands, MCP/plugin guidance, Bitwarden strategy, and troubleshooting.
 6. **Operating policy**: Added `docs/ai/AGENT_OPERATING_MODE.md` and root `AGENTS.md` so future Cloud Agents find repo-specific operating rules automatically.
 7. **Bitwarden workflow**: Added `scripts/with-bitwarden-env.sh`, a placeholder-only wrapper around `bws run --project-id "$BWS_PROJECT_ID"` that requires `BWS_ACCESS_TOKEN` and never prints secrets.
 8. **Docs alignment**: Updated `docs/ai/INDEX.md` to point at Cloud Agent docs and fixed stale web push env names in `docs/ai/SYSTEM_WIRING.md`.
 9. **Validation**: Full install/typecheck/lint/test/build suite passed with the Cloud environment still injecting `NODE_ENV=development`, proving `pnpm run build` now handles that bad secret safely.
+10. **Production start hardening**: Added `scripts/next-start.mjs` so `pnpm run start` also serves with `NODE_ENV=production` instead of inheriting the bad Cloud value.
 
 ### Checklist
 
@@ -48,7 +49,9 @@ Audited and hardened this repo for future Cursor Cloud Agents:
 | `pnpm run typecheck` | PASS |
 | `pnpm run lint:ci` | PASS — 20 warnings, 0 errors |
 | `pnpm run test:unit` | PASS — 40/40 tests |
-| `pnpm run build` | PASS — wrapper ignored inherited `NODE_ENV=development`; Next.js build completed |
+| `pnpm run build` | PASS — wrapper forced `NODE_ENV=production`; Next.js build completed |
+| `PORT=3001 pnpm run start` | PASS — wrapper forced `NODE_ENV=production`; Next.js production server ready |
+| `curl -i http://127.0.0.1:3001/login` | PASS — `200 OK` from production server |
 | `bash -n scripts/with-bitwarden-env.sh` | PASS |
 
 ### What is still broken / blocked

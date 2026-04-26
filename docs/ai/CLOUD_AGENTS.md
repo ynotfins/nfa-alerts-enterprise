@@ -63,7 +63,7 @@ Optional by feature:
 - `NEXT_PUBLIC_CONVEX_URL` only if Convex code is restored
 - `PORT` only for process managers that require a fixed port
 
-Do not set `NODE_ENV` as a Cursor secret. Next.js sets it correctly for `dev`, `build`, and `start`. A previous Cloud secret set `NODE_ENV=development`, which broke `next build`; `pnpm run build` now strips only that invalid value before delegating to `next build`.
+Do not set `NODE_ENV` as a Cursor secret. `pnpm run dev` keeps normal development behavior, while `pnpm run build` and `pnpm run start` explicitly run Next.js with `NODE_ENV=production` so injected Cloud secrets cannot force production commands into development mode.
 
 ## Update and validation commands
 
@@ -140,7 +140,7 @@ Never commit secrets or `.env*` files.
 
 - Dashboard setup appears incomplete: verify an agent can launch, dependencies install, and validation commands pass. If yes, treat it as onboarding-state drift unless future agents fail to start.
 - Wrong repo selected: set dashboard default repo to this repo and add routing keywords.
-- Build sees `NODE_ENV=development`: remove the Cursor secret. The build wrapper prevents failure, but the secret should still not exist.
+- Build/start sees `NODE_ENV=development`: remove the Cursor secret. The wrappers force production mode for production commands, but the secret should still not exist.
 - Firebase Admin warnings during build: acceptable when credentials are absent; runtime admin features need real secrets.
 - Desktop browser shows "Mobile Only": expected. Use mobile viewport emulation.
 - MCP unavailable: document the degraded tool and use fallback web/repo search.
