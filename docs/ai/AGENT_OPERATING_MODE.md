@@ -41,6 +41,9 @@ For UI changes, also run the app and capture browser evidence.
 - Keep PRs small enough to review.
 - Include test results and known caveats in the PR body.
 - Do not batch unrelated work into the same commit.
+- When Bugbot, Qodo, CI, or human review reports issues on an agent-owned PR, push focused follow-up commits to the same branch until CI passes and no critical issues remain.
+- Low-severity review comments do not block merge when CI passes, no secrets are exposed, and the PR summary documents why the residual risk is acceptable.
+- Use `docs/ai/AUTONOMOUS_PR_FIXING.md` as the merge-readiness policy.
 
 ## Secret policy
 

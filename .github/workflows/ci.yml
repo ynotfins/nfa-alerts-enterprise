@@ -6,6 +6,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -38,3 +41,105 @@ jobs:
 
       - name: Build
         run: pnpm run build
+
+  pr-readiness:
+    if: always() && github.event_name == 'pull_request'
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Comment PR readiness
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pull_number = context.payload.pull_request.number;
+            const pr = context.payload.pull_request;
+            const ciPassed = "${{ needs.validate.result }}" === "success";
+
+            const labels = pr.labels.map((label) => label.name.toLowerCase());
+            const blockingLabels = [
+              "blocker",
+              "critical",
+              "do-not-merge",
+              "high",
+              "needs-fix",
+              "needs fixes",
+              "security",
+              "severity:high",
+              "severity:critical",
+              "bugbot:high",
+              "bugbot:critical",
+              "qodo:high",
+              "qodo:critical",
+            ];
+            const lowLabels = [
+              "low",
+              "severity:low",
+              "bugbot:low",
+              "qodo:low",
+            ];
+
+            const hasBlockingLabel = labels.some((label) =>
+              blockingLabels.includes(label),
+            );
+            const onlyLowSeverity =
+              labels.length > 0 &&
+              labels.every((label) => lowLabels.includes(label));
+
+            const marker = "<!-- nfa-pr-readiness -->";
+            const safeToMerge = ciPassed && !hasBlockingLabel;
+            const statusLine = safeToMerge
+              ? "✅ Safe to merge after required approvals."
+              : "❌ Needs fixes before merge.";
+            const lowSeverityLine = onlyLowSeverity
+              ? "\n\nLow-severity review labels are present only; they do not block merge by repo policy."
+              : "";
+            const body = `${marker}
+            ### PR readiness
+            ${statusLine}
+
+            - CI validation: ${ciPassed ? "passed" : "failed or incomplete"}
+            - Critical/high/blocking labels: ${hasBlockingLabel ? "present" : "none"}
+            - Policy: low-severity-only issues do not block merge
+
+            If Bugbot or Qodo reports critical or high-confidence runtime/security issues, push a follow-up commit on this same PR before merging.${lowSeverityLine}`;
+
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number: pull_number, per_page: 100 },
+            );
+            const existing = comments.find((comment) =>
+              comment.body?.includes(marker),
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pull_number,
+                body,
+              });
+            }
+
+            if (safeToMerge && pr.draft) {
+              await github.graphql(
+                `mutation($pullRequestId: ID!) {
+                  markPullRequestReadyForReview(input: { pullRequestId: $pullRequestId }) {
+                    pullRequest { number }
+                  }
+                }`,
+                { pullRequestId: pr.node_id },
+              );
+            }

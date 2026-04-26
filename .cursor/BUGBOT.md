@@ -19,6 +19,8 @@ Avoid noise:
 - Do not request broad refactors when a focused fix is safer.
 - Do not flag missing tests unless the changed behavior is risky, user-facing, security-sensitive, or hard to validate manually.
 - Do not duplicate comments already made by humans or CI.
+- Mark low-severity issues as non-blocking when CI passes and the issue is not a runtime, data, security, deployment, Firebase, or API correctness risk.
+- Treat critical issues as blocking until fixed by a follow-up commit on the same PR branch.
 
 Expected validation for meaningful code changes:
 

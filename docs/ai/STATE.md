@@ -2,7 +2,7 @@
 
 **Last updated**: 2026-04-26  
 **Session type**: AGENT Executioner — Cloud/Bugbot/VPS Platform Hardening
-**Status**: COMPLETE — deployment consistency hardened and validation passed
+**Status**: COMPLETE — autonomous PR fixing workflow documented and validation passed
 
 ---
 
@@ -18,6 +18,7 @@ Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
 6. **VPS env loading fix**: Updated PM2 to start Next.js through `node -r dotenv/config` with `DOTENV_CONFIG_PATH=.env.production.local`, moved `dotenv` to runtime dependencies, and made deploy fail before build/restart when required env keys are absent.
 7. **Graceful shutdown fix**: Replaced `scripts/next-start.mjs` `spawnSync` usage with `spawn`, signal forwarding for `SIGINT`/`SIGTERM`, and child cleanup on wrapper exit so PM2 stops do not leave orphaned Next.js children.
 8. **Deployment consistency**: Added `packageManager: pnpm@10.33.0`, pinned the VPS setup script to pnpm `10.33.0`, added deploy-time pnpm mismatch warnings, and rejected placeholder nginx `server_name` values.
+9. **Autonomous PR convergence**: Added `docs/ai/AUTONOMOUS_PR_FIXING.md`, updated agent/Bugbot rules, and extended CI with a PR readiness comment that reports safe-to-merge vs needs-fixes and marks draft PRs ready when CI passes and no blocking labels are present.
 
 ### Checklist
 
@@ -32,6 +33,8 @@ Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
 - [x] Pin pnpm version for local, CI, and VPS consistency
 - [x] Reject placeholder nginx domains in VPS setup
 - [x] Warn on pnpm version mismatch during VPS deploy
+- [x] Add autonomous Bugbot/Qodo follow-up fix policy
+- [x] Add PR readiness comment automation
 - [x] Run validation commands
 - [x] Commit, push, and update PR
 
@@ -52,6 +55,8 @@ Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
 | `pnpm run build` | PASS — wrapper forced production mode despite injected `NODE_ENV=development` |
 | `PORT=3002 pnpm run start` + `SIGTERM` to wrapper PID | PASS — wrapper exited `143`; child PID terminated; no orphan remained |
 | `bash -n scripts/vps-hostinger-setup.sh && bash -n scripts/vps-deploy.sh && pnpm install --frozen-lockfile && pnpm run build` | PASS — after pnpm pin and deploy consistency checks |
+| `pnpm dlx prettier --check .github/workflows/ci.yml` | PASS — workflow YAML parsed/formatted |
+| `pnpm install --frozen-lockfile && pnpm run typecheck && pnpm run lint:ci && pnpm run test:unit && pnpm run build` | PASS — after PR readiness automation |
 | `curl -i http://127.0.0.1:3001/login` | PASS — `200 OK` from existing production server |
 
 ### What is still broken / blocked
@@ -61,6 +66,7 @@ Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
 3. **Manual VPS action**: Hostinger server setup requires a real domain, DNS, runtime secrets in `.env.production.local`, and optional HTTPS certificate installation.
 4. **My Machines**: Not recommended unless Cloud Agents need private-network/VPS-local access; enabling requires `agent login` or a team/service-account API key on the target machine.
 5. **Existing lint debt**: `lint:ci` passes inside the configured warning budget but still reports 20 pre-existing warnings.
+6. **External automation**: Actual Bugbot/Qodo AI follow-up commits require those services to be enabled with write/autofix permissions; repo code now supplies policy, CI, and readiness comments.
 
 ---
 

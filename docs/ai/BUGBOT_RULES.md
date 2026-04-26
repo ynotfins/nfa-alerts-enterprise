@@ -12,6 +12,8 @@ Bugbot must focus on production defects, not style noise:
 - Flag PWA/mobile breakage that prevents `/login`, signup, incident detail, notifications, or route planning from rendering on mobile viewport.
 - Ignore formatting-only changes, minor lint nits, import ordering, naming preferences, and harmless refactors unless they create a concrete bug.
 - Prefer concise findings with file path, line, impact, and a fix recommendation.
+- Severity policy: critical/high findings block merge; low severity findings should not block merge when CI passes.
+- Autonomous fix policy: Bugbot/Qodo/Cursor follow-up agents should fix critical/high findings in follow-up commits on the same PR and rerun validation.
 
 Manual activation notes:
 
