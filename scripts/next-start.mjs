@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 
 if (process.env.NODE_ENV === "development") {
   console.warn(
@@ -7,7 +7,7 @@ if (process.env.NODE_ENV === "development") {
 }
 
 const command = process.platform === "win32" ? "next.cmd" : "next";
-const result = spawnSync(command, ["start"], {
+const child = spawn(command, ["start"], {
   env: {
     ...process.env,
     NODE_ENV: "production",
@@ -16,4 +16,38 @@ const result = spawnSync(command, ["start"], {
   stdio: "inherit",
 });
 
-process.exit(result.status ?? 1);
+let shuttingDown = false;
+
+function forwardSignal(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  child.kill(signal);
+}
+
+process.on("SIGINT", () => forwardSignal("SIGINT"));
+process.on("SIGTERM", () => forwardSignal("SIGTERM"));
+
+process.on("exit", () => {
+  if (!child.killed) {
+    child.kill("SIGTERM");
+  }
+});
+
+const signalExitCodes = {
+  SIGINT: 130,
+  SIGTERM: 143,
+};
+
+child.on("exit", (code, signal) => {
+  if (signal) {
+    process.exit(signalExitCodes[signal] ?? 1);
+    return;
+  }
+
+  process.exit(code ?? 1);
+});
+
+child.on("error", (error) => {
+  console.error(error);
+  process.exit(1);
+});
