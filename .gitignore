@@ -64,6 +64,8 @@ logs/
 
 # local agent/tool state
 .cursor/
+!.cursor/
+!.cursor/BUGBOT.md
 .serena/
 openmemory.md
 CLAUDE.md

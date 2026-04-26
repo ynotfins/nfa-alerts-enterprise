@@ -1,12 +1,190 @@
 # NFA Alerts — AI State
 
-**Last updated**: 2026-04-25  
-**Session type**: AGENT Executioner — GitHub Repository Setup
-**Status**: COMPLETE — clean repository successfully published to private GitHub repo
+**Last updated**: 2026-04-26  
+**Session type**: AGENT Executioner — Cloud/Bugbot/VPS Platform Hardening
+**Status**: COMPLETE — safe auto-merge workflow added and validation passed
 
 ---
 
-## What happened this session (2026-04-25)
+## What happened this session (2026-04-26 — Cloud/Bugbot/VPS Platform Hardening)
+
+Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
+
+1. **Bugbot rules**: Added `.cursor/BUGBOT.md` and `docs/ai/BUGBOT_RULES.md` focused on runtime errors, Next.js boundaries, API failures, Firebase issues, deployment risks, and secret leaks while avoiding style noise.
+2. **Cloud Agent hardening**: Updated `AGENTS.md` and `docs/ai/CLOUD_AGENTS.md` with exact dashboard steps, runtime/PORT behavior, production smoke tests, Bugbot activation, and My Machines guidance.
+3. **VPS setup**: Added `scripts/vps-hostinger-setup.sh`, `scripts/vps-deploy.sh`, and `docs/ai/VPS_HOSTINGER.md` for Ubuntu/Hostinger setup with Node.js 22, pnpm 10.33.0, nginx, PM2, UFW, env-file handling, deployment, restart, and logs.
+4. **CI automation**: Added `.github/workflows/ci.yml` to run install, typecheck, lint, unit tests, and build on PRs and pushes to `main`.
+5. **Runtime config**: Confirmed existing production scripts already force `NODE_ENV=production`; no build/start script changes were made in this pass.
+6. **VPS env loading fix**: Updated PM2 to start Next.js through `node -r dotenv/config` with `DOTENV_CONFIG_PATH=.env.production.local`, moved `dotenv` to runtime dependencies, and made deploy fail before build/restart when required env keys are absent.
+7. **Graceful shutdown fix**: Replaced `scripts/next-start.mjs` `spawnSync` usage with `spawn`, signal forwarding for `SIGINT`/`SIGTERM`, and child cleanup on wrapper exit so PM2 stops do not leave orphaned Next.js children.
+8. **Deployment consistency**: Added `packageManager: pnpm@10.33.0`, pinned the VPS setup script to pnpm `10.33.0`, added deploy-time pnpm mismatch warnings, and rejected placeholder nginx `server_name` values.
+9. **Autonomous PR convergence**: Added `docs/ai/AUTONOMOUS_PR_FIXING.md`, updated agent/Bugbot rules, and extended CI with a PR readiness comment that reports safe-to-merge vs needs-fixes and marks draft PRs ready when CI passes and no blocking labels are present.
+10. **Safe auto-merge**: Added a PR-only auto-merge job that runs after CI passes, skips drafts, verifies merge state is not dirty/unknown, and enables squash auto-merge with the GitHub CLI.
+
+### Checklist
+
+- [x] Preserve verified `NODE_ENV` build/start wrappers
+- [x] Add Bugbot repo rules and activation instructions
+- [x] Add VPS setup/deploy scripts
+- [x] Add My Machines/self-hosted guidance
+- [x] Add GitHub Actions CI workflow
+- [x] Ensure PM2 production start loads `.env.production.local`
+- [x] Ensure VPS deploy fails when `.env.production.local` is missing or incomplete
+- [x] Ensure production start wrapper forwards shutdown signals
+- [x] Pin pnpm version for local, CI, and VPS consistency
+- [x] Reject placeholder nginx domains in VPS setup
+- [x] Warn on pnpm version mismatch during VPS deploy
+- [x] Add autonomous Bugbot/Qodo follow-up fix policy
+- [x] Add PR readiness comment automation
+- [x] Add safe squash auto-merge job for non-draft, conflict-free PRs after CI passes
+- [x] Run validation commands
+- [x] Commit, push, and update PR
+
+### Evidence
+
+| Check | Result |
+| --- | --- |
+| `git status --short --branch` | PASS — on `cursor/setup-dev-environment-cc8b` |
+| `printf 'NODE_ENV=%s PORT=%s\n' "$NODE_ENV" "$PORT"` | WARN — Cloud still injects `NODE_ENV=development`; production scripts force production mode |
+| `bash -n scripts/vps-hostinger-setup.sh` | PASS |
+| `bash -n scripts/vps-deploy.sh` | PASS |
+| `bash -n scripts/with-bitwarden-env.sh` | PASS |
+| `pm2 --version` | WARN — PM2 is installed by the VPS setup script but not present in this Cloud VM |
+| `pnpm install --frozen-lockfile` | PASS |
+| `pnpm run typecheck` | PASS |
+| `pnpm run lint:ci` | PASS — 20 warnings, 0 errors |
+| `pnpm run test:unit` | PASS — 40/40 tests |
+| `pnpm run build` | PASS — wrapper forced production mode despite injected `NODE_ENV=development` |
+| `PORT=3002 pnpm run start` + `SIGTERM` to wrapper PID | PASS — wrapper exited `143`; child PID terminated; no orphan remained |
+| `bash -n scripts/vps-hostinger-setup.sh && bash -n scripts/vps-deploy.sh && pnpm install --frozen-lockfile && pnpm run build` | PASS — after pnpm pin and deploy consistency checks |
+| `pnpm dlx prettier --check .github/workflows/ci.yml` | PASS — workflow YAML parsed/formatted |
+| `pnpm install --frozen-lockfile && pnpm run typecheck && pnpm run lint:ci && pnpm run test:unit && pnpm run build` | PASS — after PR readiness automation |
+| `pnpm dlx prettier --check .github/workflows/ci.yml && pnpm install --frozen-lockfile && pnpm run build` | PASS — after safe auto-merge job |
+| `curl -i http://127.0.0.1:3001/login` | PASS — `200 OK` from existing production server |
+
+### What is still broken / blocked
+
+1. **Manual UI action**: Bugbot must be enabled in Cursor/GitHub UI; repo files cannot authorize the GitHub app.
+2. **Manual UI action**: Cursor Cloud dashboard settings still need default repo/base branch/routing/secrets review.
+3. **Manual VPS action**: Hostinger server setup requires a real domain, DNS, runtime secrets in `.env.production.local`, and optional HTTPS certificate installation.
+4. **My Machines**: Not recommended unless Cloud Agents need private-network/VPS-local access; enabling requires `agent login` or a team/service-account API key on the target machine.
+5. **Existing lint debt**: `lint:ci` passes inside the configured warning budget but still reports 20 pre-existing warnings.
+6. **External automation**: Actual Bugbot/Qodo AI follow-up commits require those services to be enabled with write/autofix permissions; repo code now supplies policy, CI, and readiness comments.
+
+---
+
+## Previous Session (2026-04-25 — Cloud Agent Readiness Hardening)
+
+Audited and hardened this repo for future Cursor Cloud Agents:
+
+1. **Cloud readiness audit**: Confirmed the checked-out repo is `ynotfins/nfa-alerts-enterprise`, GitHub CLI is authenticated, Node `v22.22.2`, npm `10.9.7`, pnpm `10.33.0`, and current Cloud secrets expose `NODE_ENV=development` plus `PORT=3000`.
+2. **Tooling caveat**: MCP resources are not exposed in this Cloud session, and `firebase` CLI is not installed. Fallback used: repository inspection, Cursor docs, Bitwarden docs, GitHub CLI, and web research.
+3. **Build hardening**: Changed `pnpm run build` to run `scripts/next-build.mjs`, which explicitly runs `next build` with `NODE_ENV=production` even when Cursor injects `NODE_ENV=development`.
+4. **Environment template**: Removed `NODE_ENV` from `.env.example`; it should not be configured as an app secret.
+5. **Cloud Agent docs**: Added `docs/ai/CLOUD_AGENTS.md` with dashboard recommendations, required secrets, validation commands, MCP/plugin guidance, Bitwarden strategy, and troubleshooting.
+6. **Operating policy**: Added `docs/ai/AGENT_OPERATING_MODE.md` and root `AGENTS.md` so future Cloud Agents find repo-specific operating rules automatically.
+7. **Bitwarden workflow**: Added `scripts/with-bitwarden-env.sh`, a placeholder-only wrapper around `bws run --project-id "$BWS_PROJECT_ID"` that requires `BWS_ACCESS_TOKEN` and never prints secrets.
+8. **Docs alignment**: Updated `docs/ai/INDEX.md` to point at Cloud Agent docs and fixed stale web push env names in `docs/ai/SYSTEM_WIRING.md`.
+9. **Validation**: Full install/typecheck/lint/test/build suite passed with the Cloud environment still injecting `NODE_ENV=development`, proving `pnpm run build` now handles that bad secret safely.
+10. **Production start hardening**: Added `scripts/next-start.mjs` so `pnpm run start` also serves with `NODE_ENV=production` instead of inheriting the bad Cloud value.
+
+### Checklist
+
+- [x] Inspect current repo, git remote, Node/npm/pnpm versions, and exposed env caveats
+- [x] Confirm MCP resources unavailable in this session and record fallback path
+- [x] Research Cursor Cloud Agent setup/settings/Slack routing docs
+- [x] Research Bitwarden Secrets Manager CLI/access-token docs
+- [x] Add build wrapper for invalid inherited `NODE_ENV=development`
+- [x] Remove `NODE_ENV` from `.env.example`
+- [x] Add Cloud Agent setup docs
+- [x] Add autonomous operating mode docs
+- [x] Add Bitwarden wrapper
+- [x] Run full validation suite after commit/push
+- [x] Update PR
+
+### Evidence
+
+| Check | Result |
+| --- | --- |
+| `git remote -v` | PASS — origin points at `ynotfins/nfa-alerts-enterprise` |
+| `node --version && npm --version && pnpm --version` | PASS — `v22.22.2`, `10.9.7`, `10.33.0` |
+| `printf 'NODE_ENV=%s PORT=%s\n' "$NODE_ENV" "$PORT"` | WARN — Cloud secrets currently inject `NODE_ENV=development` |
+| `ListMcpResources` | WARN — no MCP resources exposed to this Cloud session |
+| `gh auth status` | PASS — GitHub CLI authenticated |
+| `firebase --version` | WARN — Firebase CLI not installed in this VM |
+| `pnpm install --frozen-lockfile` | PASS |
+| `pnpm run typecheck` | PASS |
+| `pnpm run lint:ci` | PASS — 20 warnings, 0 errors |
+| `pnpm run test:unit` | PASS — 40/40 tests |
+| `pnpm run build` | PASS — wrapper forced `NODE_ENV=production`; Next.js build completed |
+| `PORT=3001 pnpm run start` | PASS — wrapper forced `NODE_ENV=production`; Next.js production server ready |
+| `curl -i http://127.0.0.1:3001/login` | PASS — `200 OK` from production server |
+| `bash -n scripts/with-bitwarden-env.sh` | PASS |
+
+### What is still broken / blocked
+
+1. **Manual dashboard setting**: Remove the `NODE_ENV` Cursor secret; the build wrapper prevents failure, but the secret remains incorrect for a Next.js repo.
+2. **Manual dashboard setting**: Set default repository to `ynotfins/nfa-alerts-enterprise`, base branch to `main`, and add routing keywords for this app.
+3. **MCP availability**: Context7/Firebase/Vercel/Playwright/shadcn/GitHub MCPs should be configured in Cursor dashboard or local Cursor settings; none are visible in this Cloud session.
+4. **Bitwarden**: Wrapper is ready, but real use requires manual `BWS_ACCESS_TOKEN` and `BWS_PROJECT_ID` secret setup.
+5. **Existing lint debt**: `lint:ci` passes inside the configured warning budget but still reports 20 pre-existing warnings.
+
+---
+
+## Previous Session (2026-04-25 — Development Environment Setup)
+
+Set up and validated the local Cursor Cloud development environment for the Next.js app:
+
+1. **Dependency install**: Ran `pnpm install --frozen-lockfile` with pnpm 10.33.0; 1056 packages installed from `pnpm-lock.yaml`.
+2. **Toolchain verified**: Node `v22.22.2`, npm `10.9.7`, Corepack `0.34.6`, pnpm `10.33.0`.
+3. **Static validation**: `pnpm run typecheck` passed; `pnpm run lint:ci` passed with the existing 20 warnings and 0 errors.
+4. **Unit validation**: `pnpm run test:unit` passed with 40/40 tests.
+5. **Production build**: `env -u NODE_ENV pnpm run build` passed. A first build attempt failed because the persisted shell had `NODE_ENV=development`, which Next.js warns is invalid for `next build`; unsetting it let Next set production mode correctly.
+6. **Dev server**: Started `pnpm run dev --hostname 0.0.0.0 --port 3000` in tmux session `nfa-next-dev` with non-secret local Firebase placeholder values.
+7. **HTTP verification**: Confirmed `/` returns `307` to `/login`; confirmed `/login` returns `200`.
+8. **Browser verification**: Confirmed the app intentionally shows the desktop "Mobile Only" screen and renders the NFA Alerts sign-in form under mobile viewport emulation.
+
+**Walkthrough artifacts**:
+
+- `/opt/cursor/artifacts/next_dev_login_page_running.mp4`
+- `/opt/cursor/artifacts/nfa_login_mobile_dev.webp`
+
+### Checklist
+
+- [x] Read setup files: `package.json`, `README.md`, `.env.example`, `next.config.ts`, `tsconfig.json`
+- [x] Installed dependencies from lockfile
+- [x] Ran TypeScript validation
+- [x] Ran ESLint CI validation
+- [x] Ran unit tests
+- [x] Ran production build with a clean `NODE_ENV`
+- [x] Started the dev app
+- [x] Verified HTTP responses
+- [x] Captured browser walkthrough evidence
+- [x] Left dev server running for follow-up testing
+
+### Evidence
+
+| Check | Result |
+| --- | --- |
+| `pnpm install --frozen-lockfile` | PASS |
+| `pnpm run typecheck` | PASS |
+| `pnpm run lint:ci` | PASS — 20 warnings, 0 errors |
+| `pnpm run test:unit` | PASS — 40/40 tests |
+| `env -u NODE_ENV pnpm run build` | PASS — build completed; Firebase Admin credentials unavailable warnings only |
+| `curl -i http://127.0.0.1:3000/` | PASS — `307 Temporary Redirect` to `/login` |
+| `curl -i http://127.0.0.1:3000/login` | PASS — `200 OK` |
+| Browser walkthrough | PASS — mobile login page rendered |
+
+### What is still broken / blocked
+
+1. **Runtime credentials**: Real Firebase client/admin credentials are not configured in this Cloud VM; the dev server was started with non-secret public Firebase placeholder values only to prove the app boots and renders.
+2. **Shell environment caveat**: Do not run `next build` with `NODE_ENV=development`; use `env -u NODE_ENV pnpm run build` if the shell has a persisted `NODE_ENV`.
+3. **Existing lint debt**: `lint:ci` passes inside the configured warning budget but still reports 20 pre-existing warnings.
+4. **Security blocker remains**: Old repo Firebase service-account key rotation/history cleanup from SEC-001 remains a human-owned blocker.
+
+---
+
+## Previous Session (2026-04-25 — GitHub Repository Setup)
 
 Successfully published the clean NFA Alerts Enterprise repository to GitHub with comprehensive security validation:
 

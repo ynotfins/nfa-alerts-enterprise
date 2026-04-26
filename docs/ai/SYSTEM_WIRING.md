@@ -191,9 +191,7 @@ public/android.apk
 | `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Client | firebase.ts |
 | `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Client | firebase.ts |
 | `NEXT_PUBLIC_FIREBASE_APP_ID` | Client | firebase.ts |
-| `NEXT_PUBLIC_FIREBASE_VAPID_KEY` | Client | use-push-notifications.ts |
+| `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY` | Client | use-push-notifications.ts, use-permissions.ts |
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Client | google-maps-provider.tsx |
 | `OPENAI_API_KEY` | Server | webhook/parser.ts |
 | `WEBHOOK_AUTH_TOKEN` | Server | api/webhook/route.ts |
-| `VAPID_PUBLIC_KEY` | Server | notifications |
-| `VAPID_PRIVATE_KEY` | Server | notifications |
