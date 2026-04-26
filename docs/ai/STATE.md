@@ -1,8 +1,37 @@
 # NFA Alerts — AI State
 
-**Last updated**: 2026-04-25  
-**Session type**: AGENT Executioner — GitHub Repository Setup
-**Status**: COMPLETE — clean repository successfully published to private GitHub repo
+**Last updated**: 2026-04-26  
+**Session type**: AGENT Executioner — Environment Template Cleanup
+**Status**: COMPLETE — removed saved NODE_ENV entry from env template
+
+---
+
+## What happened this session (2026-04-26)
+
+Removed the saved `NODE_ENV` entry from `.env.example` so the project no longer persists that variable in its checked-in environment template.
+
+### Checklist
+
+- [x] Searched the workspace for `NODE_ENV`
+- [x] Confirmed the only saved env entry was in `.env.example`
+- [x] Removed `NODE_ENV=` from `.env.example`
+- [x] Kept runtime `process.env.NODE_ENV` checks in application code unchanged
+- [x] Updated `docs/ai/STATE.md` with checklist, evidence, and remaining impact
+
+### Evidence
+
+- `rg \bNODE_ENV\b /workspace` initially matched:
+  - `.env.example`
+  - `src/app/(dashboard)/dev-tools/page.tsx`
+  - `src/components/pwa-install-prompt.tsx`
+- Only `.env.example` contained a saved environment variable entry: `NODE_ENV=`
+- Application references remain code-only and are expected runtime/build checks, not persisted secrets/config
+
+### What is still broken / unaffected
+
+- No active defect was identified from this request
+- `process.env.NODE_ENV` checks still exist in app code by design
+- Previous documented blockers in this file remain unchanged
 
 ---
 
