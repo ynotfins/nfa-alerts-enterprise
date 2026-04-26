@@ -143,3 +143,34 @@ jobs:
                 { pullRequestId: pr.node_id },
               );
             }
+
+  auto-merge:
+    if: github.event_name == 'pull_request' && needs.validate.result == 'success' && github.event.pull_request.draft == false
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Enable squash auto-merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          set -euo pipefail
+
+          merge_state=""
+          for _ in 1 2 3 4 5; do
+            merge_state="$(gh pr view "$PR_URL" --json mergeStateStatus --jq '.mergeStateStatus')"
+            if [[ "$merge_state" != "UNKNOWN" ]]; then
+              break
+            fi
+            sleep 3
+          done
+
+          if [[ "$merge_state" == "DIRTY" || "$merge_state" == "UNKNOWN" ]]; then
+            echo "Skipping auto-merge because mergeStateStatus=$merge_state"
+            exit 0
+          fi
+
+          gh pr merge "$PR_URL" --squash --auto

@@ -2,7 +2,7 @@
 
 **Last updated**: 2026-04-26  
 **Session type**: AGENT Executioner — Cloud/Bugbot/VPS Platform Hardening
-**Status**: COMPLETE — autonomous PR fixing workflow documented and validation passed
+**Status**: COMPLETE — safe auto-merge workflow added and validation passed
 
 ---
 
@@ -19,6 +19,7 @@ Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
 7. **Graceful shutdown fix**: Replaced `scripts/next-start.mjs` `spawnSync` usage with `spawn`, signal forwarding for `SIGINT`/`SIGTERM`, and child cleanup on wrapper exit so PM2 stops do not leave orphaned Next.js children.
 8. **Deployment consistency**: Added `packageManager: pnpm@10.33.0`, pinned the VPS setup script to pnpm `10.33.0`, added deploy-time pnpm mismatch warnings, and rejected placeholder nginx `server_name` values.
 9. **Autonomous PR convergence**: Added `docs/ai/AUTONOMOUS_PR_FIXING.md`, updated agent/Bugbot rules, and extended CI with a PR readiness comment that reports safe-to-merge vs needs-fixes and marks draft PRs ready when CI passes and no blocking labels are present.
+10. **Safe auto-merge**: Added a PR-only auto-merge job that runs after CI passes, skips drafts, verifies merge state is not dirty/unknown, and enables squash auto-merge with the GitHub CLI.
 
 ### Checklist
 
@@ -35,6 +36,7 @@ Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
 - [x] Warn on pnpm version mismatch during VPS deploy
 - [x] Add autonomous Bugbot/Qodo follow-up fix policy
 - [x] Add PR readiness comment automation
+- [x] Add safe squash auto-merge job for non-draft, conflict-free PRs after CI passes
 - [x] Run validation commands
 - [x] Commit, push, and update PR
 
@@ -57,6 +59,7 @@ Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
 | `bash -n scripts/vps-hostinger-setup.sh && bash -n scripts/vps-deploy.sh && pnpm install --frozen-lockfile && pnpm run build` | PASS — after pnpm pin and deploy consistency checks |
 | `pnpm dlx prettier --check .github/workflows/ci.yml` | PASS — workflow YAML parsed/formatted |
 | `pnpm install --frozen-lockfile && pnpm run typecheck && pnpm run lint:ci && pnpm run test:unit && pnpm run build` | PASS — after PR readiness automation |
+| `pnpm dlx prettier --check .github/workflows/ci.yml && pnpm install --frozen-lockfile && pnpm run build` | PASS — after safe auto-merge job |
 | `curl -i http://127.0.0.1:3001/login` | PASS — `200 OK` from existing production server |
 
 ### What is still broken / blocked
