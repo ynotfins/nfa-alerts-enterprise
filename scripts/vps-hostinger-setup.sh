@@ -84,9 +84,11 @@ module.exports = {
     {
       name: "$APP_NAME",
       cwd: "$APP_DIR",
-      script: "pnpm",
-      args: "run start",
+      script: "node",
+      args: "-r dotenv/config node_modules/next/dist/bin/next start",
       env: {
+        DOTENV_CONFIG_PATH: ".env.production.local",
+        NODE_ENV: "production",
         PORT: "3000"
       },
       max_memory_restart: "512M",
@@ -119,8 +121,12 @@ PORT=3000
 ENV
 chown "$APP_USER:$APP_USER" "$APP_DIR/.env.production.example"
 
+if [[ ! -f "$APP_DIR/.env.production.local" ]]; then
+  install -m 0600 -o "$APP_USER" -g "$APP_USER" /dev/null "$APP_DIR/.env.production.local"
+fi
+
 echo "Base VPS setup complete."
 echo "Next:"
-echo "1. Put real runtime variables in $APP_DIR/.env.production.local with chmod 600 and owner $APP_USER."
+echo "1. Securely edit $APP_DIR/.env.production.local and add real runtime variables before deploying."
 echo "2. Deploy with: sudo -u $APP_USER bash $APP_DIR/scripts/vps-deploy.sh"
 echo "3. Enable HTTPS with certbot after DNS points $DOMAIN to this server."
