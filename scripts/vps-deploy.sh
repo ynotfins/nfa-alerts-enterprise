@@ -5,6 +5,7 @@ APP_NAME="nfa-alerts"
 APP_DIR="/var/www/nfa-alerts"
 BRANCH="${1:-main}"
 ENV_FILE=".env.production.local"
+EXPECTED_PNPM_VERSION="10.33.0"
 required_env_keys=(
   NEXT_PUBLIC_FIREBASE_API_KEY
   NEXT_PUBLIC_FIREBASE_APP_ID
@@ -17,6 +18,13 @@ required_env_keys=(
 )
 
 cd "$APP_DIR"
+
+actual_pnpm_version="$(pnpm --version 2>/dev/null || true)"
+if [[ -z "$actual_pnpm_version" ]]; then
+  echo "Warning: pnpm is not available on PATH. Install pnpm $EXPECTED_PNPM_VERSION before deploy continues." >&2
+elif [[ "$actual_pnpm_version" != "$EXPECTED_PNPM_VERSION" ]]; then
+  echo "Warning: expected pnpm $EXPECTED_PNPM_VERSION but found $actual_pnpm_version. Continuing deploy." >&2
+fi
 
 if [[ ! -f "$ENV_FILE" ]]; then
   echo "Missing $APP_DIR/$ENV_FILE. Create it from .env.production.example before deploying." >&2

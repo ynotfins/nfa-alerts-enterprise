@@ -2,7 +2,7 @@
 
 **Last updated**: 2026-04-26  
 **Session type**: AGENT Executioner — Cloud/Bugbot/VPS Platform Hardening
-**Status**: COMPLETE — production shutdown handling fixed and validation passed
+**Status**: COMPLETE — deployment consistency hardened and validation passed
 
 ---
 
@@ -17,6 +17,7 @@ Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
 5. **Runtime config**: Confirmed existing production scripts already force `NODE_ENV=production`; no build/start script changes were made in this pass.
 6. **VPS env loading fix**: Updated PM2 to start Next.js through `node -r dotenv/config` with `DOTENV_CONFIG_PATH=.env.production.local`, moved `dotenv` to runtime dependencies, and made deploy fail before build/restart when required env keys are absent.
 7. **Graceful shutdown fix**: Replaced `scripts/next-start.mjs` `spawnSync` usage with `spawn`, signal forwarding for `SIGINT`/`SIGTERM`, and child cleanup on wrapper exit so PM2 stops do not leave orphaned Next.js children.
+8. **Deployment consistency**: Added `packageManager: pnpm@10.33.0`, pinned the VPS setup script to pnpm `10.33.0`, added deploy-time pnpm mismatch warnings, and rejected placeholder nginx `server_name` values.
 
 ### Checklist
 
@@ -28,6 +29,9 @@ Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
 - [x] Ensure PM2 production start loads `.env.production.local`
 - [x] Ensure VPS deploy fails when `.env.production.local` is missing or incomplete
 - [x] Ensure production start wrapper forwards shutdown signals
+- [x] Pin pnpm version for local, CI, and VPS consistency
+- [x] Reject placeholder nginx domains in VPS setup
+- [x] Warn on pnpm version mismatch during VPS deploy
 - [x] Run validation commands
 - [x] Commit, push, and update PR
 
@@ -47,7 +51,7 @@ Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
 | `pnpm run test:unit` | PASS — 40/40 tests |
 | `pnpm run build` | PASS — wrapper forced production mode despite injected `NODE_ENV=development` |
 | `PORT=3002 pnpm run start` + `SIGTERM` to wrapper PID | PASS — wrapper exited `143`; child PID terminated; no orphan remained |
-| `bash -n scripts/vps-hostinger-setup.sh && bash -n scripts/vps-deploy.sh && pnpm install --frozen-lockfile && pnpm run build` | PASS |
+| `bash -n scripts/vps-hostinger-setup.sh && bash -n scripts/vps-deploy.sh && pnpm install --frozen-lockfile && pnpm run build` | PASS — after pnpm pin and deploy consistency checks |
 | `curl -i http://127.0.0.1:3001/login` | PASS — `200 OK` from existing production server |
 
 ### What is still broken / blocked

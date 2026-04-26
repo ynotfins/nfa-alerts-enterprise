@@ -7,6 +7,7 @@ APP_USER="nfa"
 DOMAIN="${1:-}"
 REPO_URL="https://github.com/ynotfins/nfa-alerts-enterprise.git"
 NODE_MAJOR="22"
+PNPM_VERSION="10.33.0"
 
 if [[ "$(id -u)" -ne 0 ]]; then
   echo "Run as root: sudo bash scripts/vps-hostinger-setup.sh your-domain.example" >&2
@@ -22,6 +23,12 @@ if [[ -z "$DOMAIN" ]]; then
   exit 2
 fi
 
+if [[ "$DOMAIN" == "your-domain.example" || "$DOMAIN" == "example.com" || "$DOMAIN" == "localhost" ]]; then
+  echo "Refusing placeholder nginx server_name: $DOMAIN" >&2
+  echo "Pass the real DNS name that points to this VPS." >&2
+  exit 2
+fi
+
 apt-get update
 apt-get install -y ca-certificates curl gnupg git nginx ufw
 
@@ -32,7 +39,7 @@ apt-get update
 apt-get install -y nodejs
 
 corepack enable
-corepack prepare pnpm@10 --activate
+corepack prepare "pnpm@$PNPM_VERSION" --activate
 npm install -g pm2
 
 if ! id "$APP_USER" >/dev/null 2>&1; then
@@ -50,6 +57,7 @@ cat > "/etc/nginx/sites-available/$APP_NAME" <<NGINX
 server {
     listen 80;
     listen [::]:80;
+    # Replace by rerunning this script if DNS changes; do not deploy with a placeholder.
     server_name $DOMAIN;
 
     client_max_body_size 10m;
