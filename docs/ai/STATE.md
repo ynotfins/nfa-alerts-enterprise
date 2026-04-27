@@ -21,7 +21,7 @@ Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
 9. **Autonomous PR convergence**: Added `docs/ai/AUTONOMOUS_PR_FIXING.md`, updated agent/Bugbot rules, and extended CI with a PR readiness comment that reports safe-to-merge vs needs-fixes and marks draft PRs ready when CI passes and no blocking labels are present.
 10. **Safe auto-merge**: Added a PR-only auto-merge job that runs after CI passes, skips drafts, verifies merge state is not dirty/unknown, and enables squash auto-merge with the GitHub CLI.
 11. **Secret handling**: Verified `.env` is ignored and not tracked without printing values, reset `.env.example` to empty placeholders only, documented Cursor Cloud Agents > My Secrets as source of truth, and normalized `CONTEXT7_SECRET_KEY` naming in docs/examples.
-12. **Review fixes**: Restored VPS deploy validation for Firebase Admin credentials, removed `CONTEXT7_SECRET_KEY` from required VPS runtime validation, and made `WEB_PUSH_PRIVATE_KEY` optional because app code only uses `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY` plus Firebase Admin Messaging today.
+12. **Review fixes**: Restored VPS deploy validation for Firebase Admin credentials, added Firebase Admin placeholders to the generated VPS `.env.production.example`, removed `CONTEXT7_SECRET_KEY` from required VPS runtime validation, and made `WEB_PUSH_PRIVATE_KEY` optional because app code only uses `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY` plus Firebase Admin Messaging today.
 
 ### Checklist
 
@@ -43,6 +43,7 @@ Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
 - [x] Update `.env.example` with empty placeholders only
 - [x] Normalize `CONTEXT7_SECRET_KEY` in docs/examples
 - [x] Restore Firebase Admin credential validation for VPS deploys
+- [x] Add Firebase Admin credential placeholders to generated VPS env example
 - [x] Remove `CONTEXT7_SECRET_KEY` from required VPS runtime validation
 - [x] Investigate `WEB_PUSH_PRIVATE_KEY` usage and document it as optional
 - [x] Run validation commands
