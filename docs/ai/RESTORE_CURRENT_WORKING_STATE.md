@@ -115,7 +115,7 @@ pnpm build            # Expect: all routes compile
 
 | File | Reason |
 |------|--------|
-| `.env` | Live Firebase, OpenAI, Google Maps, VAPID, webhook secret credentials |
+| `.env` | Local-only Firebase, OpenAI, Google Maps, web push, webhook, and Context7 credentials |
 | `service-account.json` | Old repo Firebase Admin SDK private key (CRITICAL — do not restore to clean repo; rotate then delete from old repo history) |
 | `nfa-alerts-v2-firebase-adminsdk-*.json` | Firebase Admin SDK key (alternate name — gitignored) |
 | `.firebaserc` | Firebase project binding (`nfa-alerts-v2`) |
@@ -160,4 +160,4 @@ The app reads these env vars from `.env`:
 - `OPENAI_API_KEY` — OpenAI GPT-4o-mini
 - `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` — Google Maps (restrict in Google Cloud console)
 - `WEBHOOK_AUTH_TOKEN` — Bearer token for `/api/webhook`
-- `VAPID_*` — Web Push keys
+- `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY` / `WEB_PUSH_PRIVATE_KEY` — Web Push keys

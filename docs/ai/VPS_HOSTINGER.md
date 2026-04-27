@@ -30,7 +30,7 @@ chmod 600 .env.production.local
 exit
 ```
 
-Required keys are listed in `docs/ai/CLOUD_AGENTS.md`. Do not set `NODE_ENV`; `pnpm run start` forces production mode.
+Required keys match `.env.example` and are listed in `docs/ai/CLOUD_AGENTS.md`. Do not set `NODE_ENV`; `pnpm run start` forces production mode.
 
 Example structure only:
 
@@ -41,18 +41,16 @@ NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
-FIREBASE_SERVICE_ACCOUNT_JSON=
-GOOGLE_APPLICATION_CREDENTIALS_JSON=
-FIREBASE_PROJECT_ID=
-FIREBASE_CLIENT_EMAIL=
-FIREBASE_PRIVATE_KEY=
-NEXT_PUBLIC_GOOGLE_MAP_ID=
-NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
-NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID=
 NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY=
+WEB_PUSH_PRIVATE_KEY=
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 OPENAI_API_KEY=
 WEBHOOK_AUTH_TOKEN=
-PORT=3000
+SITE_URL=
+NEXT_PUBLIC_GOOGLE_MAP_ID=
+CONTEXT7_SECRET_KEY=
 ```
 
 Do not commit `.env.production.local`, paste it into logs, or screenshot it.
@@ -84,6 +82,7 @@ sudo journalctl -u nginx -n 100 --no-pager
 
 - Default app port is `3000`.
 - Use `PORT=3001 pnpm run start` only when `3000` is already occupied.
+- `.env.production.local` must contain the same required variables as `.env.example`, with real values supplied manually or by a secret manager.
 - `package.json` pins the package manager; `scripts/vps-deploy.sh` warns if the installed pnpm version differs.
 - Keep secrets in `.env.production.local` on the VPS or in a provider secret store; never commit `.env.production.local`.
 - `scripts/vps-deploy.sh` preloads `.env.production.local` for `pnpm run build`, so public Firebase keys are embedded into the production client bundle from the VPS env file.

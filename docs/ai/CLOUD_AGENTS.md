@@ -47,16 +47,26 @@ Manual dashboard steps:
 
 ## Required secrets
 
-Add real values through Cursor Cloud Agent Secrets or Bitwarden Secrets Manager. Do not commit `.env*` files with real values.
+Add real values manually in Cursor Cloud Agents > My Secrets. Scope each secret to `ynotfins/nfa-alerts-enterprise` where the dashboard allows repo scoping. Do not commit `.env*` files with real values; `.env.example` is structure only.
 
 Required for real runtime:
 
 - `NEXT_PUBLIC_FIREBASE_API_KEY`
-- `NEXT_PUBLIC_FIREBASE_APP_ID`
 - `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
-- `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
 - `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
 - `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
+- `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+- `NEXT_PUBLIC_FIREBASE_APP_ID`
+- `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY`
+- `WEB_PUSH_PRIVATE_KEY`
+- `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `OPENAI_API_KEY`
+- `WEBHOOK_AUTH_TOKEN`
+- `SITE_URL`
+- `NEXT_PUBLIC_GOOGLE_MAP_ID`
+- `CONTEXT7_SECRET_KEY`
 
 Required for server/admin features:
 
@@ -64,17 +74,14 @@ Required for server/admin features:
   - `FIREBASE_SERVICE_ACCOUNT_JSON`
   - `GOOGLE_APPLICATION_CREDENTIALS_JSON`
   - `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`
-- `OPENAI_API_KEY`
-- `WEBHOOK_AUTH_TOKEN`
 
 Optional by feature:
 
-- `NEXT_PUBLIC_GOOGLE_MAP_ID`
-- `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`
 - `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID`
-- `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY`
 - `NEXT_PUBLIC_CONVEX_URL` only if Convex code is restored
 - `PORT` only for process managers that require a fixed port
+
+Legacy Firebase Admin aliases such as `FIREBASE_SERVICE_ACCOUNT_JSON`, `GOOGLE_APPLICATION_CREDENTIALS_JSON`, `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, and `FIREBASE_PRIVATE_KEY` may still be used by server code if configured, but they are not part of the standard Cursor My Secrets baseline for this repo.
 
 Do not set `NODE_ENV` as a Cursor secret. `pnpm run dev` keeps normal development behavior, while `pnpm run build` and `pnpm run start` explicitly run Next.js with `NODE_ENV=production` so injected Cloud secrets cannot force production commands into development mode.
 
