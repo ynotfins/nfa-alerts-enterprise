@@ -2,7 +2,7 @@
 
 **Last updated**: 2026-04-26  
 **Session type**: AGENT Executioner — Cloud/Bugbot/VPS Platform Hardening
-**Status**: COMPLETE — secret handling hardened and validation passed
+**Status**: COMPLETE — blocking env review findings fixed and validation passed
 
 ---
 
@@ -21,6 +21,7 @@ Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
 9. **Autonomous PR convergence**: Added `docs/ai/AUTONOMOUS_PR_FIXING.md`, updated agent/Bugbot rules, and extended CI with a PR readiness comment that reports safe-to-merge vs needs-fixes and marks draft PRs ready when CI passes and no blocking labels are present.
 10. **Safe auto-merge**: Added a PR-only auto-merge job that runs after CI passes, skips drafts, verifies merge state is not dirty/unknown, and enables squash auto-merge with the GitHub CLI.
 11. **Secret handling**: Verified `.env` is ignored and not tracked without printing values, reset `.env.example` to empty placeholders only, documented Cursor Cloud Agents > My Secrets as source of truth, and normalized `CONTEXT7_SECRET_KEY` naming in docs/examples.
+12. **Review fixes**: Restored VPS deploy validation for Firebase Admin credentials, removed `CONTEXT7_SECRET_KEY` from required VPS runtime validation, and made `WEB_PUSH_PRIVATE_KEY` optional because app code only uses `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY` plus Firebase Admin Messaging today.
 
 ### Checklist
 
@@ -41,6 +42,9 @@ Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
 - [x] Verify `.env` is ignored and not tracked without printing secret values
 - [x] Update `.env.example` with empty placeholders only
 - [x] Normalize `CONTEXT7_SECRET_KEY` in docs/examples
+- [x] Restore Firebase Admin credential validation for VPS deploys
+- [x] Remove `CONTEXT7_SECRET_KEY` from required VPS runtime validation
+- [x] Investigate `WEB_PUSH_PRIVATE_KEY` usage and document it as optional
 - [x] Run validation commands
 - [x] Commit, push, and update PR
 
@@ -67,6 +71,8 @@ Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
 | `.env` presence/tracking check | PASS — `.env` not present in this checkout, ignored by `.gitignore`, and not tracked |
 | `rg CONTEXT7_SECRET_KEY` | PASS — uppercase Context7 secret references are documented |
 | `git status --short && pnpm install --frozen-lockfile && pnpm run typecheck && pnpm run lint:ci && pnpm run test:unit && pnpm run build` | PASS — after secret baseline normalization |
+| `rg WEB_PUSH_PRIVATE_KEY src` | PASS — no app runtime references; current push path uses Firebase Admin Messaging and `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY` |
+| `bash -n scripts/vps-deploy.sh && bash -n scripts/vps-hostinger-setup.sh && pnpm install --frozen-lockfile && pnpm run typecheck && pnpm run lint:ci && pnpm run test:unit && pnpm run build` | PASS — after blocking review fixes |
 | `curl -i http://127.0.0.1:3001/login` | PASS — `200 OK` from existing production server |
 
 ### What is still broken / blocked

@@ -14,7 +14,6 @@ required_env_keys=(
   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
   NEXT_PUBLIC_FIREBASE_APP_ID
   NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY
-  WEB_PUSH_PRIVATE_KEY
   NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
   GOOGLE_CLIENT_ID
   GOOGLE_CLIENT_SECRET
@@ -22,7 +21,6 @@ required_env_keys=(
   WEBHOOK_AUTH_TOKEN
   SITE_URL
   NEXT_PUBLIC_GOOGLE_MAP_ID
-  CONTEXT7_SECRET_KEY
 )
 
 cd "$APP_DIR"
@@ -50,6 +48,17 @@ for key in "${required_env_keys[@]}"; do
     exit 1
   fi
 done
+
+if grep -Eq "^(FIREBASE_SERVICE_ACCOUNT_JSON|GOOGLE_APPLICATION_CREDENTIALS_JSON)=.+" "$ENV_FILE"; then
+  :
+elif grep -Eq "^FIREBASE_PROJECT_ID=.+" "$ENV_FILE" &&
+  grep -Eq "^FIREBASE_CLIENT_EMAIL=.+" "$ENV_FILE" &&
+  grep -Eq "^FIREBASE_PRIVATE_KEY=.+" "$ENV_FILE"; then
+  :
+else
+  echo "Missing Firebase Admin credentials in $APP_DIR/$ENV_FILE." >&2
+  exit 1
+fi
 
 git fetch origin "$BRANCH"
 git checkout "$BRANCH"

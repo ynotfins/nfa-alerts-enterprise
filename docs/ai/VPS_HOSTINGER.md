@@ -30,7 +30,7 @@ chmod 600 .env.production.local
 exit
 ```
 
-Required keys match `.env.example` and are listed in `docs/ai/CLOUD_AGENTS.md`. Do not set `NODE_ENV`; `pnpm run start` forces production mode.
+Runtime keys are listed in `docs/ai/CLOUD_AGENTS.md`. Do not set `NODE_ENV`; `pnpm run start` forces production mode.
 
 Example structure only:
 
@@ -42,7 +42,6 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
 NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY=
-WEB_PUSH_PRIVATE_KEY=
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
@@ -50,8 +49,22 @@ OPENAI_API_KEY=
 WEBHOOK_AUTH_TOKEN=
 SITE_URL=
 NEXT_PUBLIC_GOOGLE_MAP_ID=
+FIREBASE_SERVICE_ACCOUNT_JSON=
+GOOGLE_APPLICATION_CREDENTIALS_JSON=
+FIREBASE_PROJECT_ID=
+FIREBASE_CLIENT_EMAIL=
+FIREBASE_PRIVATE_KEY=
+
+# Optional tooling/future-use keys:
+WEB_PUSH_PRIVATE_KEY=
 CONTEXT7_SECRET_KEY=
 ```
+
+VPS deploys require one Firebase Admin credential form: `FIREBASE_SERVICE_ACCOUNT_JSON`, `GOOGLE_APPLICATION_CREDENTIALS_JSON`, or the split `FIREBASE_PROJECT_ID` + `FIREBASE_CLIENT_EMAIL` + `FIREBASE_PRIVATE_KEY` set. Server-side API routes and notification sending import `adminDb` and `adminMessaging` from `src/lib/firebase-admin.ts`.
+
+`WEB_PUSH_PRIVATE_KEY` is not required by current app runtime. The app currently uses `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY` for FCM token registration and Firebase Admin Messaging for server-side notification sending. Keep `WEB_PUSH_PRIVATE_KEY` only if a future direct Web Push sender is added.
+
+`CONTEXT7_SECRET_KEY` is Cursor/MCP/agent tooling only and is not required on the VPS.
 
 Do not commit `.env.production.local`, paste it into logs, or screenshot it.
 
@@ -82,7 +95,7 @@ sudo journalctl -u nginx -n 100 --no-pager
 
 - Default app port is `3000`.
 - Use `PORT=3001 pnpm run start` only when `3000` is already occupied.
-- `.env.production.local` must contain the same required variables as `.env.example`, with real values supplied manually or by a secret manager.
+- `.env.production.local` must contain the runtime variables listed above, with real values supplied manually or by a secret manager.
 - `package.json` pins the package manager; `scripts/vps-deploy.sh` warns if the installed pnpm version differs.
 - Keep secrets in `.env.production.local` on the VPS or in a provider secret store; never commit `.env.production.local`.
 - `scripts/vps-deploy.sh` preloads `.env.production.local` for `pnpm run build`, so public Firebase keys are embedded into the production client bundle from the VPS env file.

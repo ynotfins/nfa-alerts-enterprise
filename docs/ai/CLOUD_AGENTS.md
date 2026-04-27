@@ -58,7 +58,6 @@ Required for real runtime:
 - `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
 - `NEXT_PUBLIC_FIREBASE_APP_ID`
 - `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY`
-- `WEB_PUSH_PRIVATE_KEY`
 - `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
@@ -66,7 +65,6 @@ Required for real runtime:
 - `WEBHOOK_AUTH_TOKEN`
 - `SITE_URL`
 - `NEXT_PUBLIC_GOOGLE_MAP_ID`
-- `CONTEXT7_SECRET_KEY`
 
 Required for server/admin features:
 
@@ -77,11 +75,13 @@ Required for server/admin features:
 
 Optional by feature:
 
+- `WEB_PUSH_PRIVATE_KEY` only if future server-side Web Push sending is added; current notification sending uses Firebase Admin Messaging and client token registration uses `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY`.
+- `CONTEXT7_SECRET_KEY` for Cursor/MCP/agent tooling only; not required by the application runtime.
 - `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID`
 - `NEXT_PUBLIC_CONVEX_URL` only if Convex code is restored
 - `PORT` only for process managers that require a fixed port
 
-Legacy Firebase Admin aliases such as `FIREBASE_SERVICE_ACCOUNT_JSON`, `GOOGLE_APPLICATION_CREDENTIALS_JSON`, `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, and `FIREBASE_PRIVATE_KEY` may still be used by server code if configured, but they are not part of the standard Cursor My Secrets baseline for this repo.
+Firebase Admin credentials are required for server-side API routes and notification sending because `src/lib/firebase-admin.ts` initializes `adminDb` and `adminMessaging` from those values.
 
 Do not set `NODE_ENV` as a Cursor secret. `pnpm run dev` keeps normal development behavior, while `pnpm run build` and `pnpm run start` explicitly run Next.js with `NODE_ENV=production` so injected Cloud secrets cannot force production commands into development mode.
 
