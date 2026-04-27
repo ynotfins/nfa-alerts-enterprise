@@ -43,11 +43,8 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
 NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY=
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
 OPENAI_API_KEY=
 WEBHOOK_AUTH_TOKEN=
-SITE_URL=
 NEXT_PUBLIC_GOOGLE_MAP_ID=
 FIREBASE_SERVICE_ACCOUNT_JSON=
 GOOGLE_APPLICATION_CREDENTIALS_JSON=
@@ -58,6 +55,9 @@ FIREBASE_PRIVATE_KEY=
 # Optional tooling/future-use keys:
 WEB_PUSH_PRIVATE_KEY=
 CONTEXT7_SECRET_KEY=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+SITE_URL=
 ```
 
 VPS deploys require one Firebase Admin credential form: `FIREBASE_SERVICE_ACCOUNT_JSON`, `GOOGLE_APPLICATION_CREDENTIALS_JSON`, or the split `FIREBASE_PROJECT_ID` + `FIREBASE_CLIENT_EMAIL` + `FIREBASE_PRIVATE_KEY` set. Server-side API routes and notification sending import `adminDb` and `adminMessaging` from `src/lib/firebase-admin.ts`.
@@ -65,6 +65,8 @@ VPS deploys require one Firebase Admin credential form: `FIREBASE_SERVICE_ACCOUN
 `WEB_PUSH_PRIVATE_KEY` is not required by current app runtime. The app currently uses `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY` for FCM token registration and Firebase Admin Messaging for server-side notification sending. Keep `WEB_PUSH_PRIVATE_KEY` only if a future direct Web Push sender is added.
 
 `CONTEXT7_SECRET_KEY` is Cursor/MCP/agent tooling only and is not required on the VPS.
+
+`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `SITE_URL` are optional integration placeholders today. The current application source does not reference them through `process.env`, so VPS deploy validation does not require them.
 
 Do not commit `.env.production.local`, paste it into logs, or screenshot it.
 

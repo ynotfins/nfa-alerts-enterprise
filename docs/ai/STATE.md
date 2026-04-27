@@ -46,6 +46,7 @@ Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
 - [x] Add Firebase Admin credential placeholders to generated VPS env example
 - [x] Remove `CONTEXT7_SECRET_KEY` from required VPS runtime validation
 - [x] Investigate `WEB_PUSH_PRIVATE_KEY` usage and document it as optional
+- [x] Remove unused `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `SITE_URL` from VPS runtime-required validation
 - [x] Run validation commands
 - [x] Commit, push, and update PR
 

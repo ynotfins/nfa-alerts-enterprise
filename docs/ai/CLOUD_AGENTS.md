@@ -59,11 +59,8 @@ Required for real runtime:
 - `NEXT_PUBLIC_FIREBASE_APP_ID`
 - `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY`
 - `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
 - `OPENAI_API_KEY`
 - `WEBHOOK_AUTH_TOKEN`
-- `SITE_URL`
 - `NEXT_PUBLIC_GOOGLE_MAP_ID`
 
 Required for server/admin features:
@@ -76,6 +73,8 @@ Required for server/admin features:
 Optional by feature:
 
 - `WEB_PUSH_PRIVATE_KEY` only if future server-side Web Push sending is added; current notification sending uses Firebase Admin Messaging and client token registration uses `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY`.
+- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` only if Google OAuth/server-side Google APIs are wired into runtime code.
+- `SITE_URL` only if absolute callback URLs or deployment metadata are added.
 - `CONTEXT7_SECRET_KEY` for Cursor/MCP/agent tooling only; not required by the application runtime.
 - `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID`
 - `NEXT_PUBLIC_CONVEX_URL` only if Convex code is restored
