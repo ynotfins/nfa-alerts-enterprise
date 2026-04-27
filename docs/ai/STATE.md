@@ -2,7 +2,7 @@
 
 **Last updated**: 2026-04-26  
 **Session type**: AGENT Executioner — Cloud/Bugbot/VPS Platform Hardening
-**Status**: COMPLETE — safe auto-merge workflow added and validation passed
+**Status**: COMPLETE — stable CI check names added and validation passed
 
 ---
 
@@ -20,6 +20,9 @@ Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
 8. **Deployment consistency**: Added `packageManager: pnpm@10.33.0`, pinned the VPS setup script to pnpm `10.33.0`, added deploy-time pnpm mismatch warnings, and rejected placeholder nginx `server_name` values.
 9. **Autonomous PR convergence**: Added `docs/ai/AUTONOMOUS_PR_FIXING.md`, updated agent/Bugbot rules, and extended CI with a PR readiness comment that reports safe-to-merge vs needs-fixes and marks draft PRs ready when CI passes and no blocking labels are present.
 10. **Safe auto-merge**: Added a PR-only auto-merge job that runs after CI passes, skips drafts, verifies merge state is not dirty/unknown, and enables squash auto-merge with the GitHub CLI.
+11. **Secret handling**: Verified `.env` is ignored and not tracked without printing values, reset `.env.example` to empty placeholders only, documented Cursor Cloud Agents > My Secrets as source of truth, and normalized `CONTEXT7_SECRET_KEY` naming in docs/examples.
+12. **Review fixes**: Restored VPS deploy validation for Firebase Admin credentials, added Firebase Admin placeholders to the generated VPS `.env.production.example`, removed `CONTEXT7_SECRET_KEY` from required VPS runtime validation, and made `WEB_PUSH_PRIVATE_KEY` optional because app code only uses `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY` plus Firebase Admin Messaging today.
+13. **Stable CI checks**: Added explicit GitHub Actions job names `CI Validate` and `CI PR Readiness` so branch rules can require stable check names without the pull request event suffix.
 
 ### Checklist
 
@@ -37,6 +40,15 @@ Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
 - [x] Add autonomous Bugbot/Qodo follow-up fix policy
 - [x] Add PR readiness comment automation
 - [x] Add safe squash auto-merge job for non-draft, conflict-free PRs after CI passes
+- [x] Verify `.env` is ignored and not tracked without printing secret values
+- [x] Update `.env.example` with empty placeholders only
+- [x] Normalize `CONTEXT7_SECRET_KEY` in docs/examples
+- [x] Restore Firebase Admin credential validation for VPS deploys
+- [x] Add Firebase Admin credential placeholders to generated VPS env example
+- [x] Remove `CONTEXT7_SECRET_KEY` from required VPS runtime validation
+- [x] Investigate `WEB_PUSH_PRIVATE_KEY` usage and document it as optional
+- [x] Remove unused `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `SITE_URL` from VPS runtime-required validation
+- [x] Add stable explicit job names for branch protection checks
 - [x] Run validation commands
 - [x] Commit, push, and update PR
 
@@ -60,6 +72,11 @@ Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
 | `pnpm dlx prettier --check .github/workflows/ci.yml` | PASS — workflow YAML parsed/formatted |
 | `pnpm install --frozen-lockfile && pnpm run typecheck && pnpm run lint:ci && pnpm run test:unit && pnpm run build` | PASS — after PR readiness automation |
 | `pnpm dlx prettier --check .github/workflows/ci.yml && pnpm install --frozen-lockfile && pnpm run build` | PASS — after safe auto-merge job |
+| `.env` presence/tracking check | PASS — `.env` not present in this checkout, ignored by `.gitignore`, and not tracked |
+| `rg CONTEXT7_SECRET_KEY` | PASS — uppercase Context7 secret references are documented |
+| `git status --short && pnpm install --frozen-lockfile && pnpm run typecheck && pnpm run lint:ci && pnpm run test:unit && pnpm run build` | PASS — after secret baseline normalization |
+| `rg WEB_PUSH_PRIVATE_KEY src` | PASS — no app runtime references; current push path uses Firebase Admin Messaging and `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY` |
+| `bash -n scripts/vps-deploy.sh && bash -n scripts/vps-hostinger-setup.sh && pnpm install --frozen-lockfile && pnpm run typecheck && pnpm run lint:ci && pnpm run test:unit && pnpm run build` | PASS — after blocking review fixes |
 | `curl -i http://127.0.0.1:3001/login` | PASS — `200 OK` from existing production server |
 
 ### What is still broken / blocked
@@ -70,6 +87,7 @@ Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
 4. **My Machines**: Not recommended unless Cloud Agents need private-network/VPS-local access; enabling requires `agent login` or a team/service-account API key on the target machine.
 5. **Existing lint debt**: `lint:ci` passes inside the configured warning budget but still reports 20 pre-existing warnings.
 6. **External automation**: Actual Bugbot/Qodo AI follow-up commits require those services to be enabled with write/autofix permissions; repo code now supplies policy, CI, and readiness comments.
+7. **Manual secret action**: Add real values manually in Cursor Cloud Agents > My Secrets scoped to `ynotfins/nfa-alerts-enterprise`; do not commit local `.env` files.
 
 ---
 

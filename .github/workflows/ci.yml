@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   validate:
+    name: CI Validate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -43,6 +44,7 @@ jobs:
         run: pnpm run build
 
   pr-readiness:
+    name: CI PR Readiness
     if: always() && github.event_name == 'pull_request'
     needs: validate
     runs-on: ubuntu-latest
