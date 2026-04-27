@@ -47,7 +47,7 @@ Manual dashboard steps:
 
 ## Required secrets
 
-Add real values manually in Cursor Cloud Agents > My Secrets. Scope each secret to `ynotfins/nfa-alerts-enterprise` where the dashboard allows repo scoping. Do not commit `.env*` files with real values; `.env.example` is structure only.
+Add real values manually in Cursor Cloud Agents > My Secrets. Scope each secret to `ynotfins/nfa-alerts-enterprise` where the dashboard allows repo scoping. Do not commit `.env*` files with real values; `.env.example` is allowed only when every value is empty placeholder text.
 
 Required for real runtime:
 

@@ -11,4 +11,5 @@ Read `docs/ai/CLOUD_AGENTS.md` and `docs/ai/AGENT_OPERATING_MODE.md` before impl
 - Treat `.cursor/BUGBOT.md` as the active Bugbot repository rule file; keep `docs/ai/BUGBOT_RULES.md` aligned when rules change.
 - For VPS deployment details, use `docs/ai/VPS_HOSTINGER.md` and scripts under `scripts/vps-*.sh`.
 - Update `docs/ai/STATE.md` for meaningful code, config, or docs changes.
-- Never commit `.env*`, service account JSON, Bitwarden tokens, or logs containing secret values.
+- Never commit `.env`, `.env.local`, `.env.production.local`, `.env.*.local`, service account JSON, Bitwarden tokens, or logs containing secret values.
+- `.env.example` is allowed only when every value is empty placeholder text; real values belong in Cursor Cloud Agents My Secrets, GitHub Actions secrets, or VPS `.env.production.local`.
