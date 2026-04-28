@@ -47,7 +47,7 @@ Manual dashboard steps:
 
 ## Required secrets
 
-Add real values manually in Cursor Cloud Agents > My Secrets. Scope each secret to `ynotfins/nfa-alerts-enterprise` where the dashboard allows repo scoping. Do not commit `.env*` files with real values; `.env.example` is allowed only when every value is empty placeholder text.
+Add real values manually in Cursor Cloud Agents > My Secrets. Scope each secret to `ynotfins/nfa-alerts-enterprise` where the dashboard allows repo scoping. `.env` and `.env.*` are ignored by default; `.env.example` is the only allowed env file exception. `.env.example` is allowed only when every assignment is exactly `KEY=` with no value after `=`. Placeholder-like values such as `your-key-here`, `example`, `changeme`, fake tokens, and real tokens are all prohibited. Real values belong only in Cursor Cloud Agents My Secrets, GitHub Actions secrets, or VPS `.env.production.local`.
 
 Required for real runtime:
 
