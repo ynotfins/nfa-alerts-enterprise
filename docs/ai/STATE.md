@@ -1,55 +1,8 @@
 # NFA Alerts — AI State
 
-**Last updated**: 2026-04-29
-**Session type**: AGENT Executioner — Cloud Agent MCP Setup
-**Status**: COMPLETE — cloud-safe MCP setup documented and validation passed; no MCP resources exposed in this session
-
----
-
-## What happened this session (2026-04-29 — Cloud Agent MCP Setup)
-
-Documented Cloud Agent MCP/tooling guidance for public repo safety audits, screenshot-to-source UI documentation, and future native Android planning:
-
-1. **MCP inspection**: Checked the current Cloud Agent MCP resource surface; no MCP resources are exposed to this session.
-2. **Cursor Cloud research**: Verified Cloud Agent MCP setup is handled through Cursor Cloud Agent/dashboard integrations, while local Cursor Desktop MCP config does not automatically apply to Cloud Agents.
-3. **Safe recommendations**: Added `docs/ai/CLOUD_AGENT_MCP_SETUP.md` with recommended tools, skipped local-only MCPs, token/header names, scope guidance, and public-repo audit safety notes.
-4. **Docs alignment**: Updated `docs/ai/CLOUD_AGENTS.md` and `docs/ai/INDEX.md` to point future agents at the Cloud-specific MCP guide before older local/Desktop MCP references.
-5. **Memory policy**: OpenMemory/Mem0 was not available, so no memory write was attempted.
-6. **Toolchain remediation**: `pnpm`, `node`, `npm`, and `corepack` were initially missing from the Cloud VM PATH; restored Node.js 22.22.2 and pnpm 10.33.0 through NodeSource/Corepack for validation.
-
-### Checklist
-
-- [x] Read Cloud Agent operating docs
-- [x] Inspect available MCP resources
-- [x] Inspect existing MCP/tool docs for stale local/Desktop assumptions
-- [x] Research Cursor Cloud Agent MCP behavior
-- [x] Document recommended Cloud-safe MCPs and skipped local-only MCPs
-- [x] Document required secret/header names without values
-- [x] Update `docs/ai/STATE.md`
-- [x] Run validation commands
-- [x] Commit, push, and create/update PR
-
-### Evidence
-
-| Check | Result |
-| --- | --- |
-| `ListMcpResources` | WARN — no MCP resources exposed to this Cloud session |
-| Cursor Cloud MCP docs research | PASS — Cloud MCPs are added through Cloud Agent/dashboard settings; local Desktop MCP config is not a reliable Cloud Agent setup path |
-| `package.json` inspection | PASS — no Playwright dependency/scripts are currently configured in this repo |
-| OpenMemory/Mem0 availability | WARN — not exposed as an MCP resource; memory write skipped |
-| `node --version && npm --version && pnpm --version` | PASS — after remediation: `v22.22.2`, `10.9.7`, `10.33.0` |
-| `pnpm install --frozen-lockfile` | PASS — lockfile unchanged; dependencies installed with pnpm 10.33.0 |
-| `pnpm run typecheck` | PASS |
-| `pnpm run lint:ci` | PASS — 20 warnings, 0 errors within the configured warning budget |
-| `pnpm run test:unit` | PASS — 40/40 tests |
-| `pnpm run build` | PASS — Next.js production build completed; Firebase Admin warnings are expected without runtime credentials |
-
-### What is still broken / blocked
-
-1. **Manual Cloud UI action**: Context7 and any optional HTTP MCPs must be enabled in Cursor Cloud Agent/dashboard settings by a user or workspace admin.
-2. **Manual secret action**: If a recommended MCP requires auth, add only the named secret in Cursor My Secrets or provider OAuth; do not commit token-bearing config.
-3. **Optional design blocker**: Figma should stay disabled until real project Figma files/designs are available.
-4. **Existing runtime blocker**: Real Firebase/runtime secrets remain manually managed outside the repo.
+**Last updated**: 2026-04-26  
+**Session type**: AGENT Executioner — Cloud/Bugbot/VPS Platform Hardening
+**Status**: COMPLETE — env review false-positive rules tightened and validation passed
 
 ---
 

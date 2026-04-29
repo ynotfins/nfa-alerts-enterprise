@@ -117,20 +117,22 @@ Production smoke test:
 
 ## Recommended MCPs and plugins
 
-Use `docs/ai/CLOUD_AGENT_MCP_SETUP.md` as the current source of truth for Cloud Agent MCP setup. Cloud Agents do not automatically inherit local Cursor Desktop MCP servers, so enable MCPs through Cursor Cloud Agent or team integration settings rather than committing local MCP configs to the repo.
-
-Cloud-safe priority for this repo:
-
 | Tool | Use? | Why |
 | --- | --- | --- |
-| Context7 | Yes, if available in Cloud | Current docs for Next.js, Firebase, GitHub Actions, Jetpack Compose, Android, and library APIs. |
-| Browser testing / computer use | Yes | Built-in Cloud Agent capability for mobile UI verification, screenshots, videos, and screenshot-to-source documentation. |
-| Playwright MCP | Optional | Use only if Cursor Cloud exposes a supported Cloud-compatible option. Repo-level Playwright dependencies are not currently installed. |
-| OpenMemory / Mem0 | Optional | Store only high-level non-secret project facts; repo markdown remains the durable source of truth. |
-| Figma | Optional | Use only when real project Figma files/designs are available. |
-| Serena, local filesystem MCPs, local browser-profile MCPs, desktop-only MCPs, Thinking Patterns, next-devtools | No for this Cloud setup | These are local/desktop-context tools or unnecessary for the public repo audit, UI documentation, and Android planning workflow. |
+| GitHub | Yes | PRs, branches, CI logs, issue context. |
+| Context7 | Yes | Current docs for Next.js, Firebase, React, Tailwind, shadcn, and libraries. |
+| Vercel | Yes | Deployment logs and env/config checks if this app deploys on Vercel. |
+| Playwright | Yes | End-to-end browser checks for mobile PWA flows. |
+| shadcn/ui | Yes | This repo uses shadcn-style components under `src/components/ui`. |
+| Firebase | Yes | This repo uses Firebase Auth, Firestore, Storage, Admin SDK, FCM. |
+| Supabase | No | This repo does not use Supabase. |
+| Sentry | Optional future | No current Sentry dependency; consider for production error tracking. |
+| Stripe | No | No payments integration found. |
+| Prisma | No | No Prisma usage found. |
+| Exa | Yes | Research fallback when official docs or MCPs are unavailable. |
+| Serena / thinking-patterns | Optional if Cloud supports them | Useful for semantic code inspection and structured decisions, but not guaranteed in Cloud Agents. |
 
-If an MCP is unavailable in Cloud, announce it and use fallback search, repository inspection, built-in browser/computer-use tools, and official web docs.
+If an MCP is unavailable in Cloud, announce it and use fallback search, repository inspection, and official web docs.
 
 ## Bugbot setup
 
