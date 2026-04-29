@@ -2,7 +2,7 @@
 
 **Last updated**: 2026-04-26  
 **Session type**: AGENT Executioner — Cloud/Bugbot/VPS Platform Hardening
-**Status**: COMPLETE — stable CI check names added and validation passed
+**Status**: COMPLETE — env review false-positive rules tightened and validation passed
 
 ---
 
@@ -23,6 +23,7 @@ Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
 11. **Secret handling**: Verified `.env` is ignored and not tracked without printing values, reset `.env.example` to empty placeholders only, documented Cursor Cloud Agents > My Secrets as source of truth, and normalized `CONTEXT7_SECRET_KEY` naming in docs/examples.
 12. **Review fixes**: Restored VPS deploy validation for Firebase Admin credentials, added Firebase Admin placeholders to the generated VPS `.env.production.example`, removed `CONTEXT7_SECRET_KEY` from required VPS runtime validation, and made `WEB_PUSH_PRIVATE_KEY` optional because app code only uses `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY` plus Firebase Admin Messaging today.
 13. **Stable CI checks**: Added explicit GitHub Actions job names `CI Validate` and `CI PR Readiness` so branch rules can require stable check names without the pull request event suffix.
+14. **Review rule cleanup**: Updated Bugbot, agent, and Cloud Agent guidance to prohibit any committed `.env*` file except `.env.example`, and to allow `.env.example` only when every assignment is exactly empty (`KEY=`) with no placeholder-like or real values.
 
 ### Checklist
 
@@ -49,6 +50,7 @@ Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
 - [x] Investigate `WEB_PUSH_PRIVATE_KEY` usage and document it as optional
 - [x] Remove unused `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `SITE_URL` from VPS runtime-required validation
 - [x] Add stable explicit job names for branch protection checks
+- [x] Clarify review rules so `.env.example` placeholder-only changes are allowed
 - [x] Run validation commands
 - [x] Commit, push, and update PR
 

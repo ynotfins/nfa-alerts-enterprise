@@ -7,7 +7,8 @@ Bugbot must focus on production defects, not style noise:
 - Flag runtime errors, unhandled promise failures, unsafe null/undefined access, hydration problems, and Next.js App Router boundary violations.
 - Flag API route failures, bad status codes, missing auth checks, missing input validation, and webhook parsing failures.
 - Flag Firebase issues: client/admin SDK mixups, missing credential guards, unsafe Firestore writes, broken listeners, FCM token mistakes, and security-sensitive rule bypasses.
-- Flag secret leaks: `.env*`, service account JSON, private keys, webhook tokens, API keys, screenshots, or logs containing credentials.
+- Flag secret leaks: any committed `.env*` file except `.env.example`, service account JSON, private keys, webhook tokens, API keys, screenshots, or logs containing credentials.
+- Allow `.env.example` only when every assignment has an empty value exactly like `KEY=`. Flag any non-empty value after `=`, including placeholder-like values such as `your-key-here`, `example`, `changeme`, fake tokens, or real tokens.
 - Flag deployment risks: build/start scripts that rely on global env injection, production commands running with `NODE_ENV=development`, missing required runtime env, and broken `PORT` handling.
 - Flag PWA/mobile breakage that prevents `/login`, signup, incident detail, notifications, or route planning from rendering on mobile viewport.
 - Ignore formatting-only changes, minor lint nits, import ordering, naming preferences, and harmless refactors unless they create a concrete bug.
