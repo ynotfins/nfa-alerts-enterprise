@@ -16,8 +16,9 @@ Central directory for all AI-assisted development documentation in NFA Alerts v2
 4. Read [AUTONOMOUS_PR_FIXING.md](AUTONOMOUS_PR_FIXING.md) - PR self-fix and merge-readiness policy
 5. Read [BUGBOT_RULES.md](BUGBOT_RULES.md) - Bugbot review focus and activation steps
 6. Read [VPS_HOSTINGER.md](VPS_HOSTINGER.md) - Hostinger VPS deployment and worker guidance
-7. Read [CURSOR_MCP_AND_TOOLS.md](CURSOR_MCP_AND_TOOLS.md) - Available MCP servers
-8. Read [MCP_QUICK_REFERENCE.md](MCP_QUICK_REFERENCE.md) - Common commands
+7. Read [CLOUD_AGENT_MCP_SETUP.md](CLOUD_AGENT_MCP_SETUP.md) - Cloud-safe MCP/tooling setup
+8. Read [CURSOR_MCP_AND_TOOLS.md](CURSOR_MCP_AND_TOOLS.md) - Local Cursor Desktop MCP archive
+9. Read [MCP_QUICK_REFERENCE.md](MCP_QUICK_REFERENCE.md) - Common commands
 
 ### Starting a coding session?
 
@@ -51,6 +52,11 @@ Central directory for all AI-assisted development documentation in NFA Alerts v2
   - Features and capabilities per server
   - Usage guidelines and security policies
   - Troubleshooting common issues
+
+- **[CLOUD_AGENT_MCP_SETUP.md](CLOUD_AGENT_MCP_SETUP.md)** - Cloud Agent MCP setup guide
+  - Cloud-compatible recommendations
+  - Manual secret/header setup
+  - Local-only MCP exclusions
 
 - **[MCP_QUICK_REFERENCE.md](MCP_QUICK_REFERENCE.md)** - Common commands
   - Quick query examples for each MCP server
