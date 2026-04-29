@@ -1,12 +1,37 @@
 # NFA Alerts — AI State
 
-**Last updated**: 2026-04-26  
-**Session type**: AGENT Executioner — Cloud/Bugbot/VPS Platform Hardening
-**Status**: COMPLETE — env review false-positive rules tightened and validation passed
+**Last updated**: 2026-04-29
+**Session type**: AGENT Executioner — New Chat Handoff
+**Status**: COMPLETE — clean handoff document added
 
 ---
 
-## What happened this session (2026-04-26 — Cloud/Bugbot/VPS Platform Hardening)
+## What happened this session (2026-04-29 — New Chat Handoff)
+
+Created `docs/ai/HANDOFF_TO_NEW_CHAT.md` as a concise, secret-free handoff for the next senior engineering assistant. The handoff summarizes current repo state, merged platform work, GitHub/Cursor settings, secret strategy, MCP/tooling guidance, abandoned PR #5, and the immediate next documentation task.
+
+### Checklist
+
+- [x] Create clean handoff document
+- [x] Avoid secret values, raw tokens, private keys, and customer/private data
+- [x] Document main branch as source of truth
+- [x] Document PR #5 as closed/ignored
+- [x] Record current GitHub/Cursor/secret strategy expectations
+
+### Evidence
+
+| Check | Result |
+| --- | --- |
+| `docs/ai/HANDOFF_TO_NEW_CHAT.md` | ADDED |
+
+### What is still broken / blocked
+
+1. **Next task input**: The screenshot ZIP at `D:\github\nfa-alerts-enterprise\screenshots` must be attached to the next Cloud Agent task.
+2. **Manual settings**: GitHub/Cursor dashboard settings remain manual configuration surfaces.
+
+---
+
+## Previous Session (2026-04-26 — Cloud/Bugbot/VPS Platform Hardening)
 
 Extended the Cursor Cloud Agent setup into repo-tracked platform automation:
 
