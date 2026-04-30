@@ -1,62 +1,84 @@
-export interface Profile {
-  userId: string;
-  email?: string;
-  role: "chaser" | "supe" | "admin";
-  completedSteps: number;
-  name?: string;
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  address?: string;
-  avatarUrl?: string;
-  dob?: string;
-  legal?: { dob: string };
-  emergencyContact?: { name: string; phone: string; relationship: string };
-  locationTracking?: {
-    enabled: boolean;
-    lastUpdate?: number;
-    accuracy?: number;
-    lat?: number;
-    lng?: number;
-  };
-  geofencingEnabled?: boolean;
-  geofenceRadius?: number;
-  online?: boolean;
-  lastSeen?: number;
-  pushToken?: string;
-  signatureUrl?: string;
-  signedAt?: number;
-  stats?: {
-    alertsResponded: number;
-    alertsWithNotes?: number;
-    daysActive: number;
-  };
-  suspension?: {
-    active: boolean;
-    until?: number;
-    reason?: string;
-    by?: string;
-    at?: number;
-  };
-  ban?: {
-    active: boolean;
-    at: number;
-    reason?: string;
-    by?: string;
-    deviceFingerprints?: string[];
-    ipAddresses?: string[];
-  };
-  warnings?: Array<{
-    reason: string;
-    by: string;
-    at: number;
-  }>;
-  deviceFingerprint?: string;
-  status?: string;
-  hasCompletedWalkthrough?: boolean;
-  createdAt: number;
-  updatedAt: number;
-}
+import { z } from "zod";
+
+export const profileSchema = z.object({
+  userId: z.string(),
+  email: z.string().optional(),
+  role: z.enum(["chaser", "supe", "admin"]),
+  completedSteps: z.number(),
+  name: z.string().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  avatarUrl: z.string().optional(),
+  dob: z.string().optional(),
+  legal: z.object({ dob: z.string() }).optional(),
+  emergencyContact: z
+    .object({
+      name: z.string(),
+      phone: z.string(),
+      relationship: z.string(),
+    })
+    .optional(),
+  locationTracking: z
+    .object({
+      enabled: z.boolean(),
+      lastUpdate: z.number().optional(),
+      accuracy: z.number().optional(),
+      lat: z.number().optional(),
+      lng: z.number().optional(),
+    })
+    .optional(),
+  geofencingEnabled: z.boolean().optional(),
+  geofenceRadius: z.number().optional(),
+  online: z.boolean().optional(),
+  lastSeen: z.number().optional(),
+  pushToken: z.string().optional(),
+  signatureUrl: z.string().optional(),
+  signedAt: z.number().optional(),
+  stats: z
+    .object({
+      alertsResponded: z.number(),
+      alertsWithNotes: z.number().optional(),
+      daysActive: z.number(),
+    })
+    .optional(),
+  suspension: z
+    .object({
+      active: z.boolean(),
+      until: z.number().optional(),
+      reason: z.string().optional(),
+      by: z.string().optional(),
+      at: z.number().optional(),
+    })
+    .optional(),
+  ban: z
+    .object({
+      active: z.boolean(),
+      at: z.number(),
+      reason: z.string().optional(),
+      by: z.string().optional(),
+      deviceFingerprints: z.array(z.string()).optional(),
+      ipAddresses: z.array(z.string()).optional(),
+    })
+    .optional(),
+  warnings: z
+    .array(
+      z.object({
+        reason: z.string(),
+        by: z.string(),
+        at: z.number(),
+      }),
+    )
+    .optional(),
+  deviceFingerprint: z.string().optional(),
+  status: z.string().optional(),
+  hasCompletedWalkthrough: z.boolean().optional(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+});
+
+export type Profile = z.infer<typeof profileSchema>;
 
 export interface Incident {
   alertId?: string;

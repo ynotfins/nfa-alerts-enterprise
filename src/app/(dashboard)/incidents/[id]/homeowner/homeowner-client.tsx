@@ -16,11 +16,13 @@ import {
 } from "@/components/ui/dialog";
 import { IncidentHomeownerSkeleton } from "@/components/incidents/incident-detail-skeleton";
 import { useAuthContext } from "@/contexts/auth-context";
+import { auth } from "@/lib/firebase";
 import { useIncident } from "@/hooks/use-incidents";
 import {
   createChangeRequestAction,
   approveChangeRequestAction,
   rejectChangeRequestAction,
+  type ChangeRequestField,
 } from "@/actions/change-requests";
 import { subscribeToPendingChangeRequests } from "@/services/change-requests";
 import { toast } from "sonner";
@@ -34,8 +36,17 @@ import {
 } from "@phosphor-icons/react";
 import type { ChangeRequest, WithId } from "@/lib/db";
 
+async function getCurrentUserToken() {
+  const token = await auth.currentUser?.getIdToken();
+  if (!token) {
+    throw new Error("Authentication required");
+  }
+
+  return token;
+}
+
 interface FieldConfig {
-  key: string;
+  key: ChangeRequestField;
   label: string;
   type: "text" | "email" | "textarea";
   getValue: (
@@ -186,11 +197,8 @@ export default function HomeownerClient({
     if (!profile) return;
     setReviewingId(request._id);
     try {
-      await approveChangeRequestAction(
-        request._id,
-        profile._id,
-        profile.name || "Supe",
-      );
+      const token = await getCurrentUserToken();
+      await approveChangeRequestAction(request._id, token);
       toast.success("Change approved and applied");
     } catch {
       toast.error("Failed to approve change");
@@ -203,11 +211,8 @@ export default function HomeownerClient({
     if (!profile) return;
     setReviewingId(request._id);
     try {
-      await rejectChangeRequestAction(
-        request._id,
-        profile._id,
-        profile.name || "Supe",
-      );
+      const token = await getCurrentUserToken();
+      await rejectChangeRequestAction(request._id, token);
       toast.success("Change rejected");
     } catch {
       toast.error("Failed to reject change");
@@ -227,14 +232,14 @@ export default function HomeownerClient({
 
     setSubmitting(true);
     try {
+      const token = await getCurrentUserToken();
       await createChangeRequestAction({
         incidentId,
-        requesterId: profile._id,
-        requesterName: profile.name || profile.email || "Unknown",
         field: editField.key,
         fieldLabel: editField.label,
         currentValue,
         proposedValue,
+        authToken: token,
       });
       toast.success("Change request submitted for supe approval");
       setEditField(null);
