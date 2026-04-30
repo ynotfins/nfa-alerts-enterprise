@@ -27,6 +27,7 @@ export function parseProfile(id: string, value: unknown): WithId<Profile> {
   const updatedAt = optionalNumber(value.updatedAt) ?? 0;
 
   return {
+    ...value,
     _id: id,
     userId,
     role: value.role,

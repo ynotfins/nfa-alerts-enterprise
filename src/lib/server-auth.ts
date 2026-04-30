@@ -56,7 +56,13 @@ export async function verifyFirebaseBearerToken(
     throw new AuthError();
   }
 
-  const decoded = await adminAuth.verifyIdToken(token);
+  let decoded;
+  try {
+    decoded = await adminAuth.verifyIdToken(token);
+  } catch {
+    throw new AuthError();
+  }
+
   return getProfileForId(decoded.uid);
 }
 

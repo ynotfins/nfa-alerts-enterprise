@@ -42,6 +42,20 @@ describe("server auth helpers", () => {
     });
   });
 
+  it("converts invalid Firebase token verification errors to unauthorized", async () => {
+    const { verifyFirebaseBearerToken } = await import("@/lib/server-auth");
+    verifyIdToken.mockRejectedValueOnce({
+      code: "auth/id-token-expired",
+    });
+
+    await expect(
+      verifyFirebaseBearerToken("Bearer expired-token"),
+    ).rejects.toMatchObject({
+      message: "Unauthorized",
+      status: 401,
+    });
+  });
+
   it("resolves authenticated profile server-side from verified token uid", async () => {
     const { verifyFirebaseBearerToken } = await import("@/lib/server-auth");
     verifyIdToken.mockResolvedValueOnce({ uid: "real-user" });
@@ -100,5 +114,17 @@ describe("server auth helpers", () => {
         }),
       ),
     ).resolves.toMatchObject({ type: "firebase" });
+  });
+
+  it("preserves profile-not-found as forbidden after successful token verification", async () => {
+    const { verifyFirebaseBearerToken } = await import("@/lib/server-auth");
+    verifyIdToken.mockResolvedValueOnce({ uid: "missing-user" });
+
+    await expect(
+      verifyFirebaseBearerToken("Bearer firebase-token"),
+    ).rejects.toMatchObject({
+      message: "Authenticated profile not found",
+      status: 403,
+    });
   });
 });
