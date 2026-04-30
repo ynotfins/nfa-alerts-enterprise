@@ -13,7 +13,7 @@
 ## Completed / merged work
 
 - Cloud Agent environment setup completed.
-- Production scripts force `NODE_ENV=production` for build/start so injected Cloud Agent `NODE_ENV=development` does not break production commands.
+- Production wrappers avoid inheriting invalid Cloud Agent runtime mode values during build/start.
 - `.env` is ignored and untracked.
 - `.env.example` is placeholder-only and should use empty assignments only.
 - Stable CI check names exist:
@@ -87,7 +87,6 @@
 - `BWS_ACCESS_TOKEN`
 - `BWS_PROJECT_ID`
 - `PORT`
-- `NODE_ENV` remains in Cursor My Secrets if the UI cannot remove it, but production wrappers protect build/start.
 
 ## Abandoned work
 
@@ -107,11 +106,11 @@
 
 The next Cloud Agent task should be:
 
-Public repo safety audit + Supe screenshot-to-source UI documentation `D:\github\nfa-alerts-enterprise\screenshots`.
+Public repo safety audit + Supe screenshot-to-source UI documentation.
 
 Inputs required:
 
-- Attach the screenshot ZIP to the Cloud Agent task.
+- Attach the screenshot ZIP directly to the Cloud Agent task, or place screenshots under a repo-local `screenshots/` directory.
 - Start from latest `main`.
 
 Expected outputs:
