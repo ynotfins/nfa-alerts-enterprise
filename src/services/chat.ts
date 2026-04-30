@@ -221,14 +221,18 @@ export async function sendMessage(
       recipientIds = [...new Set([...recipientIds, ...supeIds])];
     }
 
+    const token = await user.getIdToken();
     for (const recipientId of recipientIds) {
       try {
         await fetch("/api/notifications/send", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
             profileId: recipientId,
-            type: "chat",
+            type: "message_new",
             title: `New message from ${senderName}`,
             body: text.length > 100 ? text.slice(0, 100) + "..." : text,
             url: `/chat/${threadId}`,

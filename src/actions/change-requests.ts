@@ -1,16 +1,77 @@
 "use server";
 
+import { z } from "zod";
 import { adminDb } from "@/lib/firebase-admin";
+import {
+  isPrivilegedRole,
+  verifyFirebaseBearerToken,
+} from "@/lib/server-auth";
 import { sendNotificationToSupes, sendAppNotification } from "./notifications";
 
 interface CreateChangeRequestParams {
   incidentId: string;
-  requesterId: string;
-  requesterName: string;
   field: string;
   fieldLabel: string;
   currentValue: string;
   proposedValue: string;
+  authToken: string;
+}
+
+const changeRequestFieldMap: Record<
+  string,
+  (value: string) => Record<string, unknown>
+> = {
+  name: (value) => ({ "homeowner.name": value }),
+  contact: (value) => ({ "homeowner.contact": value }),
+  phone: (value) => ({ "homeowner.phone": value }),
+  email: (value) => ({ "homeowner.email": value }),
+  address: (value) => ({ "homeowner.address": value }),
+  policyNumber: (value) => ({ "homeowner.insurance.policyNumber": value }),
+  carrier: (value) => ({ "homeowner.insurance.carrier": value }),
+  claimsPhone: (value) => ({ "homeowner.insurance.claimsPhone": value }),
+  description: (value) => ({ "homeowner.description": value }),
+  adjusterName: (value) => ({ "homeowner.adjuster.name": value }),
+  adjusterPhone: (value) => ({ "homeowner.adjuster.phone": value }),
+  notes: (value) => ({ "homeowner.notes": value }),
+};
+
+const createChangeRequestSchema = z.object({
+  incidentId: z.string().min(1),
+  field: z.enum([
+    "name",
+    "contact",
+    "phone",
+    "email",
+    "address",
+    "policyNumber",
+    "carrier",
+    "claimsPhone",
+    "description",
+    "adjusterName",
+    "adjusterPhone",
+    "notes",
+  ]),
+  fieldLabel: z.string().min(1).max(80),
+  currentValue: z.string().max(5000),
+  proposedValue: z.string().min(1).max(5000),
+  authToken: z.string().min(1),
+});
+
+function getProfileName(profile: { name?: string; email?: string }) {
+  return profile.name || profile.email || "Unknown";
+}
+
+async function requireActionUser(authToken: string) {
+  return verifyFirebaseBearerToken(`Bearer ${authToken}`);
+}
+
+async function requirePrivilegedActionUser(authToken: string) {
+  const profile = await requireActionUser(authToken);
+  if (!isPrivilegedRole(profile.role)) {
+    throw new Error("Forbidden");
+  }
+
+  return profile;
 }
 
 export async function createChangeRequestAction(
@@ -20,21 +81,15 @@ export async function createChangeRequestAction(
     throw new Error("Database not initialized");
   }
 
-  const {
-    incidentId,
-    requesterId,
-    requesterName,
-    field,
-    fieldLabel,
-    currentValue,
-    proposedValue,
-  } = params;
+  const { incidentId, field, fieldLabel, currentValue, proposedValue, authToken } =
+    createChangeRequestSchema.parse(params);
+  const requester = await requireActionUser(authToken);
+  const requesterName = getProfileName(requester);
 
-  // Create the change request
   const ref = adminDb.collection("changeRequests").doc();
   await ref.set({
     incidentId,
-    requesterId,
+    requesterId: requester._id,
     requesterName,
     field,
     fieldLabel,
@@ -44,7 +99,6 @@ export async function createChangeRequestAction(
     createdAt: Date.now(),
   });
 
-  // Get incident display ID for notification
   const incidentSnap = await adminDb
     .collection("incidents")
     .doc(incidentId)
@@ -52,7 +106,6 @@ export async function createChangeRequestAction(
   const incident = incidentSnap.data();
   const displayId = incident?.displayId || incidentId;
 
-  // Notify all supes
   await sendNotificationToSupes({
     type: "change_request",
     title: "Change Request",
@@ -70,14 +123,14 @@ export async function createChangeRequestAction(
 
 export async function approveChangeRequestAction(
   requestId: string,
-  reviewerId: string,
-  reviewerName: string,
+  authToken: string,
 ) {
   if (!adminDb) {
     throw new Error("Database not initialized");
   }
+  const reviewer = await requirePrivilegedActionUser(authToken);
+  const reviewerName = getProfileName(reviewer);
 
-  // Get the change request
   const requestRef = adminDb.collection("changeRequests").doc(requestId);
   const requestSnap = await requestRef.get();
 
@@ -86,40 +139,22 @@ export async function approveChangeRequestAction(
   }
 
   const request = requestSnap.data()!;
+  if (request.status !== "pending") {
+    throw new Error("Change request already reviewed");
+  }
 
-  // Update the change request status
   await requestRef.update({
     status: "approved",
-    reviewedBy: reviewerId,
+    reviewedBy: reviewer._id,
     reviewedAt: Date.now(),
   });
 
-  // Apply the change to the incident
   const incidentRef = adminDb.collection("incidents").doc(request.incidentId);
   const incidentSnap = await incidentRef.get();
   const incident = incidentSnap.data();
 
   if (incident) {
-    const _homeowner = incident.homeowner || {};
-
-    // Map field to nested structure
-    const fieldMap: Record<string, (value: string) => Record<string, unknown>> =
-      {
-        name: (v) => ({ "homeowner.name": v }),
-        contact: (v) => ({ "homeowner.contact": v }),
-        phone: (v) => ({ "homeowner.phone": v }),
-        email: (v) => ({ "homeowner.email": v }),
-        address: (v) => ({ "homeowner.address": v }),
-        policyNumber: (v) => ({ "homeowner.insurance.policyNumber": v }),
-        carrier: (v) => ({ "homeowner.insurance.carrier": v }),
-        claimsPhone: (v) => ({ "homeowner.insurance.claimsPhone": v }),
-        description: (v) => ({ "homeowner.description": v }),
-        adjusterName: (v) => ({ "homeowner.adjuster.name": v }),
-        adjusterPhone: (v) => ({ "homeowner.adjuster.phone": v }),
-        notes: (v) => ({ "homeowner.notes": v }),
-      };
-
-    const updateFn = fieldMap[request.field];
+    const updateFn = changeRequestFieldMap[request.field];
     if (updateFn) {
       await incidentRef.update({
         ...updateFn(request.proposedValue),
@@ -128,7 +163,6 @@ export async function approveChangeRequestAction(
     }
   }
 
-  // Notify the requester
   await sendAppNotification({
     profileId: request.requesterId,
     type: "change_request_approved",
@@ -146,14 +180,14 @@ export async function approveChangeRequestAction(
 
 export async function rejectChangeRequestAction(
   requestId: string,
-  reviewerId: string,
-  reviewerName: string,
+  authToken: string,
 ) {
   if (!adminDb) {
     throw new Error("Database not initialized");
   }
+  const reviewer = await requirePrivilegedActionUser(authToken);
+  const reviewerName = getProfileName(reviewer);
 
-  // Get the change request
   const requestRef = adminDb.collection("changeRequests").doc(requestId);
   const requestSnap = await requestRef.get();
 
@@ -162,15 +196,16 @@ export async function rejectChangeRequestAction(
   }
 
   const request = requestSnap.data()!;
+  if (request.status !== "pending") {
+    throw new Error("Change request already reviewed");
+  }
 
-  // Update the change request status
   await requestRef.update({
     status: "rejected",
-    reviewedBy: reviewerId,
+    reviewedBy: reviewer._id,
     reviewedAt: Date.now(),
   });
 
-  // Notify the requester
   await sendAppNotification({
     profileId: request.requesterId,
     type: "change_request_rejected",

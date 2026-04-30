@@ -1,6 +1,7 @@
 import {
   initializeApp,
   getApps,
+  getApp,
   cert,
   type App,
   type ServiceAccount,
@@ -114,7 +115,9 @@ function initAdmin() {
   if (adminApp) return;
 
   try {
-    if (getApps().length === 0) {
+    const existingDefaultApp = getApps().find((app) => app.name === "[DEFAULT]");
+
+    if (!existingDefaultApp) {
       const firebaseServiceAccount = getServiceAccountFromEnv();
 
       if (!firebaseServiceAccount) {
@@ -129,7 +132,7 @@ function initAdmin() {
         storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
       });
     } else {
-      adminApp = getApps()[0];
+      adminApp = getApp();
     }
 
     adminAuth = getAuth(adminApp);

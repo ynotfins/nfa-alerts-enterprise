@@ -1,8 +1,65 @@
 # NFA Alerts — AI State
 
-**Last updated**: 2026-04-26  
-**Session type**: AGENT Executioner — Cloud/Bugbot/VPS Platform Hardening
-**Status**: COMPLETE — env review false-positive rules tightened and validation passed
+**Last updated**: 2026-04-30  
+**Session type**: AGENT Executioner — Security Correctness Hardening
+**Status**: COMPLETE — notification and change-request auth hardened; validation passed
+
+---
+
+## What happened this session (2026-04-30 — Security Correctness Hardening)
+
+Made minimal correctness/security fixes while leaving the fire-alert ingestion/listener/rules path untouched:
+
+1. **Change requests**: Server actions now verify Firebase ID tokens server-side, derive requester/reviewer identity from the authenticated profile, reject non-supe/admin reviews, validate request fields with Zod, and prevent re-reviewing non-pending requests.
+2. **Notification API**: `/api/notifications/send` now requires either the existing internal bearer token or Firebase bearer auth. Internal callers may send supported notification types; Firebase callers are limited to their own `message_new` notifications.
+3. **Push logs**: Removed push-token logging from the notification route.
+4. **Firebase Admin**: Replaced brittle `getApps()[0]` fallback with explicit default-app lookup via `getApp()`.
+5. **React hook correctness**: Removed render-time state updates from `useProfile` and added async cancellation for fetch completion.
+6. **Tests**: Added focused tests for server auth, notification API auth/payload behavior, and change-request authenticated identity/reviewer enforcement.
+7. **Tooling**: Added the Vitest `@/*` alias so tests resolve app imports the same way TypeScript/Next do.
+
+### Checklist
+
+- [x] Read required Cloud Agent, state, Firebase config/rules, Admin SDK, change-request, notification, and profile files
+- [x] Preserve fire-alert ingestion, Firestore alert write path, alert listener/query behavior, alert schema, alert notification flow, and alert rules behavior
+- [x] Secure change-request create/approve/reject server actions
+- [x] Secure `/api/notifications/send` without breaking existing chat notifications
+- [x] Fix Firebase Admin default app selection
+- [x] Fix React state update during render in `useProfile`
+- [x] Add async cancellation guard for isolated profile fetch
+- [x] Add focused unit tests
+- [x] Run install/typecheck/lint/unit/build/Firebase CLI/rules validation
+- [x] Update `docs/ai/CODEBASE_END_TO_END_VALIDATION_REPORT.md`
+
+### Evidence
+
+| Check | Result |
+| --- | --- |
+| `pnpm install --frozen-lockfile` | PASS |
+| `pnpm run typecheck` | PASS |
+| `pnpm run lint:ci` | PASS — 19 existing warnings, 0 errors |
+| `pnpm run test:unit` | PASS — 52/52 tests |
+| `pnpm run build` | PASS — Firebase Admin credentials unavailable warnings only |
+| `pnpm dlx firebase-tools --version` | PASS — 15.16.0 |
+| `pnpm dlx firebase-tools emulators:exec --only firestore,storage --project demo-nfa-alerts-enterprise "true"` | PASS — Firestore and Storage emulators started and exited cleanly |
+| Context7 MCP | WARN — monthly quota exceeded; fallback used repository inspection and installed package behavior |
+| Initial Cloud toolchain | WARN — `node`, `npm`, `corepack`, and `pnpm` were missing from the image; installed Node 22.22.2 and activated pnpm 10.33.0 for validation |
+
+### Fire-alert pipeline untouched
+
+- `firestore.rules` unchanged.
+- `storage.rules` unchanged.
+- `firebase.json` unchanged.
+- `src/app/api/webhook/route.ts` unchanged.
+- Incident services/hooks and Firestore incident listener/query behavior unchanged.
+
+### What is still broken / blocked
+
+1. **Runtime secrets**: Real Firebase Admin credentials and `WEBHOOK_AUTH_TOKEN` still need to be configured in Vercel/Cloud runtime; no secrets were committed or printed.
+2. **Least-privilege rules**: Firestore/Storage rules remain intentionally broad per request to avoid disrupting the alert path.
+3. **Legacy cleanup**: Old repo service-account key rotation/history cleanup remains human-owned.
+4. **Existing lint debt**: `lint:ci` passes within the warning budget but still reports 19 pre-existing warnings.
+5. **Tooling setup**: Future Cloud agents should start from an image with Node 22 and Corepack/pnpm preinstalled to avoid repeating setup.
 
 ---
 
