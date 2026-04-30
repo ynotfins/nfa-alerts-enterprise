@@ -1,12 +1,30 @@
 "use server";
 
 import { adminDb } from "@/lib/firebase-admin";
+import { getAuthenticatedProfile, requireSupe } from "@/lib/server-auth";
 import { sendNotificationToSupes, sendAppNotification } from "./notifications";
 
+const HOMEOWNER_FIELD_UPDATES: Record<
+  string,
+  (value: string) => Record<string, unknown>
+> = {
+  name: (v) => ({ "homeowner.name": v }),
+  contact: (v) => ({ "homeowner.contact": v }),
+  phone: (v) => ({ "homeowner.phone": v }),
+  email: (v) => ({ "homeowner.email": v }),
+  address: (v) => ({ "homeowner.address": v }),
+  policyNumber: (v) => ({ "homeowner.insurance.policyNumber": v }),
+  carrier: (v) => ({ "homeowner.insurance.carrier": v }),
+  claimsPhone: (v) => ({ "homeowner.insurance.claimsPhone": v }),
+  description: (v) => ({ "homeowner.description": v }),
+  adjusterName: (v) => ({ "homeowner.adjuster.name": v }),
+  adjusterPhone: (v) => ({ "homeowner.adjuster.phone": v }),
+  notes: (v) => ({ "homeowner.notes": v }),
+};
+
 interface CreateChangeRequestParams {
+  authToken: string;
   incidentId: string;
-  requesterId: string;
-  requesterName: string;
   field: string;
   fieldLabel: string;
   currentValue: string;
@@ -21,20 +39,22 @@ export async function createChangeRequestAction(
   }
 
   const {
+    authToken,
     incidentId,
-    requesterId,
-    requesterName,
     field,
     fieldLabel,
     currentValue,
     proposedValue,
   } = params;
+  const requester = await getAuthenticatedProfile(authToken);
+  const requesterName =
+    requester.name || requester.email || requester.firstName || "Unknown";
 
   // Create the change request
   const ref = adminDb.collection("changeRequests").doc();
   await ref.set({
     incidentId,
-    requesterId,
+    requesterId: requester._id,
     requesterName,
     field,
     fieldLabel,
@@ -70,12 +90,16 @@ export async function createChangeRequestAction(
 
 export async function approveChangeRequestAction(
   requestId: string,
-  reviewerId: string,
-  reviewerName: string,
+  authToken: string,
 ) {
   if (!adminDb) {
     throw new Error("Database not initialized");
   }
+
+  const reviewer = await getAuthenticatedProfile(authToken);
+  requireSupe(reviewer);
+  const reviewerName =
+    reviewer.name || reviewer.email || reviewer.firstName || "Supe";
 
   // Get the change request
   const requestRef = adminDb.collection("changeRequests").doc(requestId);
@@ -90,7 +114,7 @@ export async function approveChangeRequestAction(
   // Update the change request status
   await requestRef.update({
     status: "approved",
-    reviewedBy: reviewerId,
+    reviewedBy: reviewer._id,
     reviewedAt: Date.now(),
   });
 
@@ -100,26 +124,7 @@ export async function approveChangeRequestAction(
   const incident = incidentSnap.data();
 
   if (incident) {
-    const _homeowner = incident.homeowner || {};
-
-    // Map field to nested structure
-    const fieldMap: Record<string, (value: string) => Record<string, unknown>> =
-      {
-        name: (v) => ({ "homeowner.name": v }),
-        contact: (v) => ({ "homeowner.contact": v }),
-        phone: (v) => ({ "homeowner.phone": v }),
-        email: (v) => ({ "homeowner.email": v }),
-        address: (v) => ({ "homeowner.address": v }),
-        policyNumber: (v) => ({ "homeowner.insurance.policyNumber": v }),
-        carrier: (v) => ({ "homeowner.insurance.carrier": v }),
-        claimsPhone: (v) => ({ "homeowner.insurance.claimsPhone": v }),
-        description: (v) => ({ "homeowner.description": v }),
-        adjusterName: (v) => ({ "homeowner.adjuster.name": v }),
-        adjusterPhone: (v) => ({ "homeowner.adjuster.phone": v }),
-        notes: (v) => ({ "homeowner.notes": v }),
-      };
-
-    const updateFn = fieldMap[request.field];
+    const updateFn = HOMEOWNER_FIELD_UPDATES[request.field];
     if (updateFn) {
       await incidentRef.update({
         ...updateFn(request.proposedValue),
@@ -146,12 +151,16 @@ export async function approveChangeRequestAction(
 
 export async function rejectChangeRequestAction(
   requestId: string,
-  reviewerId: string,
-  reviewerName: string,
+  authToken: string,
 ) {
   if (!adminDb) {
     throw new Error("Database not initialized");
   }
+
+  const reviewer = await getAuthenticatedProfile(authToken);
+  requireSupe(reviewer);
+  const reviewerName =
+    reviewer.name || reviewer.email || reviewer.firstName || "Supe";
 
   // Get the change request
   const requestRef = adminDb.collection("changeRequests").doc(requestId);
@@ -166,7 +175,7 @@ export async function rejectChangeRequestAction(
   // Update the change request status
   await requestRef.update({
     status: "rejected",
-    reviewedBy: reviewerId,
+    reviewedBy: reviewer._id,
     reviewedAt: Date.now(),
   });
 

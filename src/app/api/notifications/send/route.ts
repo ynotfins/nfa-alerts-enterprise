@@ -1,10 +1,83 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb, sendNotification } from "@/lib/firebase-admin";
-import type { AppNotification } from "@/lib/db";
+import { getAuthenticatedProfile, getBearerToken } from "@/lib/server-auth";
+import { z } from "zod";
+
+const notificationTypes = [
+  "incident_new",
+  "incident_responded",
+  "incident_activity",
+  "message_new",
+  "change_request",
+  "change_request_approved",
+  "change_request_rejected",
+] as const;
+
+const notificationRequestSchema = z.object({
+  profileId: z.string().min(1),
+  type: z.enum(notificationTypes),
+  title: z.string().min(1).max(200),
+  body: z.string().min(1).max(1000),
+  url: z.string().min(1).max(500).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+});
+
+async function authorizeNotificationRequest(request: NextRequest) {
+  const bearerToken = getBearerToken(request.headers.get("authorization"));
+  const internalToken = process.env.WEBHOOK_AUTH_TOKEN;
+
+  if (!bearerToken) {
+    return false;
+  }
+
+  if (internalToken && bearerToken === internalToken) {
+    return true;
+  }
+
+  await getAuthenticatedProfile(bearerToken);
+  return true;
+}
+
+function stringifyMetadata(metadata: Record<string, unknown> | undefined) {
+  if (!metadata) return undefined;
+
+  return Object.fromEntries(
+    Object.entries(metadata)
+      .filter(([, value]) => value != null)
+      .map(([key, value]) => [key, String(value)]),
+  );
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    try {
+      const authorized = await authorizeNotificationRequest(request);
+
+      if (!authorized) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+    } catch {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    let requestBody: unknown;
+    try {
+      requestBody = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid request payload" },
+        { status: 400 },
+      );
+    }
+
+    const parsed = notificationRequestSchema.safeParse(requestBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid request payload" },
+        { status: 400 },
+      );
+    }
+
     const {
       profileId,
       type,
@@ -12,21 +85,7 @@ export async function POST(request: NextRequest) {
       body: notifBody,
       url,
       metadata,
-    } = body as {
-      profileId: string;
-      type: AppNotification["type"];
-      title: string;
-      body: string;
-      url?: string;
-      metadata?: Record<string, unknown>;
-    };
-
-    if (!profileId || !type || !title || !notifBody) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 },
-      );
-    }
+    } = parsed.data;
 
     if (!adminDb) {
       return NextResponse.json(
@@ -57,19 +116,15 @@ export async function POST(request: NextRequest) {
 
     if (profile?.pushToken) {
       try {
-        console.log(
-          `Sending push to ${profileId}, token: ${profile.pushToken.slice(0, 20)}...`,
-        );
         await sendNotification(profile.pushToken, {
           title,
           body: notifBody,
           data: {
             type,
             url: url || "/notifications",
-            ...(metadata as Record<string, string>),
+            ...stringifyMetadata(metadata),
           },
         });
-        console.log(`Push sent successfully to ${profileId}`);
       } catch (pushError: unknown) {
         console.error("Push notification failed:", pushError);
         // Clear invalid token
@@ -79,14 +134,11 @@ export async function POST(request: NextRequest) {
           errorMessage.includes("not a valid FCM registration token") ||
           errorMessage.includes("Requested entity was not found")
         ) {
-          console.log(`Clearing invalid pushToken for ${profileId}`);
           await adminDb.collection("profiles").doc(profileId).update({
             pushToken: "",
           });
         }
       }
-    } else {
-      console.log(`No pushToken for profile ${profileId}`);
     }
 
     return NextResponse.json({ success: true, id: notifRef.id });

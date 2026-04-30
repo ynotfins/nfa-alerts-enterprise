@@ -1,8 +1,54 @@
 # NFA Alerts — AI State
 
-**Last updated**: 2026-04-26  
-**Session type**: AGENT Executioner — Cloud/Bugbot/VPS Platform Hardening
-**Status**: COMPLETE — env review false-positive rules tightened and validation passed
+**Last updated**: 2026-04-30
+**Session type**: Cloud Agent — Security Correctness Hardening
+**Status**: COMPLETE — security fixes implemented, validation completed with Firebase auth/project caveat
+
+---
+
+## What happened this session (2026-04-30 — Security Correctness Hardening)
+
+Implemented minimal correctness/security fixes that avoid the business-critical fire-alert ingestion and live-alert delivery path:
+
+1. **Change-request server actions**: Server actions now verify a Firebase ID token server-side, derive requester/reviewer identity from the authenticated profile, and require `supe`/`admin` role for approval and rejection.
+2. **Notification send API**: `/api/notifications/send` now requires either the existing internal bearer token or a verified Firebase bearer token before creating `appNotifications` or sending FCM, validates payloads with Zod, and no longer logs push tokens.
+3. **Firebase Admin initialization**: Replaced brittle `getApps()[0]` reuse with `getApp()` for the default Admin app.
+4. **React render-state fix**: Removed `useProfile` render-time state synchronization and now derives the cached profile directly from context after triggering fetch/subscription side effects.
+5. **Chat notification caller**: Chat notification requests now attach the current Firebase ID token.
+6. **Focused tests**: Added unit coverage for unauthorized/authorized notification API paths and authenticated change-request identity/reviewer behavior.
+
+### Checklist
+
+- [x] Read required Cloud Agent docs and target files
+- [x] Inspect existing auth/session utilities and tests
+- [x] Keep Firestore rules, Storage rules, alert schema, alert listener/query behavior, and ingestion path untouched
+- [x] Secure change-request requester/reviewer identity server-side
+- [x] Secure `/api/notifications/send`
+- [x] Fix Firebase Admin default app reuse
+- [x] Fix React state updates during render
+- [x] Add focused unit tests for new security behavior
+- [x] Run full validation suite
+- [ ] Commit, push, and create/update PR
+
+### Evidence
+
+| Check | Result |
+| --- | --- |
+| `node --version && npm --version && pnpm --version` | PASS — `v22.22.2`, `10.9.7`, `10.33.0` after installing Node 22 in this Cloud VM |
+| `pnpm install --frozen-lockfile` | PASS |
+| `pnpm run typecheck` | PASS |
+| `pnpm run lint:ci` | PASS — 19 warnings, 0 errors; warning count remains within the configured budget and no new warnings remain from this change |
+| `pnpm run test:unit` | PASS — 46/46 tests after adding focused security tests |
+| `pnpm run build` | PASS — Next.js production build completed; Firebase Admin unavailable warnings are expected in this credential-free Cloud VM |
+| `pnpm dlx firebase-tools --version` | PASS — `15.16.0` |
+| `pnpm dlx firebase-tools deploy --only firestore:rules,storage --dry-run` | WARN — no deployment occurred; blocked because no active Firebase project is configured in this checkout |
+| `pnpm dlx firebase-tools projects:list` | WARN — Firebase CLI is available, but this VM is not authenticated with Firebase |
+
+### What is still broken / blocked
+
+1. **Firebase CLI authentication/project selection**: CLI version works, but rules dry-run cannot validate without Firebase login and an active project or explicit project ID.
+2. **Runtime credentials**: Real Firebase Admin credentials remain required for production notification and server action runtime.
+3. **Deferred security scope**: No broad Firebase rule tightening, fire-alert pipeline changes, or Android work are included in this PR.
 
 ---
 

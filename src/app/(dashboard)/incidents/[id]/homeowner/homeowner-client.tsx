@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { IncidentHomeownerSkeleton } from "@/components/incidents/incident-detail-skeleton";
 import { useAuthContext } from "@/contexts/auth-context";
+import { auth } from "@/lib/firebase";
 import { useIncident } from "@/hooks/use-incidents";
 import {
   createChangeRequestAction,
@@ -182,15 +183,17 @@ export default function HomeownerClient({
     }
   };
 
+  const getCurrentUserToken = async () => {
+    const token = await auth.currentUser?.getIdToken();
+    if (!token) throw new Error("Missing auth token");
+    return token;
+  };
+
   const handleApprove = async (request: WithId<ChangeRequest>) => {
     if (!profile) return;
     setReviewingId(request._id);
     try {
-      await approveChangeRequestAction(
-        request._id,
-        profile._id,
-        profile.name || "Supe",
-      );
+      await approveChangeRequestAction(request._id, await getCurrentUserToken());
       toast.success("Change approved and applied");
     } catch {
       toast.error("Failed to approve change");
@@ -203,11 +206,7 @@ export default function HomeownerClient({
     if (!profile) return;
     setReviewingId(request._id);
     try {
-      await rejectChangeRequestAction(
-        request._id,
-        profile._id,
-        profile.name || "Supe",
-      );
+      await rejectChangeRequestAction(request._id, await getCurrentUserToken());
       toast.success("Change rejected");
     } catch {
       toast.error("Failed to reject change");
@@ -228,9 +227,8 @@ export default function HomeownerClient({
     setSubmitting(true);
     try {
       await createChangeRequestAction({
+        authToken: await getCurrentUserToken(),
         incidentId,
-        requesterId: profile._id,
-        requesterName: profile.name || profile.email || "Unknown",
         field: editField.key,
         fieldLabel: editField.label,
         currentValue,

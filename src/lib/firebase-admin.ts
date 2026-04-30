@@ -1,6 +1,7 @@
 import {
   initializeApp,
   getApps,
+  getApp,
   cert,
   type App,
   type ServiceAccount,
@@ -129,7 +130,7 @@ function initAdmin() {
         storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
       });
     } else {
-      adminApp = getApps()[0];
+      adminApp = getApp();
     }
 
     adminAuth = getAuth(adminApp);

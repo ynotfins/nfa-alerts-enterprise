@@ -88,31 +88,19 @@ export function useProfiles() {
 
 export function useProfile(id: string | undefined) {
   const { getProfile, subscribeToProfile, fetchProfile } = useProfiles();
-  const [profile, setProfile] = useState<ProfileWithId | undefined>(
-    id ? getProfile(id) : undefined
-  );
-  const [subscribedId, setSubscribedId] = useState<string | null>(null);
+  const profile = id ? getProfile(id) : undefined;
 
   useEffect(() => {
     if (!id) return;
 
-    // Fetch profile if not cached, setState happens in fetchProfile's callback
-    const cached = getProfile(id);
-    if (!cached) {
-      fetchProfile(id).then((p) => {
-        if (p) setProfile(p);
+    if (!getProfile(id)) {
+      fetchProfile(id).catch((err) => {
+        console.error("Failed to fetch profile:", id, err);
       });
     }
 
     return subscribeToProfile(id);
   }, [id, getProfile, subscribeToProfile, fetchProfile]);
-
-  // Sync profile from cache when it changes (using derived state pattern)
-  const cachedProfile = id ? getProfile(id) : undefined;
-  if (cachedProfile && cachedProfile !== profile && subscribedId !== id) {
-    setProfile(cachedProfile);
-    setSubscribedId(id ?? null);
-  }
 
   return profile;
 }
