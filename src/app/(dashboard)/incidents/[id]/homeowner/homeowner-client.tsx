@@ -22,6 +22,7 @@ import {
   createChangeRequestAction,
   approveChangeRequestAction,
   rejectChangeRequestAction,
+  type ChangeRequestField,
 } from "@/actions/change-requests";
 import { subscribeToPendingChangeRequests } from "@/services/change-requests";
 import { toast } from "sonner";
@@ -45,7 +46,7 @@ async function getCurrentUserToken() {
 }
 
 interface FieldConfig {
-  key: string;
+  key: ChangeRequestField;
   label: string;
   type: "text" | "email" | "textarea";
   getValue: (

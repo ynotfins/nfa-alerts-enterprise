@@ -29,7 +29,7 @@ type ServiceAccountEnvJson = {
 const SERVICE_ACCOUNT_JSON_ENV_KEYS = [
   "FIREBASE_SERVICE_ACCOUNT_JSON",
   "GOOGLE_APPLICATION_CREDENTIALS_JSON",
-] as const;
+];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -67,7 +67,7 @@ function parseServiceAccountJson(rawValue: string): ServiceAccount | null {
     const json = trimmed.startsWith("{")
       ? trimmed
       : Buffer.from(trimmed, "base64").toString("utf8");
-    const parsed = JSON.parse(json) as unknown;
+    const parsed: unknown = JSON.parse(json);
 
     if (!isRecord(parsed)) {
       return null;

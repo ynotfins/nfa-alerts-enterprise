@@ -8,26 +8,28 @@ import {
   authorizeInternalOrFirebaseRequest,
 } from "@/lib/server-auth";
 
+const notificationTypes: AppNotification["type"][] = [
+  "incident_new",
+  "incident_responded",
+  "incident_activity",
+  "message_new",
+  "change_request",
+  "change_request_approved",
+  "change_request_rejected",
+];
+
 const notificationSchema = z.object({
   profileId: z.string().min(1),
-  type: z.enum([
-    "incident_new",
-    "incident_responded",
-    "incident_activity",
-    "message_new",
-    "change_request",
-    "change_request_approved",
-    "change_request_rejected",
-  ] satisfies AppNotification["type"][]),
+  type: z.enum(notificationTypes),
   title: z.string().min(1).max(200),
   body: z.string().min(1).max(1000),
   url: z.string().min(1).max(500).optional(),
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
-function stringifyNotificationData(
-  metadata: Record<string, unknown> | undefined,
-) {
+type NotificationInput = z.infer<typeof notificationSchema>;
+
+function stringifyNotificationData(metadata: NotificationInput["metadata"]) {
   if (!metadata) {
     return {};
   }
@@ -114,7 +116,6 @@ export async function POST(request: NextRequest) {
         console.log(`Push sent successfully to ${profileId}`);
       } catch (pushError: unknown) {
         console.error("Push notification failed:", pushError);
-        // Clear invalid token
         const errorMessage =
           pushError instanceof Error ? pushError.message : "";
         if (

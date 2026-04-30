@@ -7,9 +7,11 @@ const verifyFirebaseBearerToken = vi.fn();
 const sendNotificationToSupes = vi.fn();
 const sendAppNotification = vi.fn();
 
+type TestDoc = Record<string, unknown>;
+
 const docs = {
-  changeRequests: new Map<string, unknown>(),
-  incidents: new Map<string, unknown>(),
+  changeRequests: new Map<string, TestDoc>(),
+  incidents: new Map<string, TestDoc>(),
 };
 
 function docRef(collectionName: "changeRequests" | "incidents", id: string) {

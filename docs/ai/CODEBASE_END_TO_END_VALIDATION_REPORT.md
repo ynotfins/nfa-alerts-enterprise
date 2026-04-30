@@ -9,6 +9,7 @@
 - Secured `/api/notifications/send` so unauthenticated requests cannot create app notifications or trigger FCM.
 - Fixed Firebase Admin default app selection to avoid brittle `getApps()[0]` behavior.
 - Removed render-time state updates from `useProfile`.
+- Removed type assertions and comments from the touched security/profile code path, with Firestore profile reads parsed at the boundary through `parseProfile`.
 - Kept fire-alert ingestion, alert writes, alert listener/query behavior, alert schema, notification flow for alerts, Firestore rules, Storage rules, and Firebase config untouched.
 
 ## Validation Matrix
@@ -24,6 +25,7 @@
 | `pnpm run build` | PASS | Next.js production build completed; Firebase Admin unavailable warnings are expected without runtime credentials. |
 | `pnpm dlx firebase-tools --version` | PASS | Firebase CLI `15.16.0`. |
 | Firebase rules local validation | PASS | `pnpm dlx firebase-tools emulators:exec --only firestore,storage --project demo-nfa-alerts-enterprise "true"` started Firestore and Storage emulators and exited successfully. |
+| Scoped assertion/comment scan | PASS | No `as`, angle-bracket type assertions, `any`, or comments remain in this PR's touched security/profile code path. |
 
 ## Auth Behavior Before / After
 

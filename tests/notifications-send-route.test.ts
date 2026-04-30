@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const setNotification = vi.fn();
 const updateProfile = vi.fn();
@@ -20,9 +20,7 @@ vi.mock("@/lib/firebase-admin", () => ({
 }));
 
 vi.mock("@/lib/server-auth", async () => {
-  const actual = await vi.importActual<typeof import("@/lib/server-auth")>(
-    "@/lib/server-auth",
-  );
+  const actual = await import("@/lib/server-auth");
 
   return {
     AuthError: actual.AuthError,

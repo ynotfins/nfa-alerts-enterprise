@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Profile } from "@/lib/db";
 
-const profileDocs = new Map<string, unknown>();
+const profileDocs = new Map<string, Profile>();
 const verifyIdToken = vi.fn();
 
 vi.mock("@/lib/firebase-admin", () => ({

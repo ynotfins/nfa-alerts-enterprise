@@ -3,22 +3,31 @@
 import { z } from "zod";
 import { adminDb } from "@/lib/firebase-admin";
 import {
+  type AuthenticatedProfile,
   isPrivilegedRole,
   verifyFirebaseBearerToken,
 } from "@/lib/server-auth";
 import { sendNotificationToSupes, sendAppNotification } from "./notifications";
 
-interface CreateChangeRequestParams {
-  incidentId: string;
-  field: string;
-  fieldLabel: string;
-  currentValue: string;
-  proposedValue: string;
-  authToken: string;
-}
+export const changeRequestFields = [
+  "name",
+  "contact",
+  "phone",
+  "email",
+  "address",
+  "policyNumber",
+  "carrier",
+  "claimsPhone",
+  "description",
+  "adjusterName",
+  "adjusterPhone",
+  "notes",
+];
+
+export type ChangeRequestField = (typeof changeRequestFields)[number];
 
 const changeRequestFieldMap: Record<
-  string,
+  ChangeRequestField,
   (value: string) => Record<string, unknown>
 > = {
   name: (value) => ({ "homeowner.name": value }),
@@ -37,27 +46,17 @@ const changeRequestFieldMap: Record<
 
 const createChangeRequestSchema = z.object({
   incidentId: z.string().min(1),
-  field: z.enum([
-    "name",
-    "contact",
-    "phone",
-    "email",
-    "address",
-    "policyNumber",
-    "carrier",
-    "claimsPhone",
-    "description",
-    "adjusterName",
-    "adjusterPhone",
-    "notes",
-  ]),
+  field: z.enum(changeRequestFields),
   fieldLabel: z.string().min(1).max(80),
   currentValue: z.string().max(5000),
   proposedValue: z.string().min(1).max(5000),
   authToken: z.string().min(1),
 });
 
-function getProfileName(profile: { name?: string; email?: string }) {
+type CreateChangeRequestParams = z.input<typeof createChangeRequestSchema>;
+type ProfileNameFields = Pick<AuthenticatedProfile, "name" | "email">;
+
+function getProfileName(profile: ProfileNameFields) {
   return profile.name || profile.email || "Unknown";
 }
 

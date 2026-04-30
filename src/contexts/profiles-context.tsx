@@ -3,9 +3,9 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { doc, onSnapshot, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Profile } from "@/lib/db";
+import { parseProfile } from "@/lib/profile-boundary";
 
-type ProfileWithId = Profile & { _id: string };
+type ProfileWithId = ReturnType<typeof parseProfile>;
 
 interface ProfilesContextValue {
   profiles: Map<string, ProfileWithId>;
@@ -32,7 +32,7 @@ export function ProfilesProvider({ children }: { children: ReactNode }) {
       const ref = doc(db, "profiles", id);
       const snap = await getDoc(ref);
       if (snap.exists()) {
-        const profile = { _id: snap.id, ...snap.data() } as ProfileWithId;
+        const profile = parseProfile(snap.id, snap.data());
         setProfiles(prev => new Map(prev).set(id, profile));
         return profile;
       }
@@ -50,7 +50,7 @@ export function ProfilesProvider({ children }: { children: ReactNode }) {
     const ref = doc(db, "profiles", id);
     const unsub = onSnapshot(ref, (snap) => {
       if (snap.exists()) {
-        const profile = { _id: snap.id, ...snap.data() } as ProfileWithId;
+        const profile = parseProfile(snap.id, snap.data());
         setProfiles(prev => new Map(prev).set(id, profile));
       }
     });

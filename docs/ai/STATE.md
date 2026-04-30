@@ -15,8 +15,9 @@ Made minimal correctness/security fixes while leaving the fire-alert ingestion/l
 3. **Push logs**: Removed push-token logging from the notification route.
 4. **Firebase Admin**: Replaced brittle `getApps()[0]` fallback with explicit default-app lookup via `getApp()`.
 5. **React hook correctness**: Removed render-time state updates from `useProfile` and added async cancellation for fetch completion.
-6. **Tests**: Added focused tests for server auth, notification API auth/payload behavior, and change-request authenticated identity/reviewer enforcement.
-7. **Tooling**: Added the Vitest `@/*` alias so tests resolve app imports the same way TypeScript/Next do.
+6. **Type cleanup**: Removed assertions/comments from the security-changed path, added a profile Firestore boundary parser, inferred change-request field types from one shared constant, and kept cleanup scoped away from fire-alert services.
+7. **Tests**: Added focused tests for server auth, notification API auth/payload behavior, and change-request authenticated identity/reviewer enforcement.
+8. **Tooling**: Added the Vitest `@/*` alias so tests resolve app imports the same way TypeScript/Next do.
 
 ### Checklist
 
@@ -27,6 +28,7 @@ Made minimal correctness/security fixes while leaving the fire-alert ingestion/l
 - [x] Fix Firebase Admin default app selection
 - [x] Fix React state update during render in `useProfile`
 - [x] Add async cancellation guard for isolated profile fetch
+- [x] Remove assertions/comments and duplicate boundary typing from files changed for this PR
 - [x] Add focused unit tests
 - [x] Run install/typecheck/lint/unit/build/Firebase CLI/rules validation
 - [x] Update `docs/ai/CODEBASE_END_TO_END_VALIDATION_REPORT.md`

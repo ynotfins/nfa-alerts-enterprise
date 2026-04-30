@@ -1,8 +1,12 @@
 import type { NextRequest } from "next/server";
-import type { Profile } from "@/lib/db";
+import type { Profile, WithId } from "@/lib/db";
 import { adminAuth, adminDb } from "@/lib/firebase-admin";
+import { parseProfile } from "@/lib/profile-boundary";
 
-export type AuthenticatedProfile = Profile & { _id: string };
+export type AuthenticatedProfile = WithId<Profile>;
+type InternalAuthContext = { type: "internal" };
+type FirebaseAuthContext = { type: "firebase"; profile: AuthenticatedProfile };
+type PrivilegedAuthContext = InternalAuthContext | FirebaseAuthContext;
 
 export class AuthError extends Error {
   status: number;
@@ -37,8 +41,7 @@ export async function getProfileForId(uid: string): Promise<AuthenticatedProfile
     throw new AuthError("Authenticated profile not found", 403);
   }
 
-  const profile = profileSnap.data() as Profile;
-  return { _id: profileSnap.id, ...profile };
+  return parseProfile(profileSnap.id, profileSnap.data());
 }
 
 export async function verifyFirebaseBearerToken(
@@ -74,13 +77,15 @@ export async function requirePrivilegedFirebaseBearerToken(
   return profile;
 }
 
-export async function authorizeInternalOrPrivilegedRequest(request: NextRequest) {
+export async function authorizeInternalOrPrivilegedRequest(
+  request: NextRequest,
+): Promise<PrivilegedAuthContext> {
   const authorization = request.headers.get("authorization");
   const internalToken = process.env.WEBHOOK_AUTH_TOKEN;
   const bearerToken = getBearerToken(authorization);
 
   if (internalToken && bearerToken === internalToken) {
-    return { type: "internal" as const };
+    return { type: "internal" };
   }
 
   const profile = await verifyFirebaseBearerToken(authorization);
@@ -88,18 +93,20 @@ export async function authorizeInternalOrPrivilegedRequest(request: NextRequest)
     throw new AuthError("Forbidden", 403);
   }
 
-  return { type: "firebase" as const, profile };
+  return { type: "firebase", profile };
 }
 
-export async function authorizeInternalOrFirebaseRequest(request: NextRequest) {
+export async function authorizeInternalOrFirebaseRequest(
+  request: NextRequest,
+): Promise<PrivilegedAuthContext> {
   const authorization = request.headers.get("authorization");
   const internalToken = process.env.WEBHOOK_AUTH_TOKEN;
   const bearerToken = getBearerToken(authorization);
 
   if (internalToken && bearerToken === internalToken) {
-    return { type: "internal" as const };
+    return { type: "internal" };
   }
 
   const profile = await verifyFirebaseBearerToken(authorization);
-  return { type: "firebase" as const, profile };
+  return { type: "firebase", profile };
 }

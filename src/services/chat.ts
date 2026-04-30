@@ -200,7 +200,6 @@ export async function sendMessage(
       unreadCount,
     });
 
-    // Send push notifications to other participants
     const senderProfile = await getProfile(user.uid);
     const senderName = senderProfile
       ? `${senderProfile.firstName} ${senderProfile.lastName}`
@@ -208,7 +207,6 @@ export async function sendMessage(
 
     let recipientIds = participants.filter((id: string) => id !== user.uid);
 
-    // For chaser_to_supes threads, also notify all supes
     if (threadData?.type === "chaser_to_supes") {
       const supesQuery = query(
         collection(db, "profiles"),
