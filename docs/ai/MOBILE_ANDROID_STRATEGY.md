@@ -12,17 +12,17 @@
 
 | Artifact | Status | Notes |
 |----------|--------|-------|
-| `public/manifest.json` | ✅ Present | Standalone PWA, portrait orientation |
-| `public/sw.js` | ✅ Present | PWA service worker (cache-first) |
-| `public/firebase-messaging-sw.js` | ✅ Present | FCM background push service worker |
-| `public/android.apk` | ✅ Present (git-tracked) | Pre-built APK committed to git |
-| `twa-manifest.json` | ✅ Present | Trusted Web Activity (Play Store) manifest |
-| PWA metadata in `app/layout.tsx` | ✅ Present | apple-mobile-web-app-capable, icon-192 |
-| `next.config.ts` | ⚠ Minimal | No PWA headers, no SW build pipeline |
+| `apps/web/public/manifest.json` | ✅ Present | Standalone PWA, portrait orientation |
+| `apps/web/public/sw.js` | ✅ Present | PWA service worker (cache-first) |
+| `apps/web/public/firebase-messaging-sw.js` | ✅ Present | FCM background push service worker |
+| `apps/web/public/android.apk` | ✅ Present (git-tracked) | Pre-built APK committed to git |
+| `apps/web/twa-manifest.json` | ✅ Present | Trusted Web Activity (Play Store) manifest |
+| PWA metadata in `apps/web/src/app/layout.tsx` | ✅ Present | apple-mobile-web-app-capable, icon-192 |
+| `apps/web/next.config.ts` | ⚠ Minimal | No PWA headers, no SW build pipeline |
 
 ### Current delivery approach
 - **Primary**: Install PWA from browser (Add to Home Screen)
-- **Android**: TWA (Trusted Web Activity) via `twa-manifest.json` and pre-built `android.apk`
+- **Android**: TWA (Trusted Web Activity) via `apps/web/twa-manifest.json` and pre-built `android.apk`
 - **iOS**: Safari PWA (add to home screen)
 
 ---
@@ -30,10 +30,10 @@
 ## Next.js PWA Guidance (from Context7 — Next.js official docs, 2026)
 
 ### Recommended manifest approach
-Next.js App Router supports a native `manifest.ts` in the `app/` directory (Route Handler pattern) for dynamic manifests. The current static `public/manifest.json` is valid and functional but the official recommendation is `app/manifest.ts`:
+Next.js App Router supports a native `manifest.ts` in the app directory (Route Handler pattern) for dynamic manifests. The current static `apps/web/public/manifest.json` is valid and functional but the official recommendation is `apps/web/src/app/manifest.ts`:
 
 ```typescript
-// app/manifest.ts
+// apps/web/src/app/manifest.ts
 import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
@@ -47,13 +47,13 @@ export default function manifest(): MetadataRoute.Manifest {
 }
 ```
 
-**Current repo uses**: `public/manifest.json` (static). Works but less flexible for dynamic theming.
+**Current repo uses**: `apps/web/public/manifest.json` (static). Works but less flexible for dynamic theming.
 
 ### Recommended service worker security headers
-Official Next.js PWA guide recommends explicit security headers in `next.config.ts` for service workers:
+Official Next.js PWA guide recommends explicit security headers in `apps/web/next.config.ts` for service workers:
 
 ```javascript
-// next.config.ts
+// apps/web/next.config.ts
 async headers() {
   return [
     { source: '/sw.js', headers: [
@@ -64,7 +64,7 @@ async headers() {
 }
 ```
 
-**Current repo**: No explicit SW headers in `next.config.ts`. Risk: browser may cache a stale service worker.
+**Current repo**: No explicit SW headers in `apps/web/next.config.ts`. Risk: browser may cache a stale service worker.
 
 ### Dual service worker concern
 The current app registers both `/sw.js` and `/firebase-messaging-sw.js`. The official guide uses a single service worker. Firebase's own guidance supports a separate messaging service worker, so the dual pattern is intentional — but the SW scope and cache-control headers should be verified to avoid conflicts.
@@ -109,7 +109,7 @@ If adopting Capacitor, the `@capacitor-community/fcm` plugin or `@capacitor/push
 - **Pros**: Already working, minimal build complexity, no native code
 - **Cons**: No native API access, limited offline, weak iOS experience
 - **Suitability**: Good for simple emergency alert consumption
-- **Next step if chosen**: Add SW security headers to `next.config.ts`; migrate `public/manifest.json` to `app/manifest.ts` for dynamic theming per PRODUCT_MODEL.md theme presets
+- **Next step if chosen**: Add SW security headers to `apps/web/next.config.ts`; migrate `apps/web/public/manifest.json` to `apps/web/src/app/manifest.ts` for dynamic theming per PRODUCT_MODEL.md theme presets
 
 ### Option B: Migrate to Capacitor
 - **Pros**: Full native APIs, better FCM, better offline, better iOS experience
@@ -128,10 +128,10 @@ If adopting Capacitor, the `@capacitor-community/fcm` plugin or `@capacitor/push
 **The current TWA approach works.** For the near-term, the risk-to-reward of a Capacitor migration is not justified while RISK-001 (service account exposure), RISK-003 (no rate limiting), and RISK-008 (near-zero test coverage) remain open.
 
 **Minimum PWA improvements to request from PLAN**:
-1. Add `Cache-Control: no-cache` headers for `/sw.js` and `/firebase-messaging-sw.js` in `next.config.ts`
-2. Migrate `public/manifest.json` to `app/manifest.ts` to enable dynamic theming (PRODUCT_MODEL.md requirement)
+1. Add `Cache-Control: no-cache` headers for `/sw.js` and `/firebase-messaging-sw.js` in `apps/web/next.config.ts`
+2. Migrate `apps/web/public/manifest.json` to `apps/web/src/app/manifest.ts` to enable dynamic theming (PRODUCT_MODEL.md requirement)
 3. Investigate consolidating dual service workers or clearly document their scope boundaries
-4. Remove `public/android.apk` from git tracking (binary in git is expensive)
+4. Remove `apps/web/public/android.apk` from git tracking (binary in git is expensive)
 
 **Capacitor migration**: Defer to PLAN. Requires separate AGENT session with dedicated scope.
 
@@ -142,5 +142,5 @@ If adopting Capacitor, the `@capacitor-community/fcm` plugin or `@capacitor/push
 - Next.js PWA guide: https://nextjs.org/docs/app/guides/progressive-web-apps
 - Capacitor Android docs: https://capacitorjs.com/docs/android
 - Capacitor workflow: https://capacitorjs.com/docs/basics/workflow
-- Current manifest: `D:/github/nfa-alerts-v2/nfa-alert/public/manifest.json`
-- Current TWA manifest: `D:/github/nfa-alerts-v2/nfa-alert/twa-manifest.json`
+- Current manifest: `apps/web/public/manifest.json`
+- Current TWA manifest: `apps/web/twa-manifest.json`

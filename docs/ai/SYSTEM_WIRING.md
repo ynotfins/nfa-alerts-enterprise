@@ -8,36 +8,36 @@
 ## Provider Wiring Tree
 
 ```
-RootLayout (app/layout.tsx)
+RootLayout (apps/web/src/app/layout.tsx)
 ├── Viewport: mobile-only, theme #3b82f6
 ├── ServiceWorker registration: /sw.js + /firebase-messaging-sw.js
-└── Providers (app/providers.tsx)
-    └── AuthProvider (src/contexts/auth-context.tsx)
+└── Providers (apps/web/src/app/providers.tsx)
+    └── AuthProvider (apps/web/src/contexts/auth-context.tsx)
         ├── onAuthStateChanged → Firebase Auth
         ├── onSnapshot(profiles/{uid}) → Firestore
-        ├── getFingerprint() → src/lib/fingerprint.ts
+        ├── getFingerprint() → apps/web/src/lib/fingerprint.ts
         ├── Writes presence to profiles/{uid}
         └── Redirects: loading/unauthenticated/incomplete/banned/suspended
     └── Toaster (sonner — toast notifications)
     └── [Protected Routes: (dashboard)/layout.tsx]
-        └── Protected (src/components/auth/protected.tsx)
+        └── Protected (apps/web/src/components/auth/protected.tsx)
             ├── Reads AuthContext
             └── Redirects if not authenticated
-        └── Presence (src/components/presence.tsx)
+        └── Presence (apps/web/src/components/presence.tsx)
             └── Writes to presence/{uid} in Firestore
-        └── ProfilesProvider (src/contexts/profiles-context.tsx)
+        └── ProfilesProvider (apps/web/src/contexts/profiles-context.tsx)
             └── onSnapshot(profiles collection) → all profiles
-        └── PushNotificationProvider (src/components/push-notification-provider.tsx)
+        └── PushNotificationProvider (apps/web/src/components/push-notification-provider.tsx)
             ├── usePushNotifications hook
             ├── Requests notification permission
             ├── getToken(messaging, { vapidKey }) → FCM token
             └── Writes token to profiles/{uid}.pushToken
-        └── GoogleMapsProvider (src/components/google-maps-provider.tsx)
+        └── GoogleMapsProvider (apps/web/src/components/google-maps-provider.tsx)
             └── Loads Google Maps JS SDK (lazy)
-        └── Shell (src/components/layout/shell.tsx)
+        └── Shell (apps/web/src/components/layout/shell.tsx)
             └── Navigation + bottom tab bar + {children}
-        └── PermissionsPrompt (src/components/permissions-prompt.tsx)
-        └── WalkthroughProvider (src/components/walkthrough-provider.tsx)
+        └── PermissionsPrompt (apps/web/src/components/permissions-prompt.tsx)
+        └── WalkthroughProvider (apps/web/src/components/walkthrough-provider.tsx)
 ```
 
 ---
@@ -47,13 +47,13 @@ RootLayout (app/layout.tsx)
 ```
 External System
   → POST /api/webhook (Bearer token auth)
-  → src/app/api/webhook/route.ts
+  → apps/web/src/app/api/webhook/route.ts
       → sanitizeInput() — strip control chars, limit 10k
-      → parseNotification() — src/lib/webhook/parser.ts
+      → parseNotification() — apps/web/src/lib/webhook/parser.ts
           → OpenAI GPT-4o-mini generateObject()
           → Schema: notificationSchema (Zod)
           → Returns: {source, alertId, isUpdate, incidentType, location, description}
-      → geocodeAddress() — src/lib/webhook/geocoder.ts
+      → geocodeAddress() — apps/web/src/lib/webhook/geocoder.ts
           → Google Maps Geocoding API
           → Returns: {lat, lng}
       → adminDb.collection("incidents").where("alertId", "==", alertId)
@@ -83,7 +83,7 @@ FirebaseAuth.onAuthStateChanged
 
 ```
 User sends message
-  → src/services/chat.ts:sendMessage()
+  → apps/web/src/services/chat.ts:sendMessage()
       → setDoc(threads/{id}/messages/{new}) — Firestore
       → updateDoc(threads/{id}) — update lastMessage, unreadCount
       → getProfile(senderId) — get sender name
@@ -92,11 +92,11 @@ User sends message
           → getDocs(profiles where role in [supe, admin]) — N+1 issue
       → FOR EACH recipient:
           → fetch("/api/notifications/send", {profileId, type, title, body, url})
-              → src/app/api/notifications/send/route.ts
+              → apps/web/src/app/api/notifications/send/route.ts
                   → setDoc(appNotifications/{new}) — Firestore
                   → IF profile.pushToken:
                       → sendNotification(token, {title, body, data})
-                          → src/lib/firebase-admin.ts
+                          → apps/web/src/lib/firebase-admin.ts
                           → adminMessaging.send()
                           → FCM → Device
 ```
@@ -107,9 +107,9 @@ User sends message
 
 ```
 User taps Respond
-  → src/app/(dashboard)/incidents/[id]/incident-detail-client.tsx
+  → apps/web/src/app/(dashboard)/incidents/[id]/incident-detail-client.tsx
   → respondToIncident(incidentId, note?)
-      → src/services/incidents.ts:respondToIncident()
+      → apps/web/src/services/incidents.ts:respondToIncident()
           → updateDoc(incidents/{id}, {
               responderIds: arrayUnion(uid),
               responderCount: increment(1),
@@ -128,15 +128,15 @@ User taps Respond
 ## FCM / Service Worker Setup
 
 ```
-public/firebase-messaging-sw.js
+apps/web/public/firebase-messaging-sw.js
   → Firebase App init with firebaseConfig (hardcoded public keys)
   → getMessaging()
   → onBackgroundMessage() → shows notification via self.registration.showNotification()
 
-public/sw.js
+apps/web/public/sw.js
   → Standard PWA service worker (cache-first strategy)
 
-Registration (src/app/layout.tsx):
+Registration (apps/web/src/app/layout.tsx):
   navigator.serviceWorker.register('/sw.js')
   navigator.serviceWorker.register('/firebase-messaging-sw.js')
   [NOTE: Dual registration — potential conflict risk]
@@ -147,7 +147,7 @@ Registration (src/app/layout.tsx):
 ## Firebase Admin SDK Initialization
 
 ```
-src/lib/firebase-admin.ts
+apps/web/src/lib/firebase-admin.ts
   → Reads FIREBASE_SERVICE_ACCOUNT_JSON or GOOGLE_APPLICATION_CREDENTIALS_JSON env var
     OR FIREBASE_PROJECT_ID + FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY
   → initializeApp({ credential: cert(firebaseServiceAccount) })
@@ -160,17 +160,17 @@ src/lib/firebase-admin.ts
 ## PWA / Android Wiring
 
 ```
-public/manifest.json
+apps/web/public/manifest.json
   → name: "NFA Alerts - Emergency Response Platform"
   → display: standalone
   → orientation: portrait
   → start_url: /
   → icons: icon-192.png, icon-512.png
 
-twa-manifest.json
+apps/web/twa-manifest.json
   → Trusted Web Activity manifest for Play Store distribution
 
-public/android.apk
+apps/web/public/android.apk
   → Pre-built APK committed to git (⚠ large binary in git history)
 ```
 

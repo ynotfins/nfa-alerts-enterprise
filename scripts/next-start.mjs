@@ -12,7 +12,7 @@ const child = spawn(command, ["start"], {
     ...process.env,
     NODE_ENV: "production",
   },
-  shell: false,
+  shell: process.platform === "win32",
   stdio: "inherit",
 });
 

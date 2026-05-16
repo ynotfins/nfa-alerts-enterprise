@@ -11,8 +11,12 @@ process.env.NODE_ENV = "production";
 const command = process.platform === "win32" ? "next.cmd" : "next";
 const result = spawnSync(command, ["build"], {
   env: process.env,
-  shell: false,
+  shell: process.platform === "win32",
   stdio: "inherit",
 });
+
+if (result.error) {
+  console.error(result.error);
+}
 
 process.exit(result.status ?? 1);

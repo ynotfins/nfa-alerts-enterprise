@@ -1,8 +1,129 @@
 # NFA Alerts — AI State
 
-**Last updated**: 2026-04-26  
-**Session type**: AGENT Executioner — Cloud/Bugbot/VPS Platform Hardening
-**Status**: COMPLETE — env review false-positive rules tightened and validation passed
+**Last updated**: 2026-05-16  
+**Session type**: AGENT Executioner — Enterprise monorepo migration cleanup
+**Status**: COMPLETE — migration cleanup validation passing
+
+---
+
+## What happened this session (2026-05-16 — Multitask Migration Cleanup)
+
+Ran a focused cleanup/fix pass after the enterprise monorepo migration:
+
+1. **Generated artifact hygiene**: Added ignore coverage for `.idea/`, `android_bootstrap_backup/`, and `test-results/`; verified those paths plus `apps/web/.next/` and `apps/web/node_modules/` are ignored.
+2. **Documentation path alignment**: Corrected active docs that still pointed at root `src/`, root `public/`, or plain `firebase use` after the move to `apps/web` and `firebase/firebase.json`.
+3. **State formatting**: Fixed the malformed literal `\n` in the current migration summary.
+4. **Validation**: Re-ran `pnpm --filter web lint`, `typecheck`, `test:unit`, and `build`; all passed. Firebase emulators reached "All emulators ready" with `--config firebase/firebase.json` and were stopped after verification.
+
+### Cleanup Evidence
+
+| Check | Result |
+| --- | --- |
+| `git status --ignored -- .idea android_bootstrap_backup test-results apps/web/node_modules apps/web/.next` | PASS — local/generated artifacts are ignored |
+| `pnpm --filter web lint` | PASS — 20 existing warnings, 0 errors |
+| `pnpm --filter web typecheck` | PASS |
+| `pnpm --filter web test:unit` | PASS — 40/40 tests |
+| `pnpm --filter web build` | PASS |
+| `firebase emulators:start --config firebase/firebase.json --project nfa-alerts-v2 --only auth,firestore` | PASS — reached "All emulators ready" and was stopped |
+
+### Cleanup Caveats
+
+1. **Existing lint debt**: The 20 ESLint warnings remain pre-existing and were not fixed in this migration cleanup pass.
+2. **Historical docs**: Some older dated/history docs still mention old root paths as historical evidence; this pass updated current operating and architecture docs only.
+
+---
+
+## What happened this session (2026-05-16 — Enterprise Monorepo Migration)
+
+Migrated the parent repository toward a commercial enterprise monorepo layout:
+
+1. **Workspace layout**: Moved the Next.js PWA from repo root into `apps/web` and kept root package scripts as workspace forwarding commands.
+2. **Firebase layout**: Moved Firebase CLI config, Firestore rules/indexes, Storage rules, and CORS config into `firebase/` while preserving rule/index contents.
+3. **Android boundary**: Created only an `apps/android` documentation placeholder. Android Studio remains responsible for creating the native Gradle project there.
+4. **Safety docs**: Added enterprise, Android, Firebase, and commercial planning docs for production guardrails and future work boundaries.
+5. **Validation**: `pnpm install`, `pnpm --filter web lint`, `typecheck`, `test:unit`, and `build` passed. `firebase use` requires `--config firebase/firebase.json` in the new layout; emulator startup passed with that config and was stopped after verification.
+
+### Checklist
+
+- [x] Confirm migration branch and working tree
+- [x] Move web app files with `git mv`
+- [x] Move Firebase config files with `git mv`
+- [x] Split root/web package configuration
+- [x] Preserve webhook route at `apps/web/src/app/api/webhook/route.ts`
+- [x] Avoid Android Gradle generation
+- [x] Run validation commands
+- [x] Record final migration report
+
+---
+
+## What happened this session (2026-05-16 — Canvas SDK maintenance)
+
+Updated the managed Cursor canvas at `C:/Users/ynotf/.cursor/projects/d-github-nfa-alerts-enterprise/canvases/deep-structural-scan.canvas.tsx` so it matches the current Canvas SDK surface and guidance:
+
+1. **SDK comparison**: Re-read the current canvas skill plus the live `cursor/canvas` declaration files before editing. The original primitives still exist, but the public surface is broader now and the design guidance is stricter about composition.
+2. **Canvas refresh**: Reworked the scan to use current primitives such as `Card`, `CardHeader`, `CardBody`, `Row`, and `Code` alongside the existing `Table`, `Stat`, `Callout`, and `Pill` components.
+3. **Runtime fix**: Replaced brace-style Firestore placeholders like `profiles/{uid}` and `incidents/{id}` with code-formatted angle-bracket placeholders like `profiles/<uid>` and `incidents/<id>` to eliminate the reported `uid is not defined` failure mode.
+4. **Layout cleanup**: Kept tables directly under headings per current canvas guidance, added striping for scan-heavy sections, and mixed open sections with card-based provider summaries instead of relying only on stacked tables.
+
+### Canvas Checklist
+
+- [x] Read current canvas skill and SDK declaration files
+- [x] Compare the existing canvas against the current public API
+- [x] Update the managed canvas to use current `cursor/canvas` components
+- [x] Replace brace-style displayed path placeholders that could trigger runtime evaluation
+- [x] Run a post-edit lint check
+
+### Canvas Evidence
+
+| Check | Result |
+| --- | --- |
+| Canvas skill | PASS — current skill read before editing |
+| `cursor/canvas` declarations | PASS — current SDK exports and prop types reviewed |
+| `ReadLints` on the canvas file | PASS — no linter errors |
+
+### Canvas Caveats
+
+1. **Best-effort build diagnostics**: The managed canvas status sidecar was not present during this pass, so the fix is verified by source inspection and lint status rather than sidecar output.
+2. **Static artifact drift**: This canvas is still a hand-maintained structural snapshot; future repo changes can make its route, dependency, or risk rows stale again.
+
+---
+
+## What happened this session (2026-04-30 — Android UI Specification Pack)
+
+Created a source- and screenshot-backed documentation pack for rebuilding the existing NFA Alerts PWA as a native Android app with UI parity:
+
+1. **Documentation root**: Added `docs/android-ui-spec/` with overview docs, role differences, realtime/Firebase mapping, Android build plan, component inventory, and verification report.
+2. **Screen specs**: Added 36 per-screen/state markdown specs under `docs/android-ui-spec/screens/`, covering auth/onboarding, incidents, filters, incident details, homeowner/docs/signing, favorites tabs, route planner, notifications, chat, chasers, profile, legal/help, admin, and system states.
+3. **Screenshot review**: Inspected all 34 Supe app screenshots in `screenshots/` and mapped each screenshot to screen docs and verification evidence.
+4. **Source verification**: Verified route/page maps, shared components, hooks, services, Firebase client/admin wiring, Firestore/Storage rules, PWA service workers, and manifest behavior from current source.
+5. **Android translation**: Added Jetpack Compose, Firebase Android SDK, navigation graph, state management, offline/cache, and milestone guidance in `android-build-plan.md`.
+6. **Known gaps**: Marked Chaser-specific visuals, admin screenshots, populated notification/docs/signing states, permission-denied states, and several source/doc contradictions as verification gaps instead of inventing UI details.
+
+### Checklist
+
+- [x] Create `docs/android-ui-spec/`
+- [x] Create `docs/android-ui-spec/screens/`
+- [x] Inspect all 34 screenshots
+- [x] Verify current source instead of trusting older docs
+- [x] Create README, app map, design system, screen index
+- [x] Create 36 screen/state specs
+- [x] Create role differences, realtime/Firebase, Android build plan, component inventory, verification report
+- [x] Run safe validation command
+
+### Evidence
+
+| Check | Result |
+| --- | --- |
+| Screenshot inventory | PASS — 34 JPG screenshots inspected |
+| Markdown docs created | PASS — 45 markdown files under `docs/android-ui-spec/` |
+| `pnpm run typecheck` | PASS |
+
+### What is still broken / blocked
+
+1. **Chaser visual parity**: Screenshots are Supe-only; Chaser-specific UI must be captured on device before final native parity.
+2. **Admin screenshots**: Admin users, admin user edit, and admin live locations are source-backed but not screenshot-backed.
+3. **Runtime state coverage**: Populated notifications, uploaded documents, completed signed PDFs, permission-denied states, and error states need additional screenshots.
+4. **Source/doc contradictions**: Existing docs still contain stale claims about Next.js version, Playwright/functions, APK artifact, and some product behavior; new Android spec records these contradictions.
 
 ---
 

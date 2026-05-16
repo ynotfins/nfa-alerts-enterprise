@@ -2,7 +2,7 @@
 
 ## Readiness status
 
-This repo is ready for Cursor Cloud Agents when the dashboard points agents at `ynotfins/nfa-alerts-enterprise` and the update command is `pnpm install --frozen-lockfile`.
+This repo is a pnpm workspace monorepo. It is ready for Cursor Cloud Agents when the dashboard points agents at `ynotfins/nfa-alerts-enterprise`, the update command is `pnpm install --frozen-lockfile`, and web app work targets `apps/web`.
 
 Validated Cloud evidence:
 
@@ -80,7 +80,7 @@ Optional by feature:
 - `NEXT_PUBLIC_CONVEX_URL` only if Convex code is restored
 - `PORT` only for process managers that require a fixed port
 
-Firebase Admin credentials are required for server-side API routes and notification sending because `src/lib/firebase-admin.ts` initializes `adminDb` and `adminMessaging` from those values.
+Firebase Admin credentials are required for server-side API routes and notification sending because `apps/web/src/lib/firebase-admin.ts` initializes `adminDb` and `adminMessaging` from those values.
 
 Do not set `NODE_ENV` as a Cursor secret. `pnpm run dev` keeps normal development behavior, while `pnpm run build` and `pnpm run start` explicitly run Next.js with `NODE_ENV=production` so injected Cloud secrets cannot force production commands into development mode.
 
@@ -98,7 +98,7 @@ Validation before PR:
 - `pnpm run test:unit`
 - `pnpm run build`
 
-GitHub Actions runs the same validation on `main` and PRs through `.github/workflows/ci.yml`.
+GitHub Actions runs the same root forwarding validation on `main` and PRs through `.github/workflows/ci.yml`. The Next.js app package lives at `apps/web`.
 
 Local app smoke test:
 
@@ -123,7 +123,7 @@ Production smoke test:
 | Context7 | Yes | Current docs for Next.js, Firebase, React, Tailwind, shadcn, and libraries. |
 | Vercel | Yes | Deployment logs and env/config checks if this app deploys on Vercel. |
 | Playwright | Yes | End-to-end browser checks for mobile PWA flows. |
-| shadcn/ui | Yes | This repo uses shadcn-style components under `src/components/ui`. |
+| shadcn/ui | Yes | This repo uses shadcn-style components under `apps/web/src/components/ui`. |
 | Firebase | Yes | This repo uses Firebase Auth, Firestore, Storage, Admin SDK, FCM. |
 | Supabase | No | This repo does not use Supabase. |
 | Sentry | Optional future | No current Sentry dependency; consider for production error tracking. |

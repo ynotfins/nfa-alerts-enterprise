@@ -1,61 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NFA Alerts Enterprise
 
-## NFA Alerts v2
+NFA Alerts Enterprise is a commercial emergency response monorepo. The current production-facing web client is a mobile-first Next.js PWA backed by Firebase Auth, Firestore, Storage, FCM, and Firebase Admin-powered API routes.
 
-A business-critical Next.js/PWA web application with integrated Firebase backend, employee operations tools, and mobile-first design.
+## Repository Layout
 
-### Key Technologies
-
-- **Framework:** Next.js 16.1.1 with App Router
-- **UI:** React 19.2.3, Shadcn/ui (New York style), Tailwind CSS v4
-- **Backend:** Firebase (Auth, Firestore, Storage, Functions, FCM)
-- **Maps:** Google Maps API with geocoding
-- **AI/Parsing:** OpenAI webhook integration
-- **Testing:** Vitest, Playwright
-- **Deployment:** Vercel
-
-### Development Tools & MCP Servers
-
-This project has **4 mandatory MCP servers** configured for optimal AI-assisted development:
-
-1. **Firebase MCP** - Firebase project management and debugging
-2. **Next.js DevTools MCP** - Next.js diagnostics and route analysis
-3. **Vercel MCP** - Deployment logs and production debugging
-4. **Shadcn MCP** - Component browsing and installation
-
-See `docs/ai/CURSOR_MCP_AND_TOOLS.md` for complete MCP server documentation.
-
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```text
+apps/
+  web/       Next.js PWA and API routes
+  android/   Android Studio-owned native project placeholder
+  ios/       Future iOS app placeholder
+packages/
+  shared/    Future shared contracts/utilities
+  config/    Future shared configuration
+firebase/    Firebase CLI config, Firestore rules/indexes, Storage rules
+scripts/     Repo-level automation and deployment helpers
+docs/        Architecture, operations, Android, Firebase, and enterprise docs
+.github/     CI workflows
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Web App
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The web app lives in `apps/web`. Root scripts forward to the `web` workspace:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```powershell
+pnpm install
+pnpm run dev
+pnpm run lint:ci
+pnpm run typecheck
+pnpm run test:unit
+pnpm run build
+```
 
-## Learn More
+The webhook ingestion route remains in `apps/web/src/app/api/webhook/route.ts` and must preserve its behavior.
 
-To learn more about Next.js, take a look at the following resources:
+## Firebase
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Firebase project: `nfa-alerts-v2`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Firebase config and rules live in `firebase/`. Emulator commands should be run from the repo root with explicit config:
 
-## Deploy on Vercel
+```powershell
+firebase emulators:start --config firebase/firebase.json --project nfa-alerts-v2 --only auth,firestore
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Do not run `firebase deploy` without explicit approval.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Android
+
+Android Studio owns `apps/android`. Cursor must not create Android Gradle files manually.
+
+Android Studio project settings:
+
+```text
+Template: Empty Activity
+App name: NFA Alerts
+Package: com.emergency.alerts
+Save location: D:\github\nfa-alerts-enterprise\apps\android
+Language: Kotlin
+Build config language: Kotlin DSL
+Minimum SDK: API 24
+Jetpack Compose: Yes
+```
+
+The operator will add `google-services.json` to `apps/android/app/google-services.json` after Android Studio creates the app module.

@@ -66,6 +66,7 @@ logs/
 .cursor/
 !.cursor/
 !.cursor/BUGBOT.md
+.idea/
 .serena/
 openmemory.md
 CLAUDE.md
@@ -75,7 +76,29 @@ CLAUDE.md
 *.patch
 *.diff
 nfa-alerts-migration-backups/
+android_bootstrap_backup/
+test-results/
 
 # OpenMemory - IDE/Assistant specific rules
 .cursor\rules\openmemory.mdc
 CLAUDE.md
+.cursor\rules\openmemory.mdc
+CLAUDE.md
+AGENTS.md
+
+# workspace app outputs
+/apps/*/.next/
+/apps/*/out/
+/apps/*/build/
+/apps/*/coverage/
+/apps/*/next-env.d.ts
+/apps/*/*.tsbuildinfo
+/apps/*/node_modules/
+
+# Android Studio / Gradle outputs
+/apps/android/.gradle/
+/apps/android/build/
+/apps/android/**/build/
+/apps/android/local.properties
+/apps/android/*.jks
+/apps/android/*.keystore
