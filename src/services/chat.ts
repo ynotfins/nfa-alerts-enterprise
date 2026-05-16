@@ -200,7 +200,6 @@ export async function sendMessage(
       unreadCount,
     });
 
-    // Send push notifications to other participants
     const senderProfile = await getProfile(user.uid);
     const senderName = senderProfile
       ? `${senderProfile.firstName} ${senderProfile.lastName}`
@@ -208,7 +207,6 @@ export async function sendMessage(
 
     let recipientIds = participants.filter((id: string) => id !== user.uid);
 
-    // For chaser_to_supes threads, also notify all supes
     if (threadData?.type === "chaser_to_supes") {
       const supesQuery = query(
         collection(db, "profiles"),
@@ -221,14 +219,18 @@ export async function sendMessage(
       recipientIds = [...new Set([...recipientIds, ...supeIds])];
     }
 
+    const token = await user.getIdToken();
     for (const recipientId of recipientIds) {
       try {
         await fetch("/api/notifications/send", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
             profileId: recipientId,
-            type: "chat",
+            type: "message_new",
             title: `New message from ${senderName}`,
             body: text.length > 100 ? text.slice(0, 100) + "..." : text,
             url: `/chat/${threadId}`,

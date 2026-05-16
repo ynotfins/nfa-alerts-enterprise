@@ -1,6 +1,7 @@
 import {
   initializeApp,
   getApps,
+  getApp,
   cert,
   type App,
   type ServiceAccount,
@@ -28,7 +29,7 @@ type ServiceAccountEnvJson = {
 const SERVICE_ACCOUNT_JSON_ENV_KEYS = [
   "FIREBASE_SERVICE_ACCOUNT_JSON",
   "GOOGLE_APPLICATION_CREDENTIALS_JSON",
-] as const;
+];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -66,7 +67,7 @@ function parseServiceAccountJson(rawValue: string): ServiceAccount | null {
     const json = trimmed.startsWith("{")
       ? trimmed
       : Buffer.from(trimmed, "base64").toString("utf8");
-    const parsed = JSON.parse(json) as unknown;
+    const parsed: unknown = JSON.parse(json);
 
     if (!isRecord(parsed)) {
       return null;
@@ -114,7 +115,9 @@ function initAdmin() {
   if (adminApp) return;
 
   try {
-    if (getApps().length === 0) {
+    const existingDefaultApp = getApps().find((app) => app.name === "[DEFAULT]");
+
+    if (!existingDefaultApp) {
       const firebaseServiceAccount = getServiceAccountFromEnv();
 
       if (!firebaseServiceAccount) {
@@ -129,7 +132,7 @@ function initAdmin() {
         storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
       });
     } else {
-      adminApp = getApps()[0];
+      adminApp = getApp();
     }
 
     adminAuth = getAuth(adminApp);
