@@ -8,7 +8,7 @@ import {
   authorizeInternalOrFirebaseRequest,
 } from "@/lib/server-auth";
 
-const notificationTypes: AppNotification["type"][] = [
+const notificationTypes = [
   "incident_new",
   "incident_responded",
   "incident_activity",
@@ -16,11 +16,12 @@ const notificationTypes: AppNotification["type"][] = [
   "change_request",
   "change_request_approved",
   "change_request_rejected",
-];
+] as const satisfies readonly AppNotification["type"][];
+const notificationTypeSchema = z.enum(notificationTypes);
 
 const notificationSchema = z.object({
   profileId: z.string().min(1),
-  type: z.enum(notificationTypes),
+  type: notificationTypeSchema,
   title: z.string().min(1).max(200),
   body: z.string().min(1).max(1000),
   url: z.string().min(1).max(500).optional(),
@@ -42,7 +43,19 @@ function stringifyNotificationData(metadata: NotificationInput["metadata"]) {
   );
 }
 
-function canSendFirebaseNotification(
+function metadataString(
+  metadata: NotificationInput["metadata"],
+  key: string,
+) {
+  const value = metadata?.[key];
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+
+async function canSendFirebaseNotification(
   profile: AuthenticatedProfile,
   notification: z.infer<typeof notificationSchema>,
 ) {
@@ -50,10 +63,47 @@ function canSendFirebaseNotification(
     return true;
   }
 
-  return (
-    notification.type === "message_new" &&
-    notification.metadata?.senderId === profile._id
-  );
+  const threadId = metadataString(notification.metadata, "threadId");
+  const senderId = metadataString(notification.metadata, "senderId");
+  if (
+    notification.type !== "message_new" ||
+    senderId !== profile._id ||
+    !threadId ||
+    !adminDb
+  ) {
+    return false;
+  }
+
+  const threadSnap = await adminDb.collection("threads").doc(threadId).get();
+  const thread = threadSnap.data();
+  if (!thread) {
+    return false;
+  }
+
+  const participants = isStringArray(thread.participants)
+    ? thread.participants
+    : [];
+  const chaserIds = isStringArray(thread.chaserIds) ? thread.chaserIds : [];
+  const senderIsParticipant =
+    participants.includes(profile._id) || chaserIds.includes(profile._id);
+  if (!senderIsParticipant) {
+    return false;
+  }
+
+  if (participants.includes(notification.profileId)) {
+    return true;
+  }
+
+  if (thread.type !== "chaser_to_supes") {
+    return false;
+  }
+
+  const recipientSnap = await adminDb
+    .collection("profiles")
+    .doc(notification.profileId)
+    .get();
+  const recipient = recipientSnap.data();
+  return recipient?.role === "supe" || recipient?.role === "admin";
 }
 
 export async function POST(request: NextRequest) {
@@ -79,7 +129,7 @@ export async function POST(request: NextRequest) {
       parsed.data;
     if (
       authContext.type === "firebase" &&
-      !canSendFirebaseNotification(authContext.profile, parsed.data)
+      !(await canSendFirebaseNotification(authContext.profile, parsed.data))
     ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

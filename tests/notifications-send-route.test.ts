@@ -4,13 +4,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const setNotification = vi.fn();
 const updateProfile = vi.fn();
 const getProfile = vi.fn();
-const doc = vi.fn((id?: string) => ({
+const getThread = vi.fn();
+const doc = vi.fn((collectionName: string, id?: string) => ({
   id: id ?? "notification-id",
   set: setNotification,
-  get: getProfile,
+  get: collectionName === "threads" ? getThread : getProfile,
   update: updateProfile,
 }));
-const collection = vi.fn(() => ({ doc }));
+const collection = vi.fn((collectionName: string) => ({
+  doc: (id?: string) => doc(collectionName, id),
+}));
 const sendNotification = vi.fn();
 const authorizeInternalOrFirebaseRequest = vi.fn();
 
@@ -39,6 +42,12 @@ describe("/api/notifications/send", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     getProfile.mockResolvedValue({ data: () => ({}) });
+    getThread.mockResolvedValue({
+      data: () => ({
+        type: "direct",
+        participants: ["sender-1", "profile-1"],
+      }),
+    });
     authorizeInternalOrFirebaseRequest.mockResolvedValue({ type: "internal" });
   });
 
@@ -118,6 +127,33 @@ describe("/api/notifications/send", () => {
 
     expect(response.status).toBe(200);
     expect(setNotification).toHaveBeenCalled();
+  });
+
+  it("blocks Firebase callers from notifying non-participants", async () => {
+    const { POST } = await import("@/app/api/notifications/send/route");
+    authorizeInternalOrFirebaseRequest.mockResolvedValue({
+      type: "firebase",
+      profile: { _id: "sender-1", role: "chaser" },
+    });
+    getThread.mockResolvedValue({
+      data: () => ({
+        type: "direct",
+        participants: ["sender-1", "allowed-recipient"],
+      }),
+    });
+
+    const response = await POST(
+      createRequest({
+        profileId: "profile-1",
+        type: "message_new",
+        title: "Title",
+        body: "Body",
+        metadata: { threadId: "thread-1", senderId: "sender-1" },
+      }),
+    );
+
+    expect(response.status).toBe(403);
+    expect(setNotification).not.toHaveBeenCalled();
   });
 
   it("blocks Firebase callers from forging privileged notification types", async () => {

@@ -8,6 +8,11 @@ const sendNotificationToSupes = vi.fn();
 const sendAppNotification = vi.fn();
 
 type TestDoc = Record<string, unknown>;
+type TestDocRef = ReturnType<typeof docRef>;
+type TestTransaction = {
+  get: (ref: TestDocRef) => ReturnType<TestDocRef["get"]>;
+  update: (ref: TestDocRef, data: TestDoc) => unknown;
+};
 
 const docs = {
   changeRequests: new Map<string, TestDoc>(),
@@ -31,6 +36,11 @@ vi.mock("@/lib/firebase-admin", () => ({
     collection: (collectionName: "changeRequests" | "incidents") => ({
       doc: (id?: string) => docRef(collectionName, id ?? "new-request"),
     }),
+    runTransaction: async (callback: (tx: TestTransaction) => Promise<unknown>) =>
+      callback({
+        get: (ref) => ref.get(),
+        update: (ref, data) => ref.update(data),
+      }),
   },
 }));
 

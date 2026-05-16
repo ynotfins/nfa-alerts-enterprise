@@ -22,7 +22,7 @@ export const changeRequestFields = [
   "adjusterName",
   "adjusterPhone",
   "notes",
-];
+] as const;
 
 export type ChangeRequestField = (typeof changeRequestFields)[number];
 
@@ -55,6 +55,14 @@ const createChangeRequestSchema = z.object({
 
 type CreateChangeRequestParams = z.input<typeof createChangeRequestSchema>;
 type ProfileNameFields = Pick<AuthenticatedProfile, "name" | "email">;
+type ReviewableChangeRequest = {
+  incidentId: string;
+  requesterId: string;
+  field: ChangeRequestField;
+  fieldLabel: string;
+  proposedValue: string;
+  status?: string;
+};
 
 function getProfileName(profile: ProfileNameFields) {
   return profile.name || profile.email || "Unknown";
@@ -127,40 +135,45 @@ export async function approveChangeRequestAction(
   if (!adminDb) {
     throw new Error("Database not initialized");
   }
+  const db = adminDb;
   const reviewer = await requirePrivilegedActionUser(authToken);
   const reviewerName = getProfileName(reviewer);
 
-  const requestRef = adminDb.collection("changeRequests").doc(requestId);
-  const requestSnap = await requestRef.get();
+  const requestRef = db.collection("changeRequests").doc(requestId);
+  const reviewedAt = Date.now();
+  const request = await db.runTransaction(async (tx) => {
+    const requestSnap = await tx.get(requestRef);
 
-  if (!requestSnap.exists) {
-    throw new Error("Change request not found");
-  }
+    if (!requestSnap.exists) {
+      throw new Error("Change request not found");
+    }
 
-  const request = requestSnap.data()!;
-  if (request.status !== "pending") {
-    throw new Error("Change request already reviewed");
-  }
+    const currentRequest = requestSnap.data() as ReviewableChangeRequest;
+    if (currentRequest.status !== "pending") {
+      throw new Error("Change request already reviewed");
+    }
 
-  await requestRef.update({
-    status: "approved",
-    reviewedBy: reviewer._id,
-    reviewedAt: Date.now(),
-  });
+    const incidentRef = db
+      .collection("incidents")
+      .doc(currentRequest.incidentId);
+    const incidentSnap = await tx.get(incidentRef);
+    const updateFn = changeRequestFieldMap[currentRequest.field];
 
-  const incidentRef = adminDb.collection("incidents").doc(request.incidentId);
-  const incidentSnap = await incidentRef.get();
-  const incident = incidentSnap.data();
+    tx.update(requestRef, {
+      status: "approved",
+      reviewedBy: reviewer._id,
+      reviewedAt,
+    });
 
-  if (incident) {
-    const updateFn = changeRequestFieldMap[request.field];
-    if (updateFn) {
-      await incidentRef.update({
-        ...updateFn(request.proposedValue),
-        updatedAt: Date.now(),
+    if (incidentSnap.exists && updateFn) {
+      tx.update(incidentRef, {
+        ...updateFn(currentRequest.proposedValue),
+        updatedAt: reviewedAt,
       });
     }
-  }
+
+    return currentRequest;
+  });
 
   await sendAppNotification({
     profileId: request.requesterId,
@@ -184,25 +197,31 @@ export async function rejectChangeRequestAction(
   if (!adminDb) {
     throw new Error("Database not initialized");
   }
+  const db = adminDb;
   const reviewer = await requirePrivilegedActionUser(authToken);
   const reviewerName = getProfileName(reviewer);
 
-  const requestRef = adminDb.collection("changeRequests").doc(requestId);
-  const requestSnap = await requestRef.get();
+  const requestRef = db.collection("changeRequests").doc(requestId);
+  const reviewedAt = Date.now();
+  const request = await db.runTransaction(async (tx) => {
+    const requestSnap = await tx.get(requestRef);
 
-  if (!requestSnap.exists) {
-    throw new Error("Change request not found");
-  }
+    if (!requestSnap.exists) {
+      throw new Error("Change request not found");
+    }
 
-  const request = requestSnap.data()!;
-  if (request.status !== "pending") {
-    throw new Error("Change request already reviewed");
-  }
+    const currentRequest = requestSnap.data() as ReviewableChangeRequest;
+    if (currentRequest.status !== "pending") {
+      throw new Error("Change request already reviewed");
+    }
 
-  await requestRef.update({
-    status: "rejected",
-    reviewedBy: reviewer._id,
-    reviewedAt: Date.now(),
+    tx.update(requestRef, {
+      status: "rejected",
+      reviewedBy: reviewer._id,
+      reviewedAt,
+    });
+
+    return currentRequest;
   });
 
   await sendAppNotification({
