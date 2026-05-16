@@ -1,6 +1,7 @@
 # Architecture — Current State
 
 **Generated**: 2026-04-23  
+**Updated**: 2026-05-16 for enterprise monorepo paths  
 **Source**: AGENT Bootstrap — reconstructed from code inspection + existing ARCHITECTURE.md  
 **Git HEAD**: `a5d8ec28879848733c6e76c2ba8fa2039c261441`
 
@@ -11,13 +12,13 @@
 **National Fire Alerts (NFA)** — emergency response coordination PWA for organizations like Miami-Dade Fire Rescue.
 
 - **Role**: Connects supervisors (Supes) with field responders (Chasers) for real-time incident coordination
-- **Deployment**: Next.js 16.0.1 deployed to Vercel (inferred from `vercel.json`)
+- **Deployment**: Next.js 16.1.1 app under `apps/web`, deployed to Vercel from the app root
 - **Database**: Firebase Firestore
 - **Auth**: Firebase Authentication
 - **Mobile-first**: Max 448px viewport, blocks desktop (`md:hidden` wrapper)
-- **PWA**: `public/manifest.json` — standalone display, portrait orientation
+- **PWA**: `apps/web/public/manifest.json` — standalone display, portrait orientation
 - **Service workers**: `/sw.js` (PWA) + `/firebase-messaging-sw.js` (FCM background push)
-- **Android artifact**: `public/android.apk` tracked in git (TWA manifest at `twa-manifest.json`)
+- **Android artifact**: `apps/web/public/android.apk` tracked in git (TWA manifest at `apps/web/twa-manifest.json`)
 
 ---
 
@@ -25,8 +26,8 @@
 
 | Layer | Technology | Version |
 |-------|------------|---------|
-| Framework | Next.js App Router | 16.0.1 |
-| Runtime | React | 19.2.0 |
+| Framework | Next.js App Router | 16.1.1 |
+| Runtime | React | 19.2.3 |
 | Language | TypeScript | strict mode |
 | Database | Firebase Firestore | persistent local cache |
 | Auth | Firebase Authentication | email/password + Google OAuth |
@@ -39,7 +40,7 @@
 | Forms | React Hook Form + Zod | — |
 | PDF | @react-pdf/renderer | — |
 | Test | Vitest | v4.0.8 |
-| Package manager | pnpm | v10.24.0 |
+| Package manager | pnpm | v10.33.0 |
 | Node | v22.22.0 | — |
 
 ---
@@ -103,17 +104,17 @@
 ## 4. Contexts & Providers (Top-Down Tree)
 
 ```
-RootLayout (app/layout.tsx)
-└── Providers (app/providers.tsx)
-    └── AuthProvider (src/contexts/auth-context.tsx)
+RootLayout (apps/web/src/app/layout.tsx)
+└── Providers (apps/web/src/app/providers.tsx)
+    └── AuthProvider (apps/web/src/contexts/auth-context.tsx)
         └── Toaster (sonner)
             └── [pages]
-                └── Protected (src/components/auth/protected.tsx)
-                    └── Presence (src/components/presence.tsx)
-                    └── ProfilesProvider (src/contexts/profiles-context.tsx)
-                        └── PushNotificationProvider (src/components/push-notification-provider.tsx)
-                            └── GoogleMapsProvider (src/components/google-maps-provider.tsx)
-                                └── Shell (src/components/layout/shell.tsx)
+                └── Protected (apps/web/src/components/auth/protected.tsx)
+                    └── Presence (apps/web/src/components/presence.tsx)
+                    └── ProfilesProvider (apps/web/src/contexts/profiles-context.tsx)
+                        └── PushNotificationProvider (apps/web/src/components/push-notification-provider.tsx)
+                            └── GoogleMapsProvider (apps/web/src/components/google-maps-provider.tsx)
+                                └── Shell (apps/web/src/components/layout/shell.tsx)
                                     └── {children}
                                 └── PermissionsPrompt
                                 └── WalkthroughProvider
@@ -125,9 +126,9 @@ RootLayout (app/layout.tsx)
 
 | Context | File | Responsibility |
 |---------|------|----------------|
-| `AuthContext` | `src/contexts/auth-context.tsx` | Auth state machine, profile subscription, device fingerprinting, ban checking, route redirects |
-| `ProfileContext` | `src/contexts/profile-context.tsx` | Current user's profile |
-| `ProfilesContext` | `src/contexts/profiles-context.tsx` | All profiles map (for chasers list, admin) |
+| `AuthContext` | `apps/web/src/contexts/auth-context.tsx` | Auth state machine, profile subscription, device fingerprinting, ban checking, route redirects |
+| `ProfileContext` | `apps/web/src/contexts/profile-context.tsx` | Current user's profile |
+| `ProfilesContext` | `apps/web/src/contexts/profiles-context.tsx` | All profiles map (for chasers list, admin) |
 
 ### Auth State Machine (AuthContext)
 ```
@@ -142,18 +143,18 @@ loading → unauthenticated → incomplete → authenticated
 
 | Hook | File | Purpose |
 |------|------|---------|
-| `useIncidents` | `src/hooks/use-incidents.ts` | Incident list + real-time subscription |
-| `useChat` | `src/hooks/use-chat.ts` | Chat threads + messages |
-| `useMessageNotifications` | `src/hooks/use-message-notifications.ts` | Unread badge counts |
-| `useNotifications` | `src/hooks/use-notifications.ts` | In-app notifications |
-| `usePushNotifications` | `src/hooks/use-push-notifications.ts` | FCM token registration |
-| `usePermissions` | `src/hooks/use-permissions.ts` | Browser permission state |
-| `useRole` | `src/hooks/use-role.ts` | Current user role |
-| `useProfiles` | `src/hooks/use-profiles.ts` | Profiles list |
-| `useGeofencing` | `src/hooks/use-geofencing.ts` | Location geofencing |
-| `useAppBadge` | `src/hooks/use-app-badge.ts` | App badge API |
-| `useDialog` | `src/hooks/use-dialog.ts` | Dialog state helper |
-| `useMobile` | `src/lib/hooks/use-mobile.ts` | Mobile viewport detection |
+| `useIncidents` | `apps/web/src/hooks/use-incidents.ts` | Incident list + real-time subscription |
+| `useChat` | `apps/web/src/hooks/use-chat.ts` | Chat threads + messages |
+| `useMessageNotifications` | `apps/web/src/hooks/use-message-notifications.ts` | Unread badge counts |
+| `useNotifications` | `apps/web/src/hooks/use-notifications.ts` | In-app notifications |
+| `usePushNotifications` | `apps/web/src/hooks/use-push-notifications.ts` | FCM token registration |
+| `usePermissions` | `apps/web/src/hooks/use-permissions.ts` | Browser permission state |
+| `useRole` | `apps/web/src/hooks/use-role.ts` | Current user role |
+| `useProfiles` | `apps/web/src/hooks/use-profiles.ts` | Profiles list |
+| `useGeofencing` | `apps/web/src/hooks/use-geofencing.ts` | Location geofencing |
+| `useAppBadge` | `apps/web/src/hooks/use-app-badge.ts` | App badge API |
+| `useDialog` | `apps/web/src/hooks/use-dialog.ts` | Dialog state helper |
+| `useMobile` | `apps/web/src/lib/hooks/use-mobile.ts` | Mobile viewport detection |
 
 ---
 
@@ -161,14 +162,14 @@ loading → unauthenticated → incomplete → authenticated
 
 | Service | File | Key Operations |
 |---------|------|----------------|
-| Incidents | `src/services/incidents.ts` (~800 LOC) | CRUD, subscribe, respond, close, documents, signatures, favorites, bookmarks |
-| Chat | `src/services/chat.ts` | Thread CRUD, send message, subscribe, mark read |
-| Profiles | `src/services/profiles.ts` | Create, update, role management |
-| Storage | `src/services/storage.ts` | Upload avatar, signature, documents, voice |
-| Notifications | `src/services/notifications.ts` | In-app notification CRUD |
-| Moderation | `src/services/moderation.ts` | Ban/suspension checks |
-| Change Requests | `src/services/change-requests.ts` | Change request workflow |
-| Verification | `src/services/verification.ts` | User verification |
+| Incidents | `apps/web/src/services/incidents.ts` (~800 LOC) | CRUD, subscribe, respond, close, documents, signatures, favorites, bookmarks |
+| Chat | `apps/web/src/services/chat.ts` | Thread CRUD, send message, subscribe, mark read |
+| Profiles | `apps/web/src/services/profiles.ts` | Create, update, role management |
+| Storage | `apps/web/src/services/storage.ts` | Upload avatar, signature, documents, voice |
+| Notifications | `apps/web/src/services/notifications.ts` | In-app notification CRUD |
+| Moderation | `apps/web/src/services/moderation.ts` | Ban/suspension checks |
+| Change Requests | `apps/web/src/services/change-requests.ts` | Change request workflow |
+| Verification | `apps/web/src/services/verification.ts` | User verification |
 
 ---
 
@@ -200,17 +201,17 @@ loading → unauthenticated → incomplete → authenticated
 
 | File | Purpose |
 |------|---------|
-| `src/lib/firebase.ts` | Client SDK init (Auth, Firestore, Storage, FCM) with persistentLocalCache |
-| `src/lib/firebase-admin.ts` | Server SDK init + `sendNotification()` + `sendNotificationToMultiple()` |
-| `src/lib/firebase-db.ts` | Firestore helpers |
-| `src/lib/db.ts` | TypeScript type definitions (Incident, Note, Document, Signature, Profile) |
-| `src/lib/auth-client.ts` | Client-side auth utilities |
-| `src/lib/fingerprint.ts` | Device fingerprinting for ban enforcement |
-| `src/lib/pdf-generator.ts` | PDF generation with @react-pdf/renderer |
-| `src/lib/utils.ts` | General utilities (cn, formatters) |
-| `src/lib/webhook/parser.ts` | OpenAI GPT-4o-mini structured output parser |
-| `src/lib/webhook/geocoder.ts` | Google Maps geocoding |
-| `src/lib/webhook/errors.ts` | Custom error classes (GeocodingError, ParsingError) |
+| `apps/web/src/lib/firebase.ts` | Client SDK init (Auth, Firestore, Storage, FCM) with persistentLocalCache |
+| `apps/web/src/lib/firebase-admin.ts` | Server SDK init + `sendNotification()` + `sendNotificationToMultiple()` |
+| `apps/web/src/lib/firebase-db.ts` | Firestore helpers |
+| `apps/web/src/lib/db.ts` | TypeScript type definitions (Incident, Note, Document, Signature, Profile) |
+| `apps/web/src/lib/auth-client.ts` | Client-side auth utilities |
+| `apps/web/src/lib/fingerprint.ts` | Device fingerprinting for ban enforcement |
+| `apps/web/src/lib/pdf-generator.ts` | PDF generation with @react-pdf/renderer |
+| `apps/web/src/lib/utils.ts` | General utilities (cn, formatters) |
+| `apps/web/src/lib/webhook/parser.ts` | OpenAI GPT-4o-mini structured output parser |
+| `apps/web/src/lib/webhook/geocoder.ts` | Google Maps geocoding |
+| `apps/web/src/lib/webhook/errors.ts` | Custom error classes (GeocodingError, ParsingError) |
 
 ---
 
@@ -218,8 +219,8 @@ loading → unauthenticated → incomplete → authenticated
 
 | File | Deployed | Notes |
 |------|----------|-------|
-| `firestore.rules` | Yes (production) | Role helpers: isSupe(), isAdmin(), isOwner() |
-| `storage.rules` | Yes (production) | Path-based rules |
+| `firebase/firestore.rules` | Yes (production) | Role helpers: isSupe(), isAdmin(), isOwner() |
+| `firebase/storage.rules` | Yes (production) | Path-based rules |
 
 ---
 
@@ -227,9 +228,9 @@ loading → unauthenticated → incomplete → authenticated
 
 | File | Tests | Status |
 |------|-------|--------|
-| `tests/webhook-parser.test.ts` | 12 | PASS (mocked OpenAI) |
-| `tests/webhook-notifications.test.ts` | 28 | PASS (mocked fetch) |
-| `tests/__mocks__/ai.ts` | — | OpenAI mock |
+| `apps/web/tests/webhook-parser.test.ts` | 12 | PASS (mocked OpenAI) |
+| `apps/web/tests/webhook-notifications.test.ts` | 28 | PASS (mocked fetch) |
+| `apps/web/tests/__mocks__/ai.ts` | — | OpenAI mock |
 
 **Total**: 40/40 PASS. Coverage: ~3% (webhook parser only).
 
@@ -237,9 +238,9 @@ loading → unauthenticated → incomplete → authenticated
 
 ## 12. Android / Mobile
 
-- **Android APK**: `public/android.apk` tracked in git
-- **TWA manifest**: `twa-manifest.json` at repo root
-- **PWA manifest**: `public/manifest.json` — `prefer_related_applications: false`
+- **Android APK**: `apps/web/public/android.apk` tracked in git
+- **TWA manifest**: `apps/web/twa-manifest.json`
+- **PWA manifest**: `apps/web/public/manifest.json` — `prefer_related_applications: false`
 - **Service workers**: Dual registration (sw.js + firebase-messaging-sw.js)
 - Strategy is currently PWA-first with TWA wrapper for Play Store distribution
 

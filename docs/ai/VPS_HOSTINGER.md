@@ -60,7 +60,7 @@ GOOGLE_CLIENT_SECRET=
 SITE_URL=
 ```
 
-VPS deploys require one Firebase Admin credential form: `FIREBASE_SERVICE_ACCOUNT_JSON`, `GOOGLE_APPLICATION_CREDENTIALS_JSON`, or the split `FIREBASE_PROJECT_ID` + `FIREBASE_CLIENT_EMAIL` + `FIREBASE_PRIVATE_KEY` set. Server-side API routes and notification sending import `adminDb` and `adminMessaging` from `src/lib/firebase-admin.ts`.
+VPS deploys require one Firebase Admin credential form: `FIREBASE_SERVICE_ACCOUNT_JSON`, `GOOGLE_APPLICATION_CREDENTIALS_JSON`, or the split `FIREBASE_PROJECT_ID` + `FIREBASE_CLIENT_EMAIL` + `FIREBASE_PRIVATE_KEY` set. Server-side API routes and notification sending import `adminDb` and `adminMessaging` from `apps/web/src/lib/firebase-admin.ts`.
 
 `WEB_PUSH_PRIVATE_KEY` is not required by current app runtime. The app currently uses `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY` for FCM token registration and Firebase Admin Messaging for server-side notification sending. Keep `WEB_PUSH_PRIVATE_KEY` only if a future direct Web Push sender is added.
 

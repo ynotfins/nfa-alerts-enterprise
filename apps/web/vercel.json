@@ -1,7 +1,9 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "pnpm run build",
   "framework": "nextjs",
-  "regions": ["iad1"],
+  "regions": [
+    "iad1"
+  ],
   "headers": [
     {
       "source": "/(.*)",

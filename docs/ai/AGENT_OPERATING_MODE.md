@@ -26,7 +26,7 @@ This repo expects autonomous agents to work like senior engineers: move quickly,
 
 Always run the narrowest command set that proves the change, then broaden when shared behavior is touched.
 
-For normal repo changes, run:
+For normal repo changes, run from the repo root. Root scripts forward to the `apps/web` workspace:
 
 - `pnpm run typecheck`
 - `pnpm run lint:ci`

@@ -92,10 +92,10 @@ module.exports = {
     {
       name: "$APP_NAME",
       cwd: "$APP_DIR",
-      script: "node",
-      args: "-r dotenv/config node_modules/next/dist/bin/next start",
+      script: "pnpm",
+      args: "--filter web run start",
       env: {
-        DOTENV_CONFIG_PATH: ".env.production.local",
+        DOTENV_CONFIG_PATH: "$APP_DIR/.env.production.local",
         NODE_ENV: "production",
         PORT: "3000"
       },

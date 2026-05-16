@@ -66,7 +66,7 @@ pnpm install --frozen-lockfile
 pnpm run typecheck
 pnpm run lint:ci
 pnpm run test:unit
-DOTENV_CONFIG_PATH="$ENV_FILE" node -r dotenv/config scripts/next-build.mjs
+DOTENV_CONFIG_PATH="$APP_DIR/$ENV_FILE" pnpm --filter web run build
 
 if pm2 describe "$APP_NAME" >/dev/null 2>&1; then
   pm2 restart "$APP_NAME" --update-env
