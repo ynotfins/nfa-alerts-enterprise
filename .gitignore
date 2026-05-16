@@ -81,10 +81,6 @@ test-results/
 
 # OpenMemory - IDE/Assistant specific rules
 .cursor\rules\openmemory.mdc
-CLAUDE.md
-.cursor\rules\openmemory.mdc
-CLAUDE.md
-AGENTS.md
 
 # workspace app outputs
 /apps/*/.next/

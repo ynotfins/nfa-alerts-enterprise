@@ -3,9 +3,9 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { doc, onSnapshot, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Profile } from "@/lib/db";
+import { parseProfile } from "@/lib/profile-boundary";
 
-type ProfileWithId = Profile & { _id: string };
+type ProfileWithId = ReturnType<typeof parseProfile>;
 
 interface ProfilesContextValue {
   profiles: Map<string, ProfileWithId>;
@@ -32,7 +32,7 @@ export function ProfilesProvider({ children }: { children: ReactNode }) {
       const ref = doc(db, "profiles", id);
       const snap = await getDoc(ref);
       if (snap.exists()) {
-        const profile = { _id: snap.id, ...snap.data() } as ProfileWithId;
+        const profile = parseProfile(snap.id, snap.data());
         setProfiles(prev => new Map(prev).set(id, profile));
         return profile;
       }
@@ -50,7 +50,7 @@ export function ProfilesProvider({ children }: { children: ReactNode }) {
     const ref = doc(db, "profiles", id);
     const unsub = onSnapshot(ref, (snap) => {
       if (snap.exists()) {
-        const profile = { _id: snap.id, ...snap.data() } as ProfileWithId;
+        const profile = parseProfile(snap.id, snap.data());
         setProfiles(prev => new Map(prev).set(id, profile));
       }
     });
@@ -88,31 +88,34 @@ export function useProfiles() {
 
 export function useProfile(id: string | undefined) {
   const { getProfile, subscribeToProfile, fetchProfile } = useProfiles();
-  const [profile, setProfile] = useState<ProfileWithId | undefined>(
-    id ? getProfile(id) : undefined
-  );
-  const [subscribedId, setSubscribedId] = useState<string | null>(null);
+  const [fetchedProfile, setFetchedProfile] = useState<
+    ProfileWithId | undefined
+  >();
 
   useEffect(() => {
-    if (!id) return;
-
-    // Fetch profile if not cached, setState happens in fetchProfile's callback
-    const cached = getProfile(id);
-    if (!cached) {
-      fetchProfile(id).then((p) => {
-        if (p) setProfile(p);
-      });
+    let active = true;
+    if (!id) {
+      return;
     }
 
-    return subscribeToProfile(id);
+    const cached = getProfile(id);
+    if (cached) {
+      return subscribeToProfile(id);
+    }
+
+    void fetchProfile(id).then((p) => {
+      if (active && p) setFetchedProfile(p);
+    });
+
+    const unsubscribe = subscribeToProfile(id);
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, [id, getProfile, subscribeToProfile, fetchProfile]);
 
-  // Sync profile from cache when it changes (using derived state pattern)
   const cachedProfile = id ? getProfile(id) : undefined;
-  if (cachedProfile && cachedProfile !== profile && subscribedId !== id) {
-    setProfile(cachedProfile);
-    setSubscribedId(id ?? null);
-  }
-
-  return profile;
+  if (cachedProfile) return cachedProfile;
+  return fetchedProfile?._id === id ? fetchedProfile : undefined;
 }
