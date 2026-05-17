@@ -1,8 +1,32 @@
 # NFA Alerts — AI State
 
 **Last updated**: 2026-05-16  
-**Session type**: AGENT Executioner — Enterprise monorepo migration cleanup
-**Status**: COMPLETE — migration cleanup validation passing
+**Session type**: AGENT Executioner — Android Home/Alert Details architecture audit
+**Status**: COMPLETE — Android documentation audit generated
+
+---
+
+## What happened this session (2026-05-16 — Android Home/Alert Details Architecture Audit)
+
+Created `docs/android/ANDROID_HOME_ALERT_DETAILS_ARCHITECTURE.md` as a documentation-only audit for building native Android Home and Alert Details screens from the current Next.js/Firebase codebase.
+
+1. **Backend contract audit**: Documented Firebase Auth, Firestore, Storage, Admin Messaging, webhook ingestion, geocoding, weather, and notification flows from local source artifacts.
+2. **Firestore contract map**: Consolidated `profiles`, `incidents`, `userIncidents`, `notes`, `activities`, media submissions, notifications, change requests, webhook logs, counters, roles, and moderation structures.
+3. **Android implementation guidance**: Added documentation snippets for Kotlin DTOs, repository interfaces, ViewModel structure, exact listeners/queries, package naming, migration roadmap, and Android-specific portability risks.
+4. **Safety boundaries**: Preserved Android Studio ownership of Gradle/Kotlin work; no Firebase deploys, production reads/writes, Android webhook calls, subscription implementation, commits, or pushes were performed.
+
+### Audit Evidence
+
+| Check | Result |
+| --- | --- |
+| Local repo safety | Branch was dirty and behind remote; no destructive reset or merge performed |
+| Source inspection | PASS — local `apps/web/src`, `firebase/`, and existing Android docs reviewed |
+| Output doc | PASS — `docs/android/ANDROID_HOME_ALERT_DETAILS_ARCHITECTURE.md` created |
+
+### Audit Caveats
+
+1. **Branch staleness**: The local branch was behind remote at audit start, so remote-only changes not present in the checkout may not be reflected.
+2. **Docs-only validation**: Full web build was intentionally not run because only markdown/state docs changed.
 
 ---
 

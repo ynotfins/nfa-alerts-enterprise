@@ -98,7 +98,15 @@ AGENTS.md
 # Android Studio / Gradle outputs
 /apps/android/.gradle/
 /apps/android/build/
+/apps/android/app/build/
 /apps/android/**/build/
+/apps/android/**/google-services.json
 /apps/android/local.properties
+/apps/android/**/local.properties
 /apps/android/*.jks
+/apps/android/**/*.jks
 /apps/android/*.keystore
+/apps/android/**/*.keystore
+.cursor\rules\openmemory.mdc
+CLAUDE.md
+AGENTS.md
