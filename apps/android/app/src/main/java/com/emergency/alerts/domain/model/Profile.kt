@@ -13,10 +13,24 @@ data class Profile(
     val avatarUrl: String?,
     val pushToken: String?,
     val locationTracking: LocationTracking?,
+    val suspension: Suspension?,
+    val ban: Ban?,
     val online: Boolean?,
     val lastSeen: Long?,
     val createdAt: Long,
     val updatedAt: Long
+)
+
+data class Suspension(
+    val active: Boolean,
+    val until: Long?,
+    val reason: String?
+)
+
+data class Ban(
+    val active: Boolean,
+    val at: Long,
+    val reason: String?
 )
 
 data class LocationTracking(
