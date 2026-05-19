@@ -39,9 +39,19 @@ class ObserveHomeFeedUseCase @Inject constructor(
             
             val incidents = (incidentsResult as? Result.Success)?.data ?: emptyList()
             val flags = (flagsResult as? Result.Success)?.data ?: emptyList()
+            
+            // Note: Don't treat a location error as a feed error, just ignore the location
             val deviceLocation = (locationResult as? Result.Success)?.data
 
-            val feed = incidents.map { incident ->
+            // Deduplicate by alertId (keep newest update per alertId). If alertId is null use incident.id.
+            val newestByKey = incidents.groupBy { it.alertId ?: it.id }
+                .mapValues { entry ->
+                    entry.value.maxByOrNull { if (it.updatedAt > 0L) it.updatedAt else it.createdAt }!!
+                }
+                .values
+                .toList()
+
+            val feed = newestByKey.map { incident ->
                 val incidentFlags = flags.filter { it.incidentId == incident.id }
                 
                 var distance: Double? = null

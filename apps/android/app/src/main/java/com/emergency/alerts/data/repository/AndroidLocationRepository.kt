@@ -40,7 +40,8 @@ class AndroidLocationRepository @Inject constructor(
     override fun observeDeviceLocation(): Flow<Result<DeviceLocation>> = callbackFlow {
         if (!hasLocationPermissionSync()) {
             trySend(Result.Error(SecurityException("Missing location permissions")))
-            close()
+            // Suspend until cancelled so we don't prematurely close and kill the combine flow upstream
+            awaitClose {}
             return@callbackFlow
         }
 

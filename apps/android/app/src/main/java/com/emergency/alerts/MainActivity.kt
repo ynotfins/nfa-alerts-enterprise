@@ -15,6 +15,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.emergency.alerts.feature.auth.SessionUiState
 import com.emergency.alerts.feature.auth.SessionViewModel
 import com.emergency.alerts.feature.auth.LoginScreen
@@ -36,6 +37,8 @@ class MainActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     val uiState by sessionViewModel.uiState.collectAsState()
 
+                    Timber.d("Current UI State: $uiState")
+
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -45,8 +48,30 @@ class MainActivity : ComponentActivity() {
                         when (val state = uiState) {
                             is SessionUiState.Loading -> Text("Loading Session...")
                             is SessionUiState.Unauthenticated -> LoginScreen()
-                            is SessionUiState.MissingProfile -> Text("Profile missing for UID: ${state.uid}")
-                            is SessionUiState.Restricted -> Text("Account Restricted: ${state.reason}")
+                            is SessionUiState.MissingProfile -> {
+                                androidx.compose.foundation.layout.Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text("Profile not found.")
+                                    Text("Please complete registration on the web app.")
+                                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(8.dp))
+                                    androidx.compose.material3.Button(onClick = { sessionViewModel.signOut() }) {
+                                        Text("Sign Out")
+                                    }
+                                }
+                            }
+                            is SessionUiState.Restricted -> {
+                                androidx.compose.foundation.layout.Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text("Account Restricted")
+                                    Text(state.reason)
+                                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(8.dp))
+                                    androidx.compose.material3.Button(onClick = { sessionViewModel.signOut() }) {
+                                        Text("Sign Out")
+                                    }
+                                }
+                            }
                             is SessionUiState.Authenticated -> HomeFeedScreen(onIncidentClick = { incidentId ->
                                 Timber.d("Clicked incident: $incidentId")
                             })
