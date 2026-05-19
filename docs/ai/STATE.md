@@ -1,8 +1,27 @@
 # NFA Alerts — AI State
 
-**Last updated**: 2026-05-16  
-**Session type**: AGENT Executioner — Android Home/Alert Details architecture audit
-**Status**: COMPLETE — Android documentation audit generated
+**Last updated**: 2026-05-18
+**Session type**: AGENT Executioner — commercial security/secrets/subscription architecture plan
+**Status**: COMPLETE — commercial architecture plan documented
+
+---
+
+## What happened this session (2026-05-18 — Security, Secrets, and Subscription Architecture)
+
+Created `docs/commercial/SECURITY_SECRETS_SUBSCRIPTIONS_ARCHITECTURE.md` as a documentation-only commercial architecture plan for backend secret handling, Android secret boundaries, Firebase App Check/Play Integrity, Stripe Billing, Google Play Billing, Firestore entitlements, tenant/account memberships, role alignment, rules impact, scaling risks, and migration from the live `nfa-alerts-v2` Firebase project.
+
+1. **Trusted backend entitlement model**: Documented Firestore as the entitlement source of truth, with Stripe and Google Play purchase events updating entitlements only through verified backend processing.
+2. **Secret and client boundaries**: Captured Google Cloud Secret Manager strategy, placeholder-only secret names, Android no-backend-secret/no-webhook rules, and `google-services.json` handling.
+3. **Commercial Firestore model**: Added architecture-level collection map for tenants, accounts, memberships, roles, subscriptions, entitlements, audit logs, webhook events, and Play purchase token tracking.
+4. **Rollout and migration plan**: Added release blockers, phased checklist, high-volume scaling risks, rules/index impacts, and additive migration strategy from `nfa-alerts-v2`.
+
+### Commercial Architecture Evidence
+
+| Check | Result |
+| --- | --- |
+| Output doc | PASS — `docs/commercial/SECURITY_SECRETS_SUBSCRIPTIONS_ARCHITECTURE.md` created |
+| Safety boundary | PASS — docs-only; no Firebase deploy, production data mutation, real secrets, Android logic changes, commit, or push |
+| Existing plan relationship | PASS — new doc expands `docs/commercial/SUBSCRIPTION_ARCHITECTURE_PLAN.md` without implementing billing logic |
 
 ---
 
@@ -27,6 +46,52 @@ Created `docs/android/ANDROID_HOME_ALERT_DETAILS_ARCHITECTURE.md` as a documenta
 
 1. **Branch staleness**: The local branch was behind remote at audit start, so remote-only changes not present in the checkout may not be reflected.
 2. **Docs-only validation**: Full web build was intentionally not run because only markdown/state docs changed.
+
+---
+
+## What happened this session (2026-05-18 — Android Design System + Home Parity)
+
+Implemented a centralized native Android Compose design system and refactored the Home feed to use reusable components while preserving the live Firestore feed, session flow, and repository/use-case/viewmodel boundaries.
+
+1. **Centralized design system**: Added `app/src/main/java/com/emergency/alerts/core/designsystem/` with token files for colors, typography, spacing, shapes, and elevation plus a new `NFATheme.kt` that supports a default light theme, dark mode, and preset themes (`Light`, `Classic Blue`, `Executive Dark`, `High Contrast`, `Firehouse`).
+2. **Future admin-theme architecture**: Added `NFAThemeSelection`, `NFAThemeMode`, `NFAThemePreset`, and `NFAThemeOverrides` to prepare future admin-controlled theme selection for primary, secondary, accent, background, surface, text, and light/dark mode without building the admin UI yet.
+3. **Reusable UI components**: Added reusable Compose components for a premium bottom nav, top bar, incident card, severity badge, distance label, icon button, and loading/empty/error states.
+4. **Home parity refactor**: Reworked `HomeFeedScreen` to use the design system components, keep the live Firestore-backed ViewModel flow, preserve dedupe/sort behavior from the existing use case, and keep department code cleanup plus alert ID rendering for the incident body.
+5. **Role-aware shell prep**: Added role-aware navigation configuration for future Admin/Supe/Chaser divergence while keeping only the Incidents destination active now.
+6. **Theme migration cleanup**: Removed the old generated `ui/theme` template files and moved the app shell to the new design system theme entry point.
+
+### Android Design System Evidence
+
+| Check | Result |
+| --- | --- |
+| Centralized token/theme package | PASS — `core/designsystem/{tokens,theme,components}` added |
+| Home feed refactor | PASS — Home now uses reusable design system components |
+| Live feed boundary | PASS — no mock data, webhook/admin route calls, or repository logic moved into Composables |
+
+### Android Design System Caveats
+
+1. **Default app theme**: The app now defaults to the new light preset to match the UI examples more closely; dark mode support exists but is not the current default.
+2. **Role divergence**: Admin/Supe/Chaser role structure is prepared in navigation config only; separate dashboards and admin controls remain future work.
+
+---
+
+## What happened this session (2026-05-18 — Android UI Refinement Pass)
+
+Performed a visual refinement pass on the native Android design system and Home feed to move the UI closer to the premium `UI_example` direction without changing app architecture or Home feed data behavior.
+
+1. **Token polish**: Tightened spacing, softened elevation, refined corner radii, tuned typography hierarchy, and improved neutral/background/surface contrast in the shared design tokens.
+2. **Incident card polish**: Improved metadata/body rhythm, refined divider insets, softened card presentation, tuned line height for the 7-line alert body, and upgraded the right-arrow affordance.
+3. **Badge and distance polish**: Refined alarm badge pill sizing, borders, and premium color treatment; made distance labels subtler and better aligned for operational scanning.
+4. **Bottom nav polish**: Improved floating container border/shadow treatment, icon alignment, and active-state presentation while preserving icons-only behavior and the role-aware nav model.
+5. **Home spacing polish**: Added a bit more breathing room in the feed while preserving dense responder scanning and existing Firestore-backed behavior.
+
+### Android Refinement Evidence
+
+| Check | Result |
+| --- | --- |
+| Firestore/Home behavior preserved | PASS — no data-layer or backend changes |
+| Theme architecture preserved | PASS — only token/component polish applied |
+| Role-aware nav preserved | PASS — nav architecture unchanged, visuals refined |
 
 ---
 
