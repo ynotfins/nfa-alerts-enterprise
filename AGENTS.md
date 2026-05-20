@@ -14,6 +14,7 @@ Read `docs/ai/CLOUD_AGENTS.md` and `docs/ai/AGENT_OPERATING_MODE.md` before impl
 - For Bugbot/Qodo findings, follow `docs/ai/AUTONOMOUS_PR_FIXING.md`: fix critical/high/medium issues in follow-up commits on the same PR, treat low-severity-only findings as non-blocking, and keep CI green.
 - Treat `.cursor/BUGBOT.md` as the active Bugbot repository rule file; keep `docs/ai/BUGBOT_RULES.md` aligned when rules change.
 - For VPS deployment details, use `docs/ai/VPS_HOSTINGER.md` and scripts under `scripts/vps-*.sh`; update those scripts before using VPS deployment from the monorepo layout.
+- For production-readiness audits, multi-agent critique, or release governance reviews, use `.claude/skills/full-stack-project-auditor.md` and `docs/ai/FULL_STACK_PROJECT_AUDITOR.md`.
 - Update `docs/ai/STATE.md` for meaningful code, config, or docs changes.
 - Never commit `.env*` files except `.env.example`, service account JSON, Bitwarden tokens, or logs containing secret values.
 - `.env.example` is the only allowed env-file exception and is valid only when every assignment is exactly `KEY=` with nothing after `=`. Flag placeholder-like values such as `your-key-here`, `example`, `changeme`, fake tokens, or real tokens.

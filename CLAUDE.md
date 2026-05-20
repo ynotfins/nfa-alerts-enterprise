@@ -6,6 +6,11 @@ National Fire Alerts (NFA) - Emergency response coordination platform connecting
 
 **Tech Stack:** Next.js 16 web app (NOT React Native)
 
+## Skills
+
+- Use `.claude/skills/full-stack-project-auditor.md` for production-readiness audits, multi-agent critique loops, and release governance reviews.
+- See `docs/ai/FULL_STACK_PROJECT_AUDITOR.md` for usage, self-test evidence, and global installation notes.
+
 ## Architecture
 
 ### Framework & Core

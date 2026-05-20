@@ -183,6 +183,7 @@ Prompt template:
 ```text
 Work in `ynotfins/nfa-alerts-enterprise` from base branch `main`.
 Read `docs/ai/STATE.md`, `docs/ai/CLOUD_AGENTS.md`, and `docs/ai/AGENT_OPERATING_MODE.md`.
+For production-readiness audits, use `.claude/skills/full-stack-project-auditor.md` and `docs/ai/FULL_STACK_PROJECT_AUDITOR.md`.
 Implement the requested change on a `cursor/` branch, run install/typecheck/lint/test/build, update `docs/ai/STATE.md`, commit, push, and open a GitHub PR.
 Never commit secrets or `.env*` files.
 ```
