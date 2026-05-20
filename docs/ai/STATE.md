@@ -1,8 +1,39 @@
 # NFA Alerts — AI State
 
-**Last updated**: 2026-05-16  
-**Session type**: AGENT Executioner — Enterprise monorepo migration cleanup
-**Status**: COMPLETE — migration cleanup validation passing; PR review blockers addressed
+**Last updated**: 2026-05-20  
+**Session type**: AGENT Executioner — Full-Stack Project Auditor skill
+**Status**: IN PROGRESS — skill added; validation pending
+
+---
+
+## What happened this session (2026-05-20 — Full-Stack Project Auditor Skill)
+
+Created a repository-local auditor skill for production-grade multi-agent review cycles:
+
+1. **Skill addition**: Added `.claude/skills/full-stack-project-auditor.md` with required inputs, subagent roles, operating loop, verdict rubric, stop condition, and report template.
+2. **EMU/NFA enhancements**: Added project-specific checks for Firebase runtimes, incident update/activity schema alignment, MacroDroid/BNN trigger drift, Firestore write error logging, future FCM topic delivery tracking, type safety, CI ingestion tests, rollback behavior, and schema cross-reference.
+3. **Documentation index**: Linked the skill from `docs/ai/INDEX.md` so future agents can discover it.
+
+### Checklist
+
+- [x] Create branch `multi_agent_team`
+- [x] Inspect existing skill and AI documentation conventions
+- [x] Add Full-Stack Project Auditor skill
+- [x] Update documentation index
+- [ ] Run repository validation commands
+- [ ] Commit, push, and create PR
+
+### Evidence
+
+| Check | Result |
+| --- | --- |
+| `git checkout -b multi_agent_team` | PASS |
+| `.claude/skills/full-stack-project-auditor.md` | ADDED |
+| `docs/ai/INDEX.md` | UPDATED |
+
+### What is still broken / blocked
+
+1. **Validation pending**: Required root validation commands still need to run before PR creation.
 
 ---
 

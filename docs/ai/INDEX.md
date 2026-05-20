@@ -18,6 +18,7 @@ Central directory for all AI-assisted development documentation in NFA Alerts v2
 6. Read [VPS_HOSTINGER.md](VPS_HOSTINGER.md) - Hostinger VPS deployment and worker guidance
 7. Read [CURSOR_MCP_AND_TOOLS.md](CURSOR_MCP_AND_TOOLS.md) - Available MCP servers
 8. Read [MCP_QUICK_REFERENCE.md](MCP_QUICK_REFERENCE.md) - Common commands
+9. Use [.claude/skills/full-stack-project-auditor.md](../../.claude/skills/full-stack-project-auditor.md) for multi-agent production audits
 
 ### Starting a coding session?
 
@@ -67,6 +68,9 @@ Central directory for all AI-assisted development documentation in NFA Alerts v2
 
 - **[AGENT_OPERATING_MODE.md](AGENT_OPERATING_MODE.md)** - Autonomous agent operating policy
   - Planning, decision, testing, PR, and secret handling rules
+
+- **[Full-Stack Project Auditor](../../.claude/skills/full-stack-project-auditor.md)** - Multi-agent audit skill
+  - Drift critique, modularity validation, observability judgment, governance enforcement, CI/CD validation, and architecture cross-reference checks
 
 - **[tabs/TAB_BOOTSTRAP_PROMPTS.md](tabs/TAB_BOOTSTRAP_PROMPTS.md)** - 5-tab model setup
   - PLAN, AGENT, DEBUG, ASK, ARCHIVE tab prompts
