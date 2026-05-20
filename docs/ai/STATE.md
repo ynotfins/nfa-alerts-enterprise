@@ -1,8 +1,86 @@
 # NFA Alerts — AI State
 
-**Last updated**: 2026-05-16  
-**Session type**: AGENT Executioner — Enterprise monorepo migration cleanup
-**Status**: COMPLETE — migration cleanup validation passing; PR review blockers addressed
+**Last updated**: 2026-05-20  
+**Session type**: AGENT Executioner — Full-Stack Project Auditor improvement
+**Status**: COMPLETE — skill improved, globally installed, and validation passing
+
+---
+
+## What happened this session (2026-05-20 — Auditor Skill Test and Global Install)
+
+Improved the Full-Stack Project Auditor skill after testing all six auditor roles against this monorepo:
+
+1. **Agent self-test**: Ran Drift, Modularity, Observability, Governance, CI/CD, and Cross-Referencer agents in focused mode. Every role returned a `revise` verdict with actionable repo findings and skill-friction feedback.
+2. **Skill upgrade**: Added modes, project-profile detection, NFA/EMU source hierarchy, collection-name normalization, conditional Cloud Functions/MacroDroid/Flutter handling, explicit focused-mode behavior, and stronger role checklists.
+3. **Docs update**: Added `docs/ai/FULL_STACK_PROJECT_AUDITOR.md`, linked the skill from `docs/ai/INDEX.md`, `AGENTS.md`, `CLAUDE.md`, `docs/ai/AGENT_OPERATING_MODE.md`, and the Cloud Agent prompt template.
+4. **Global install**: Copied the skill to `/home/ubuntu/.claude/skills/full-stack-project-auditor.md` for global use on this Cloud machine.
+
+### Checklist
+
+- [x] Run all six auditor role subagents against the repo
+- [x] Apply skill improvements from agent feedback
+- [x] Add usage, self-test, and global install documentation
+- [x] Install global skill copy for this user environment
+- [x] Run repository validation commands
+- [x] Commit, push, and update PR
+
+### Evidence
+
+| Check | Result |
+| --- | --- |
+| Drift Critique Agent | PASS — role executed; verdict `revise` / medium |
+| Modularity Validator Agent | PASS — role executed; verdict `revise` / medium |
+| Observability Judge Agent | PASS — role executed; verdict `revise` / high |
+| Governance Enforcer Agent | PASS — role executed; verdict `revise` / high |
+| CI/CD Validator Agent | PASS — role executed; verdict `revise` / medium-high |
+| Cross-Referencer Agent | PASS — role executed; verdict `revise` / medium |
+| `cp /workspace/.claude/skills/full-stack-project-auditor.md /home/ubuntu/.claude/skills/full-stack-project-auditor.md` | PASS |
+| `cmp -s /workspace/.claude/skills/full-stack-project-auditor.md /home/ubuntu/.claude/skills/full-stack-project-auditor.md` | PASS |
+| `pnpm install --frozen-lockfile` | PASS |
+| `pnpm run typecheck` | PASS |
+| `pnpm run lint:ci` | PASS — 19 existing warnings, 0 errors |
+| `pnpm run test:unit` | PASS — 57/57 tests |
+| `pnpm run build` | PASS — Firebase Admin credentials unavailable warnings only |
+
+### What is still broken / blocked
+
+1. **Existing lint debt**: `lint:ci` passes inside the warning budget but still reports 19 pre-existing warnings.
+
+---
+
+## What happened this session (2026-05-20 — Full-Stack Project Auditor Skill)
+
+Created a repository-local auditor skill for production-grade multi-agent review cycles:
+
+1. **Skill addition**: Added `.claude/skills/full-stack-project-auditor.md` with required inputs, subagent roles, operating loop, verdict rubric, stop condition, and report template.
+2. **EMU/NFA enhancements**: Added project-specific checks for Firebase runtimes, incident update/activity schema alignment, MacroDroid/BNN trigger drift, Firestore write error logging, future FCM topic delivery tracking, type safety, CI ingestion tests, rollback behavior, and schema cross-reference.
+3. **Documentation index**: Linked the skill from `docs/ai/INDEX.md` so future agents can discover it.
+
+### Checklist
+
+- [x] Create branch `multi_agent_team`
+- [x] Inspect existing skill and AI documentation conventions
+- [x] Add Full-Stack Project Auditor skill
+- [x] Update documentation index
+- [x] Run repository validation commands
+- [x] Commit, push, and create PR
+
+### Evidence
+
+| Check | Result |
+| --- | --- |
+| `git checkout -b multi_agent_team` | PASS |
+| `.claude/skills/full-stack-project-auditor.md` | ADDED |
+| `docs/ai/INDEX.md` | UPDATED |
+| `pnpm install --frozen-lockfile` | PASS |
+| `pnpm run typecheck` | PASS |
+| `pnpm run lint:ci` | PASS — 19 existing warnings, 0 errors |
+| `pnpm run test:unit` | PASS — 57/57 tests |
+| `pnpm run build` | PASS — Firebase Admin credentials unavailable warnings only |
+
+### What is still broken / blocked
+
+1. **Existing lint debt**: `lint:ci` passes inside the warning budget but still reports 19 pre-existing warnings.
 
 ---
 

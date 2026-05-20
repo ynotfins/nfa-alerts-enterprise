@@ -14,6 +14,8 @@ This repo expects autonomous agents to work like senior engineers: move quickly,
 8. Update `docs/ai/STATE.md` for every meaningful code/config/docs change.
 9. Open or update a GitHub PR when done.
 
+For production-readiness audits, release governance reviews, or multi-agent critique loops, use `.claude/skills/full-stack-project-auditor.md`. See `docs/ai/FULL_STACK_PROJECT_AUDITOR.md` for focused-mode and full-cycle usage.
+
 ## Decision policy
 
 - Prefer framework-standard behavior over repo-specific workarounds.
