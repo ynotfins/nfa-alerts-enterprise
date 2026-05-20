@@ -6,6 +6,7 @@ import androidx.annotation.Keep
 data class IncidentDto(
     val alertId: String? = null,
     val displayId: String = "",
+    val commercialDisplayId: String? = null,
     val location: IncidentLocationDto? = null,
     val type: String = "other",
     val description: String = "",

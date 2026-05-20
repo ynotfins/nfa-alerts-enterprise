@@ -30,6 +30,7 @@ fun IncidentDto.toDomain(id: String): Incident {
         id = id,
         alertId = alertId,
         displayId = displayId,
+        commercialDisplayId = commercialDisplayId,
         location = location?.toDomain() ?: LocationData(0.0, 0.0, "", "", null, ""),
         type = type,
         description = description,

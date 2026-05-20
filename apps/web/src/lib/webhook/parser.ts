@@ -1,6 +1,7 @@
 import { openai } from "@ai-sdk/openai";
 import { generateObject } from "ai";
 import { z } from "zod";
+import { normalizeDepartmentCodes } from "./normalization";
 
 const activityTypes = [
   "fire_arrived",
@@ -97,8 +98,14 @@ true if starts with "U/D"/"Update" OR contains: arrived, on scene, cleared, secu
 </is_update>
 
 <incident_type>
-fire, flood, storm, wind, hail, other
-Map: "Smoke Condition" → fire, "Fuel Spill" → other
+Classification rules, in priority order:
+- fire: structure fire, working fire, vehicle fire, brush fire, smoke condition, 10-75 signal
+- flood: flooding, water rescue, flash flood, high water
+- storm: severe weather, tornado, hurricane, broad storm damage
+- wind: high winds or wind damage when wind is the primary incident
+- hail: hail damage or hail storm
+- other: gas leak, utility issue, power lines, power outage, fuel spill, hazmat, medical, EMS, injury, vehicle/MVA/traffic crash, police/law enforcement, water main break, building collapse, or any unclear/non-weather emergency
+IMPORTANT: Default ambiguous or non-fire incidents to "other". Do NOT default to "fire".
 </incident_type>
 
 <location>
@@ -146,10 +153,20 @@ Output: {source:"BNN", location:{state:"NY", county:"Westchester", city:"Ossinin
 
 Input: "U/D NY| Staten Island| 10-75| SI-2616| 200 Penn Ave| BC23 reports Natl Grid mitigated leak | <C> BNN | BNNDESK/nyc075 | #1839844"
 Output: {source:"BNN", location:{state:"NY", county:null, city:"Staten Island", address:"200 Penn Ave"}, description:"BC23 reports Natl Grid mitigated leak", incidentType:"other", isUpdate:true, alarmLevel:null, departmentNumber:["nyc075"], alertId:"1839844", activityType:"custom"}
+
+Input: "NJ| Bergen| Hackensack| Fuel Spill| 70 River St| fuel spill with hazmat requested | <C> BNN | BNNDESK/nj125 | #1840001"
+Output: {source:"BNN", location:{state:"NJ", county:"Bergen", city:"Hackensack", address:"70 River St"}, description:"fuel spill with hazmat requested", incidentType:"other", isUpdate:false, alarmLevel:null, departmentNumber:["nj125"], alertId:"1840001"}
+
+Input: "NY| Queens| Queens| All Hands| 55 Main St| fire on the 2nd floor | <C> BNN | nyq123 | #1840002"
+Output: {source:"BNN", location:{state:"NY", county:"Queens", city:"Queens", address:"55 Main St"}, description:"fire on the 2nd floor", incidentType:"fire", isUpdate:false, alarmLevel:"all_hands", departmentNumber:["nyq123"], alertId:"1840002"}
 </examples>`,
     });
 
-    const parsed = result.object;
+    const departmentNumber = normalizeDepartmentCodes(result.object.departmentNumber);
+    const parsed = {
+      ...result.object,
+      departmentNumber: departmentNumber.length > 0 ? departmentNumber : null,
+    };
 
     if (!parsed.location?.address || parsed.location.address.length < 3) {
       throw new Error("Invalid address extracted");

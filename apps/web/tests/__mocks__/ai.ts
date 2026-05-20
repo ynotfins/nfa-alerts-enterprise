@@ -6,13 +6,15 @@ function generateMockResponse(prompt: string) {
   const inputMatch = prompt.match(/<input>([\s\S]*?)<\/input>/i);
   const inputText = inputMatch ? inputMatch[1] : prompt;
   const text = inputText.toLowerCase();
+  const bnnParts = inputText.split("|").map((part) => part.trim());
   
   // Determine source - check for specific patterns
   let source = "Manual";
   // BNN format uses pipe-delimited fields (e.g., "FL| Miami-Dade| Miami| Structure Fire| 123 Main Street")
   // Check for multiple pipes which indicates BNN format
   const pipeCount = (text.match(/\|/g) || []).length;
-  if (pipeCount >= 3) {
+  const isBnnFormat = pipeCount >= 3;
+  if (isBnnFormat) {
     source = "BNN";
   } else if (text.includes("pulsepoint:") || text.includes("pulsepoint ")) {
     source = "PulsePoint";
@@ -39,7 +41,27 @@ function generateMockResponse(prompt: string) {
   
   // Determine incident type - check flood/storm BEFORE fire
   let incidentType: "fire" | "flood" | "storm" | "wind" | "hail" | "other" = "other";
-  if (text.includes("flood") || text.includes("water rescue")) {
+  if (
+    text.includes("gas leak") ||
+    text.includes("natl grid") ||
+    text.includes("fuel spill") ||
+    text.includes("hazmat") ||
+    text.includes("haz mat") ||
+    text.includes("utility") ||
+    text.includes("power line") ||
+    text.includes("power outage") ||
+    text.includes("ems") ||
+    text.includes("medical") ||
+    text.includes("injury") ||
+    text.includes("injured") ||
+    text.includes("vehicle") ||
+    text.includes("mva") ||
+    text.includes("traffic") ||
+    text.includes("police") ||
+    text.includes("law enforcement")
+  ) {
+    incidentType = "other";
+  } else if (text.includes("flood") || text.includes("water rescue")) {
     incidentType = "flood";
   } else if (text.includes("storm") || text.includes("tornado") || text.includes("severe weather")) {
     incidentType = "storm";
@@ -47,12 +69,23 @@ function generateMockResponse(prompt: string) {
     incidentType = "wind";
   } else if (text.includes("hail")) {
     incidentType = "hail";
-  } else if (text.includes("fire") || text.includes("structure fire") || text.includes("smoke")) {
+  } else if (
+    text.includes("fire") ||
+    text.includes("structure fire") ||
+    text.includes("smoke") ||
+    text.includes("10-75")
+  ) {
     incidentType = "fire";
   }
   
   // Extract state - look for specific state patterns
   let state = "FL"; // Default to FL
+  if (isBnnFormat) {
+    const stateMatch = bnnParts[0].match(/(?:^|\s)([A-Z]{2})$/i);
+    if (stateMatch) {
+      state = stateMatch[1].toUpperCase();
+    }
+  }
   
   // First check for explicit state names
   if (text.includes("florida") || text.includes(", fl")) {
@@ -63,7 +96,7 @@ function generateMockResponse(prompt: string) {
     state = "CA";
   } else if (text.includes("texas") || text.includes(", tx")) {
     state = "TX";
-  } else {
+  } else if (!isBnnFormat) {
     // Look for 2-letter state codes at the end of location strings
     const stateMatch = text.match(/,\s*([a-z]{2})(?:\s|$|\.)/i);
     if (stateMatch) {
@@ -79,6 +112,11 @@ function generateMockResponse(prompt: string) {
   
   // Extract city
   let city = "Miami";
+  if (isBnnFormat && bnnParts[2] && !/^(?:all hands|\d+(?:st|nd|rd|th)? alarm|10-\d+)/i.test(bnnParts[2])) {
+    city = bnnParts[2];
+  } else if (isBnnFormat && bnnParts[1]) {
+    city = bnnParts[1];
+  }
   if (text.includes("tampa")) city = "Tampa";
   if (text.includes("orlando")) city = "Orlando";
   if (text.includes("jacksonville")) city = "Jacksonville";
@@ -88,17 +126,34 @@ function generateMockResponse(prompt: string) {
   if (text.includes("houston")) city = "Houston";
   if (text.includes("los angeles")) city = "Los Angeles";
   if (text.includes("new york")) city = "New York";
+  if (text.includes("manhattan")) city = "Manhattan";
+  if (text.includes("brooklyn")) city = "Brooklyn";
+  if (text.includes("queens")) city = "Queens";
+  if (text.includes("bronx")) city = "Bronx";
+  if (text.includes("staten island")) city = "Staten Island";
   
   // Extract county if present
   let county: string | null = null;
+  if (isBnnFormat && bnnParts[1] && bnnParts[1] !== city) county = bnnParts[1];
   if (text.includes("miami-dade")) county = "Miami-Dade";
   if (text.includes("broward")) county = "Broward";
+  if (text.includes("new york county")) county = "New York County";
+  if (text.includes("kings county")) county = "Kings County";
+  if (text.includes("richmond county")) county = "Richmond County";
   
   // Extract address
   let address = "123 Main St";
   const addressMatch = text.match(/(\d+\s+[\w\s]+(?:st|street|ave|avenue|rd|road|ln|lane|ct|court|blvd|boulevard|way|dr|drive))/i);
   if (addressMatch) {
     address = addressMatch[1];
+  }
+  if (isBnnFormat) {
+    const addressPart = bnnParts.find((part) =>
+      /\d+\s+[\w\s]+(?:st|street|ave|avenue|rd|road|ln|lane|ct|court|blvd|boulevard|way|dr|drive)/i.test(part),
+    );
+    if (addressPart) {
+      address = addressPart;
+    }
   }
   
   // For "Unknown location" pattern
@@ -108,7 +163,14 @@ function generateMockResponse(prompt: string) {
   
   // Generate description
   let description = "Emergency incident reported at location";
-  if (text.includes("structure fire")) {
+  const addressPartIndex = bnnParts.findIndex((part) => part === address);
+  const bnnEventPart =
+    isBnnFormat && addressPartIndex >= 0
+      ? bnnParts[addressPartIndex + 1]?.replace(/\s*<C>.*/i, "").trim()
+      : null;
+  if (bnnEventPart) {
+    description = bnnEventPart;
+  } else if (text.includes("structure fire")) {
     description = "Structure fire reported with multiple units responding";
   } else if (text.includes("fire")) {
     description = "Fire incident reported at location";
@@ -160,14 +222,31 @@ function generateMockResponse(prompt: string) {
     }
   }
   
-  // Extract department number if present
-  // Note: The test file has a bug - it uses .toMatch() on departmentNumber which is an array
-  // We return null to skip the assertion in the test
-  const departmentNumber: string[] | null = null;
+  // Extract department numbers from the BNN code section after the <C> org marker.
+  const cMarkerIndex = bnnParts.findIndex((part) => /^<C>/i.test(part));
+  const departmentNumber =
+    cMarkerIndex >= 0 && bnnParts[cMarkerIndex + 1]
+      ? bnnParts[cMarkerIndex + 1].split("/").map((code) => code.trim())
+      : null;
+
+  const alertId = inputText.match(/#(\d+)/)?.[1] ?? null;
+  const alarmText = text.replace(/10-\d+/g, "");
+  let alarmLevel: string | null = null;
+  if (alarmText.includes("all hands") || alarmText.includes("1st alarm")) {
+    alarmLevel = "all_hands";
+  } else if (alarmText.includes("2nd alarm")) {
+    alarmLevel = "2nd_alarm";
+  } else if (alarmText.includes("3rd alarm")) {
+    alarmLevel = "3rd_alarm";
+  } else if (alarmText.includes("4th alarm")) {
+    alarmLevel = "4th_alarm";
+  } else if (alarmText.includes("5th alarm")) {
+    alarmLevel = "5th_alarm";
+  }
   
   return {
     source,
-    alertId: null,
+    alertId,
     isUpdate,
     incidentType,
     location: {
@@ -178,7 +257,7 @@ function generateMockResponse(prompt: string) {
     },
     description,
     departmentNumber,
-    alarmLevel: null,
+    alarmLevel,
     activityType,
     activityDescription: isUpdate ? description : null,
   };

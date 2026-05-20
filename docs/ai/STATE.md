@@ -1,8 +1,35 @@
 # NFA Alerts — AI State
 
-**Last updated**: 2026-05-18
-**Session type**: AGENT Executioner — commercial security/secrets/subscription architecture plan
-**Status**: COMPLETE — commercial architecture plan documented
+**Last updated**: 2026-05-19
+**Session type**: AGENT Executioner — parser contract and Android field alignment
+**Status**: COMPLETE — backend parser contract hardened
+
+---
+
+## What happened this session (2026-05-19 — Parser Contract and Android Field Alignment)
+
+Hardened the backend-owned alert parsing/write contract and kept Android consumption tolerant.
+
+1. **Webhook parser input fixed**: `POST /api/webhook` now extracts a raw alert message from supported top-level payload fields (`message`, `rawMessage`, `text`) and no longer sends `JSON.stringify(body)` to `parseNotification`.
+2. **Backend normalization added**: Added webhook helpers for NYC borough-to-county normalization, county base-name cleanup, department promo-code filtering, and backend-only `commercialDisplayId` generation for valid new incidents.
+3. **Parser prompt and tests strengthened**: Prompt guidance now explicitly defaults ambiguous/non-fire incidents to `other`; parser/helper tests cover gas leaks, hazmat/fuel spills, utility/power-line incidents, EMS/medical/injury, vehicle/MVA/traffic, police/law enforcement, smoke/working fire, 10-75, alarm levels, BNNDESK filtering, slash-separated department codes, U/D updates, NYC boroughs, raw payload extraction, and commercial display IDs.
+4. **Android field tolerance documented**: Android DTO/domain mapping accepts optional `commercialDisplayId`; docs reinforce that Android must not parse raw alerts or treat presentation heuristics as business logic.
+
+### Parser Contract Evidence
+
+| Check | Result |
+| --- | --- |
+| `pnpm --filter web test:unit -- webhook-parser` | PASS — 37/37 focused parser/helper tests |
+| `pnpm --filter web typecheck` | PASS |
+| Targeted ESLint on changed web files | PASS |
+| `git diff --check` on changed files | PASS |
+| `pnpm --filter web lint:ci` | FAIL — unrelated untracked `apps/web/create-test-profile.js` and `apps/web/test-profile.js` use `require()` imports; edited files passed targeted lint |
+
+### Parser Contract Caveats
+
+1. **Android Gradle validation not run**: Repo operating docs assign Android build validation to Android Studio, and prior state notes local-only Firebase config is expected for Android builds.
+2. **No AdjustLeads ingestion**: Only the future normalized source object is documented; no new AdjustLeads route/parser was created.
+3. **No production side effects**: No Firebase deploy, production data mutation, real secrets, commit, push, or `nfa-alerts-v2` modification was performed.
 
 ---
 

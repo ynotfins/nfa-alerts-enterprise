@@ -46,6 +46,7 @@ Key fields:
 
 - `alertId`: nullable external alert/update key.
 - `displayId`: human-readable ID such as `INC-000001`.
+- `commercialDisplayId`: nullable backend-generated public/commercial reference for valid new incidents.
 - `location.lat`, `location.lng`, `location.address`, `location.city`, `location.county`, `location.state`.
 - `type`: `fire`, `flood`, `storm`, `wind`, `hail`, `other`.
 - `description`.
@@ -93,6 +94,12 @@ Android contract:
 - Use as the appended update timeline.
 - Do not display each activity as a Home card.
 - Include listener error state.
+
+Normalization notes:
+
+- Android must treat `commercialDisplayId` as optional display/reference data only. It is not the document ID, not a security boundary, and not a dedupe key.
+- Backend stores NYC county base names for boroughs: `New York`, `Kings`, `Queens`, `Bronx`, or `Richmond`.
+- Android must not parse raw alert text to infer category, county, or source behavior.
 
 ## Notes
 

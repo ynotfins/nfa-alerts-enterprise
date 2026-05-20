@@ -4,32 +4,18 @@ import { FieldValue } from "firebase-admin/firestore";
 import { parseNotification } from "@/lib/webhook/parser";
 import { geocodeAddress } from "@/lib/webhook/geocoder";
 import { GeocodingError, ParsingError } from "@/lib/webhook/errors";
+import {
+  extractRawAlertMessage,
+  generateCommercialDisplayId,
+  normalizeDepartmentCodes,
+  normalizeNYCCounty,
+} from "@/lib/webhook/normalization";
 
 function sanitizeInput(text: string): string {
   return text
     .replace(/[\u0000-\u001F\u007F-\u009F]/g, "")
     .trim()
     .slice(0, 10000);
-}
-
-const PROMO_FD_CODES = [
-  "BNN",
-  "BNDESK",
-  "BNNDESK",
-  "BNN DESK",
-  "BNNDSK",
-  "BN DESK",
-];
-
-function filterPromoCodes(codes: string[] | null | undefined): string[] {
-  if (!codes) return [];
-  return codes.filter(
-    (code) =>
-      !PROMO_FD_CODES.some(
-        (promo) =>
-          code.toUpperCase().replace(/\s+/g, "") === promo.replace(/\s+/g, ""),
-      ),
-  );
 }
 
 async function getNextIncidentNumber(): Promise<string> {
@@ -78,8 +64,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log("[WEBHOOK] Request body:", body);
 
-    const message = body.message || "";
-    if (!message || message.trim().length < 10) {
+    const rawMessage = extractRawAlertMessage(body);
+    if (!rawMessage || rawMessage.trim().length < 10) {
       console.log("[WEBHOOK] Empty or too short message, skipping");
       return NextResponse.json(
         { success: false, error: "Empty or invalid message" },
@@ -87,12 +73,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const bodyText = JSON.stringify(body);
-    console.log("[WEBHOOK] Stringified body length:", bodyText.length);
+    console.log("[WEBHOOK] Raw message length:", rawMessage.length);
 
-    const sanitized = sanitizeInput(bodyText);
+    const sanitized = sanitizeInput(rawMessage);
     console.log("[WEBHOOK] Sanitized text:", {
-      originalLength: bodyText.length,
+      originalLength: rawMessage.length,
       sanitizedLength: sanitized.length,
     });
 
@@ -134,6 +119,12 @@ export async function POST(request: NextRequest) {
         { status: 422 },
       );
     }
+
+    const normalizedCounty = normalizeNYCCounty(
+      parsed.location.city,
+      parsed.location.county,
+      parsed.location.state,
+    );
 
     let existingIncident = null;
     if (parsed.alertId) {
@@ -188,7 +179,7 @@ export async function POST(request: NextRequest) {
         activityCount: FieldValue.increment(1),
       };
 
-      const filteredDepts = filterPromoCodes(parsed.departmentNumber);
+      const filteredDepts = normalizeDepartmentCodes(parsed.departmentNumber);
       if (filteredDepts.length > 0) {
         updateData.departmentNumber = FieldValue.arrayUnion(...filteredDepts);
       }
@@ -196,8 +187,8 @@ export async function POST(request: NextRequest) {
         updateData.alarmLevel =
           parsed.alarmLevel ?? alarmActivityMap[activityType];
       }
-      if (parsed.location.county) {
-        updateData["location.county"] = parsed.location.county;
+      if (normalizedCounty) {
+        updateData["location.county"] = normalizedCounty;
       }
 
       await adminDb
@@ -206,7 +197,7 @@ export async function POST(request: NextRequest) {
         .update(updateData);
 
       await adminDb.collection("webhookLogs").add({
-        rawText: bodyText,
+        rawText: rawMessage,
         sanitizedText: sanitized,
         parsedData: parsed,
         incidentId: existingIncident._id,
@@ -235,7 +226,7 @@ export async function POST(request: NextRequest) {
         "[WEBHOOK] Incident exists but no activity to add - returning existing",
       );
       await adminDb.collection("webhookLogs").add({
-        rawText: bodyText,
+        rawText: rawMessage,
         sanitizedText: sanitized,
         parsedData: parsed,
         incidentId: existingIncident._id,
@@ -255,20 +246,26 @@ export async function POST(request: NextRequest) {
 
     console.log("[WEBHOOK] Creating new incident...");
     const displayId = await getNextIncidentNumber();
+    const commercialDisplayId = generateCommercialDisplayId(
+      parsed.alertId,
+      parsed.location.state,
+      parsed.location.city,
+    );
     const now = Date.now();
 
     const incidentRef = await adminDb.collection("incidents").add({
       alertId: parsed.alertId ?? null,
       displayId,
+      ...(commercialDisplayId ? { commercialDisplayId } : {}),
       type: parsed.incidentType,
       description: parsed.description,
-      departmentNumber: filterPromoCodes(parsed.departmentNumber),
+      departmentNumber: normalizeDepartmentCodes(parsed.departmentNumber),
       alarmLevel: parsed.alarmLevel ?? null,
       location: {
         ...coords,
         address: parsed.location.address,
         city: parsed.location.city,
-        county: parsed.location.county ?? null,
+        county: normalizedCounty,
         state: parsed.location.state,
       },
       status: "active",
@@ -280,7 +277,7 @@ export async function POST(request: NextRequest) {
     console.log("[WEBHOOK] Created incident:", incidentRef.id);
 
     await adminDb.collection("webhookLogs").add({
-      rawText: bodyText,
+      rawText: rawMessage,
       sanitizedText: sanitized,
       parsedData: parsed,
       incidentId: incidentRef.id,

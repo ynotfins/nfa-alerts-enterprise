@@ -67,8 +67,11 @@ The backend parser returns a `ParsedNotification` shape with:
 - `activityDescription`
 
 The backend geocoder turns address/city/state into `location.lat` and `location.lng`, validates coordinate range, and rejects invalid geocoding.
+The webhook route sends only raw message strings from supported payload fields (`message`, `rawMessage`, or `text`) into the parser; it does not parse `JSON.stringify(body)`.
+In the original alert stream, the alert type is the field immediately before the alert message. Backend/parser owns normalized `incidentType`, Firestore `type`, and any future category field.
 
 Android consumes the final Firestore incident shape, not the parser shape.
+Android must not infer alert type from the message body, must not parse raw alerts, and must display normalized Firestore fields only. Emojis are additive presentation-only hints and never replace text labels. `BNNDESK` must not show in UI, but valid fire department codes after it must be preserved.
 
 ## Incident Aggregation Behavior
 
@@ -85,6 +88,7 @@ When a normalized alert is new:
 
 - Backend creates a new `incidents/{incidentId}` doc.
 - Backend assigns `displayId` from `counters/incidents`.
+- Backend may assign optional `commercialDisplayId` for valid new incidents only; Android must treat it as display data, not identity or authorization.
 - Backend writes normalized location, type, description, departments, alarm level, status, responders, and timestamps.
 
 ## Required Android DTO Fields
@@ -96,6 +100,7 @@ Incident fields:
 - `id`: Firestore document ID, Android-local field.
 - `alertId`: nullable external alert key.
 - `displayId`: human-readable incident ID.
+- `commercialDisplayId`: nullable backend-generated public/commercial reference.
 - `location.lat`, `location.lng`, `location.address`, `location.city`, `location.county`, `location.state`.
 - `type`: `fire`, `flood`, `storm`, `wind`, `hail`, or `other`.
 - `description`.
@@ -114,6 +119,12 @@ Incident fields:
 - `activityCount`: nullable number.
 - `createdAt`: epoch millis.
 - `updatedAt`: epoch millis.
+
+Backend location normalization:
+
+- NYC boroughs are stored as county base names: Manhattan -> New York, Brooklyn -> Kings, Queens -> Queens, Bronx -> Bronx, Staten Island -> Richmond.
+- County strings are stored without repeated trailing `County` suffixes.
+- Android may format borough-friendly labels for display, but must not reinterpret raw alert payloads.
 
 Location fields:
 

@@ -61,6 +61,7 @@ export interface Profile {
 export interface Incident {
   alertId?: string;
   displayId: string;
+  commercialDisplayId?: string;
   location: {
     lat: number;
     lng: number;

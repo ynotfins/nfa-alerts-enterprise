@@ -4,6 +4,7 @@ data class Incident(
     val id: String,
     val alertId: String?,
     val displayId: String,
+    val commercialDisplayId: String?,
     val location: LocationData,
     val type: String,
     val description: String,
