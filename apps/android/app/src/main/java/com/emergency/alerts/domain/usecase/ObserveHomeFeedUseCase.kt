@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import timber.log.Timber
 import javax.inject.Inject
 
 class ObserveHomeFeedUseCase @Inject constructor(
@@ -44,6 +45,22 @@ class ObserveHomeFeedUseCase @Inject constructor(
             
             val incidents = (incidentsResult as? Result.Success)?.data ?: emptyList()
             val flags = (flagsResult as? Result.Success)?.data ?: emptyList()
+
+            val newestIncomingIncident = incidents.maxWithOrNull(homeFeedIncidentComparator)
+            if (newestIncomingIncident != null) {
+                Timber.d(
+                    "UseCase incoming incidents=%d flags=%d newestIncoming id=%s alertId=%s createdAt=%d updatedAt=%d status=%s",
+                    incidents.size,
+                    flags.size,
+                    newestIncomingIncident.id,
+                    newestIncomingIncident.alertId,
+                    newestIncomingIncident.createdAt,
+                    newestIncomingIncident.updatedAt,
+                    newestIncomingIncident.status
+                )
+            } else {
+                Timber.d("UseCase incoming incidents=0 flags=%d", flags.size)
+            }
             
             // Note: Don't treat a location error as a feed error, just ignore the location
             val deviceLocation = (locationResult as? Result.Success)?.data
@@ -51,9 +68,7 @@ class ObserveHomeFeedUseCase @Inject constructor(
             // Deduplicate by alertId (keep newest update per alertId). If alertId is null use incident.id.
             val newestByKey = incidents.groupBy { it.homeFeedGroupingKey() }
                 .mapValues { entry ->
-                    entry.value.maxWithOrNull(
-                        compareBy<Incident>({ it.latestHomeFeedTimestamp() }, { it.createdAt })
-                    )!!
+                    entry.value.maxWithOrNull(homeFeedIncidentComparator)!!
                 }
                 .values
                 .toList()
@@ -80,11 +95,22 @@ class ObserveHomeFeedUseCase @Inject constructor(
                     isUnread = latestUpdateTimestamp > (lastSeenTimestamp ?: 0L),
                     updateCount = updateCount
                 )
-            }.sortedWith(
-                compareByDescending<HomeFeedIncident> { it.latestUpdateTimestamp }
-                    .thenByDescending { it.incident.createdAt }
-                    .thenBy { it.readStateKey }
-            )
+            }.sortedWith(homeFeedComparator)
+
+            val newestFeedIncident = feed.firstOrNull()
+            if (newestFeedIncident != null) {
+                Timber.d(
+                    "UseCase feed size=%d deduped=%d newestFeed id=%s alertId=%s latest=%d createdAt=%d hidden=%s muted=%s",
+                    feed.size,
+                    newestByKey.size,
+                    newestFeedIncident.incident.id,
+                    newestFeedIncident.incident.alertId,
+                    newestFeedIncident.latestUpdateTimestamp,
+                    newestFeedIncident.incident.createdAt,
+                    newestFeedIncident.isHidden,
+                    newestFeedIncident.isMuted
+                )
+            }
             
             Result.Success(feed)
         }
@@ -103,8 +129,18 @@ private fun Incident.readStateKey(): String {
 }
 
 private fun Incident.latestHomeFeedTimestamp(): Long {
-    return if (updatedAt > 0L) updatedAt else createdAt
+    return updatedAt.takeIf { it > 0L }
+        ?: createdAt.takeIf { it > 0L }
+        ?: 0L
 }
+
+private val homeFeedIncidentComparator =
+    compareBy<Incident>({ it.latestHomeFeedTimestamp() }, { it.createdAt.coerceAtLeast(0L) }, { it.id })
+
+private val homeFeedComparator =
+    compareByDescending<HomeFeedIncident> { it.latestUpdateTimestamp }
+        .thenByDescending { it.incident.createdAt.coerceAtLeast(0L) }
+        .thenBy { it.readStateKey }
 
 private fun Incident.distanceFrom(
     deviceLocation: DeviceLocation?,

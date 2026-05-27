@@ -49,6 +49,86 @@ class ObserveHomeFeedUseCaseTest {
         assertEquals(listOf("alert:C-1", "alert:A-1", "alert:B-1"), feed.map { it.readStateKey })
     }
 
+    @Test
+    fun invoke_prioritizesUpdatedAtOverOlderCreatedAtForOverallSorting() = runBlocking {
+        val incidents = listOf(
+            incident(id = "created-newer", alertId = "A-1", createdAt = 400L, updatedAt = 0L),
+            incident(id = "updated-newest", alertId = "B-1", createdAt = 100L, updatedAt = 900L)
+        )
+        val result = useCaseFor(incidents)(activeOnly = true).first()
+
+        assertTrue(result is Result.Success)
+        val feed = (result as Result.Success).data
+        assertEquals(listOf("updated-newest", "created-newer"), feed.map { it.incident.id })
+        assertEquals(listOf(900L, 400L), feed.map { it.latestUpdateTimestamp })
+    }
+
+    @Test
+    fun invoke_keepsNewestIncidentForSameAlertId() = runBlocking {
+        val incidents = listOf(
+            incident(id = "alert-a-old", alertId = "A-1", createdAt = 100L, updatedAt = 250L),
+            incident(id = "alert-a-new", alertId = "A-1", createdAt = 110L, updatedAt = 800L),
+            incident(id = "alert-b", alertId = "B-1", createdAt = 300L, updatedAt = 0L)
+        )
+        val result = useCaseFor(incidents)(activeOnly = true).first()
+
+        assertTrue(result is Result.Success)
+        val feed = (result as Result.Success).data
+        assertEquals(2, feed.size)
+        assertEquals(listOf("alert-a-new", "alert-b"), feed.map { it.incident.id })
+        assertEquals(listOf(800L, 300L), feed.map { it.latestUpdateTimestamp })
+    }
+
+    @Test
+    fun invoke_fallsBackToCreatedAtWhenUpdatedAtMissing() = runBlocking {
+        val incidents = listOf(
+            incident(id = "created-only", alertId = "A-1", createdAt = 700L, updatedAt = 0L),
+            incident(id = "older-created-only", alertId = "B-1", createdAt = 200L, updatedAt = 0L)
+        )
+        val result = useCaseFor(incidents)(activeOnly = true).first()
+
+        assertTrue(result is Result.Success)
+        val feed = (result as Result.Success).data
+        assertEquals(listOf("created-only", "older-created-only"), feed.map { it.incident.id })
+        assertEquals(listOf(700L, 200L), feed.map { it.latestUpdateTimestamp })
+    }
+
+    @Test
+    fun invoke_usesZeroWhenCreatedAtAndUpdatedAtAreMissingOrInvalid() = runBlocking {
+        val incidents = listOf(
+            incident(id = "zeroed", alertId = "A-1", createdAt = 0L, updatedAt = 0L),
+            incident(id = "negative", alertId = "B-1", createdAt = -5L, updatedAt = -1L)
+        )
+        val result = useCaseFor(incidents)(activeOnly = true).first()
+
+        assertTrue(result is Result.Success)
+        val feed = (result as Result.Success).data
+        assertEquals(listOf(0L, 0L), feed.map { it.latestUpdateTimestamp })
+    }
+
+    @Test
+    fun invoke_sortsNewestFirstEvenWhenRepositoryInputOrderIsAscending() = runBlocking {
+        val incidents = listOf(
+            incident(id = "oldest", alertId = "A-1", createdAt = 100L, updatedAt = 0L),
+            incident(id = "middle", alertId = "B-1", createdAt = 200L, updatedAt = 300L),
+            incident(id = "newest", alertId = "C-1", createdAt = 250L, updatedAt = 500L)
+        )
+        val result = useCaseFor(incidents)(activeOnly = true).first()
+
+        assertTrue(result is Result.Success)
+        val feed = (result as Result.Success).data
+        assertEquals(listOf("newest", "middle", "oldest"), feed.map { it.incident.id })
+        assertEquals(listOf(500L, 300L, 100L), feed.map { it.latestUpdateTimestamp })
+    }
+
+    private fun useCaseFor(incidents: List<Incident>) = ObserveHomeFeedUseCase(
+        incidentRepository = FakeIncidentRepository(incidents),
+        authRepository = FakeAuthRepository(),
+        homeFeedReadStateRepository = FakeHomeFeedReadStateRepository(),
+        locationRepository = FakeLocationRepository(),
+        calculateDistance = CalculateDistanceUseCase()
+    )
+
     private class FakeIncidentRepository(
         private val incidents: List<Incident>
     ) : IncidentRepository {

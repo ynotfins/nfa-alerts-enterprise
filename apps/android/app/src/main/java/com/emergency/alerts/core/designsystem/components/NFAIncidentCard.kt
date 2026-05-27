@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -38,6 +39,16 @@ import com.emergency.alerts.core.designsystem.theme.NFATheme
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+private val HomeCardVerticalPadding = 8.dp
+private val HomeCardTopRowGap = 6.dp
+private val HomeCardRowToBodyGap = 2.dp
+private val HomeCardIconTapTarget = 32.dp
+private val HomeCardIconVisualSize = 18.dp
+private val HomeCardDistanceMinWidth = 34.dp
+private val HomeCardDistanceMaxWidth = 48.dp
+private val HomeCardDateLineHeight = 14.sp
+private val HomeCardBodyLineHeight = 18.sp
 
 @Immutable
 data class NFAIncidentCardData(
@@ -109,23 +120,25 @@ fun NFAIncidentCard(
                         .weight(1f)
                         .padding(
                             horizontal = NFATheme.spacing.cardHorizontal,
-                            vertical = NFATheme.spacing.cardVertical
+                            vertical = HomeCardVerticalPadding
                         ),
-                    verticalArrangement = Arrangement.spacedBy(NFATheme.spacing.metadataGap)
+                    verticalArrangement = Arrangement.spacedBy(HomeCardRowToBodyGap)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(NFATheme.spacing.sm),
-                        verticalAlignment = Alignment.Top
+                        horizontalArrangement = Arrangement.spacedBy(HomeCardTopRowGap),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(
                             modifier = Modifier.weight(1f),
-                            horizontalArrangement = Arrangement.spacedBy(NFATheme.spacing.xs),
+                            horizontalArrangement = Arrangement.spacedBy(HomeCardTopRowGap),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 text = dateTimeLabel,
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    lineHeight = HomeCardDateLineHeight
+                                ),
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.Bold,
                                 maxLines = 1,
@@ -133,13 +146,15 @@ fun NFAIncidentCard(
                             )
                             NFADistanceLabel(
                                 distanceMiles = data.distanceMiles,
-                                modifier = Modifier.width(58.dp)
+                                modifier = Modifier
+                                    .width(HomeCardDistanceMaxWidth)
+                                    .heightIn(min = HomeCardIconVisualSize)
                             )
                         }
 
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(
-                                NFATheme.spacing.xs,
+                                HomeCardTopRowGap,
                                 Alignment.End
                             ),
                             verticalAlignment = Alignment.CenterVertically
@@ -154,7 +169,7 @@ fun NFAIncidentCard(
                             )
                             CardActionIcon(
                                 active = data.isBookmarked,
-                                tint = NFATheme.colors.notifications,
+                                tint = NFATheme.colors.bookmark,
                                 activeIcon = Icons.Default.Bookmark,
                                 inactiveIcon = Icons.Default.BookmarkBorder,
                                 contentDescription = "Bookmark alert",
@@ -182,7 +197,7 @@ fun NFAIncidentCard(
                     Text(
                         text = data.inlineBodyText,
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            lineHeight = 19.sp
+                            lineHeight = HomeCardBodyLineHeight
                         ),
                         color = bodyColor,
                         fontWeight = FontWeight.Normal,
@@ -208,7 +223,7 @@ fun NFAIncidentCard(
 
 private fun rememberDateTimeLabel(
     dateTimeMillis: Long
-) : String {
+): String {
     val formatter = SimpleDateFormat("MM/dd/yy hh:mm a", Locale.getDefault())
     return formatter.format(Date(dateTimeMillis))
 }
@@ -229,7 +244,7 @@ private fun CardActionIcon(
 ) {
     Box(
         modifier = Modifier
-            .size(40.dp)
+            .size(HomeCardIconTapTarget)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -237,7 +252,7 @@ private fun CardActionIcon(
             imageVector = if (active) activeIcon else inactiveIcon,
             contentDescription = contentDescription,
             tint = if (active) tint else tint.copy(alpha = 0.88f),
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(HomeCardIconVisualSize)
         )
     }
 }

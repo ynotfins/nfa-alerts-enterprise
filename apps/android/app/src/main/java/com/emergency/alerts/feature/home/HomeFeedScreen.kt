@@ -20,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.emergency.alerts.core.designsystem.components.NFABottomDestination
 import com.emergency.alerts.core.designsystem.components.NFABottomNavBar
@@ -55,14 +56,10 @@ fun HomeFeedScreen(
                             icon = Icons.Default.Visibility,
                             contentDescription = "Show hidden alerts",
                             onClick = viewModel::onRestoreHidden,
-                            tint = NFATheme.colors.profile,
-                            containerColor = if ((successState?.filterOptions?.hiddenCount ?: 0) > 0) {
-                                NFATheme.colors.profile.copy(alpha = 0.12f)
-                            } else {
-                                NFATheme.colors.mutedSurface
-                            },
-                            borderColor = NFATheme.colors.cardBorder,
-                            size = 34
+                            tint = NFATheme.colors.chasers,
+                            containerColor = Color.Transparent,
+                            borderColor = Color.Transparent,
+                            size = 40
                         )
                         NFAIconButton(
                             icon = Icons.Default.FilterList,
@@ -70,9 +67,9 @@ fun HomeFeedScreen(
                             onClick = { showFilterSheet = true },
                             modifier = Modifier.padding(start = NFATheme.spacing.xs),
                             tint = NFATheme.colors.accentBlue,
-                            containerColor = NFATheme.colors.accentBlue.copy(alpha = 0.12f),
-                            borderColor = NFATheme.colors.cardBorder,
-                            size = 34
+                            containerColor = Color.Transparent,
+                            borderColor = Color.Transparent,
+                            size = 40
                         )
                     }
                 }

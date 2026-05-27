@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 sealed interface HomeFeedUiState {
@@ -56,10 +57,41 @@ class HomeFeedViewModel @Inject constructor(
                 result.exception.localizedMessage ?: "Failed to load incidents"
             )
             is Result.Success -> {
+                val visibleIncidents = result.data.toVisibleHomeFeed(preferences)
+                val filterOptions = result.data.toFilterOptions(preferences)
+                val newestVisible = visibleIncidents.firstOrNull()
+                Timber.d(
+                    "ViewModel visible=%d raw=%d hiddenCount=%d favoriteKeys=%d bookmarkKeys=%d silentKeys=%d hiddenKeys=%d typeFilters=%d selectedTypes=%s deptFilters=%d selectedDepartments=%s keyword=%s distance=%s updates=%s highAlertOnly=%s highAlertEnabled=%s highAlertTypes=%d selectedHighAlertTypes=%s highAlertKeywords=%d selectedHighAlertKeywords=%s highAlertDepartments=%d selectedHighAlertDepartments=%s newestVisibleId=%s newestVisibleAlertId=%s newestVisibleLatest=%s",
+                    visibleIncidents.size,
+                    result.data.size,
+                    filterOptions.hiddenCount,
+                    preferences.favoriteAlertKeys.size,
+                    preferences.bookmarkAlertKeys.size,
+                    preferences.silentAlertKeys.size,
+                    preferences.hiddenAlertKeys.size,
+                    preferences.filters.selectedAlertTypes.size,
+                    preferences.filters.selectedAlertTypes,
+                    preferences.filters.selectedDepartmentCodes.size,
+                    preferences.filters.selectedDepartmentCodes,
+                    preferences.filters.keywordQuery,
+                    preferences.filters.distanceFilter.name,
+                    preferences.filters.updateFilter.name,
+                    preferences.filters.highAlertOnly,
+                    preferences.highAlertConfig.enabled,
+                    preferences.highAlertConfig.selectedAlertTypes.size,
+                    preferences.highAlertConfig.selectedAlertTypes,
+                    preferences.highAlertConfig.selectedKeywords.size,
+                    preferences.highAlertConfig.selectedKeywords,
+                    preferences.highAlertConfig.selectedDepartments.size,
+                    preferences.highAlertConfig.selectedDepartments,
+                    newestVisible?.incident?.id,
+                    newestVisible?.incident?.alertId,
+                    newestVisible?.latestUpdateTimestamp
+                )
                 HomeFeedUiState.Success(
-                    incidents = result.data.toVisibleHomeFeed(preferences),
+                    incidents = visibleIncidents,
                     preferences = preferences,
-                    filterOptions = result.data.toFilterOptions(preferences)
+                    filterOptions = filterOptions
                 )
             }
         }

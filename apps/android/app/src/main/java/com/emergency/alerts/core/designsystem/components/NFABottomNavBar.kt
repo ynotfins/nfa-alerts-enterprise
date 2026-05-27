@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
@@ -107,7 +108,7 @@ fun nfaRoleNavigationConfig(role: NFAUserRole): NFARoleNavigationConfig {
         ),
         NFABottomNavItem(
             destination = NFABottomDestination.Chasers,
-            icon = Icons.Default.Person,
+            icon = Icons.Default.Groups,
             contentDescription = "Chasers",
             tint = NFATheme.colors.chasers,
             enabled = false,
@@ -179,7 +180,7 @@ fun NFABottomNavBar(
                 val iconTint = if (selected) {
                     item.tint
                 } else {
-                    item.tint.copy(alpha = if (item.enabled) 0.92f else 0.76f)
+                    item.tint.copy(alpha = if (item.enabled) 0.96f else 0.84f)
                 }
 
                 if (showsIncidentsPill) {

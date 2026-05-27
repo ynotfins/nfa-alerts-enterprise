@@ -15,6 +15,7 @@ data class NFAExtendedColors(
     val navSelectedSurface: Color,
     val accentBlue: Color,
     val favorite: Color,
+    val bookmark: Color,
     val route: Color,
     val notifications: Color,
     val chasers: Color,
@@ -42,6 +43,7 @@ data class NFAThemePalette(
 
 private val LockedPurple = Color(0xFF6840B8)
 private val LockedRed = Color(0xFFD81800)
+private val LockedYellow = Color(0xFFF4B400)
 private val LockedOrange = Color(0xFFFF7000)
 private val LockedGreen = Color(0xFF00A858)
 private val LockedBlue = Color(0xFF508FF8)
@@ -55,14 +57,14 @@ private val LightTextTertiary = Color(0xFF9CA3AF)
 private val LightBorder = Color(0xFFE5E7EB)
 private val LightBorderSubtle = Color(0xFFEEF2F6)
 
-private val DarkBackground = Color(0xFF131518)
-private val DarkSurface = Color(0xFF191C20)
-private val DarkHeaderSurface = Color(0xFF20242A)
-private val DarkTextPrimary = Color(0xFFF8FAFC)
-private val DarkTextSecondary = Color(0xFFB0B7C3)
-private val DarkTextTertiary = Color(0xFF8D96A3)
-private val DarkBorder = Color(0xFF2B3139)
-private val DarkBorderSubtle = Color(0xFF22272F)
+private val DarkBackground = Color(0xFF080808)
+private val DarkSurface = Color(0xFF111111)
+private val DarkHeaderSurface = Color(0xFF151515)
+private val DarkTextPrimary = Color(0xFFFFFFFF)
+private val DarkTextSecondary = Color(0xFFB8B8B8)
+private val DarkTextTertiary = Color(0xFF8F8F8F)
+private val DarkBorder = Color(0xFF2A2A2A)
+private val DarkBorderSubtle = Color(0xFF1A1A1A)
 
 private val LightBaseScheme = lightColorScheme(
     primary = LockedBlue,
@@ -99,11 +101,12 @@ private val DefaultLightExtended = NFAExtendedColors(
     navSelectedSurface = LockedBlue.copy(alpha = 0.10f),
     accentBlue = LockedBlue,
     favorite = LockedRed,
+    bookmark = LockedYellow,
     route = LockedGreen,
     notifications = LockedOrange,
     chasers = LockedPurple,
     chat = LockedBlue,
-    profile = LockedPurple,
+    profile = LockedYellow,
     neutralNav = LightTextSecondary,
     severityCritical = LockedRed,
     severityWarning = LockedOrange,
@@ -151,11 +154,12 @@ private val DarkExtended = NFAExtendedColors(
     navSelectedSurface = LockedBlue.copy(alpha = 0.16f),
     accentBlue = LockedBlue,
     favorite = LockedRed,
+    bookmark = LockedYellow,
     route = LockedGreen,
     notifications = LockedOrange,
     chasers = LockedPurple,
     chat = LockedBlue,
-    profile = LockedPurple,
+    profile = LockedYellow,
     neutralNav = DarkTextSecondary,
     severityCritical = LockedRed,
     severityWarning = LockedOrange,

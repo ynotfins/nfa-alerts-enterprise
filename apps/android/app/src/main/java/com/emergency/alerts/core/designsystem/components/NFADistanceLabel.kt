@@ -9,24 +9,36 @@ import androidx.compose.ui.text.style.TextAlign
 import com.emergency.alerts.core.designsystem.theme.NFATheme
 import kotlin.math.roundToInt
 
+private const val DISTANCE_ROUNDING_SCALE = 10.0
+
 @Composable
 fun NFADistanceLabel(
     distanceMiles: Double?,
     modifier: Modifier = Modifier
 ) {
-    val label = if (distanceMiles != null) {
-        val rounded = (distanceMiles * 10.0).roundToInt() / 10.0
-        "$rounded mi"
-    } else {
-        "-- mi"
-    }
+    val label = distanceMiles.toCompactDistanceLabel()
 
     Box(modifier = modifier) {
         Text(
             text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = NFATheme.colors.textSecondary,
-            textAlign = TextAlign.End
+            style = MaterialTheme.typography.labelSmall,
+            color = NFATheme.colors.accentBlue,
+            textAlign = TextAlign.Start,
+            maxLines = 1
         )
     }
 }
+
+private fun Double?.toCompactDistanceLabel(): String {
+    if (this == null) return "-- m"
+
+    val roundedToTenth = (this * DISTANCE_ROUNDING_SCALE).roundToInt() / DISTANCE_ROUNDING_SCALE
+    val wholeMiles = roundedToTenth.toInt().toDouble() == roundedToTenth
+
+    return if (wholeMiles) {
+        "${roundedToTenth.toInt()}m"
+    } else {
+        "${roundedToTenth}m"
+    }
+}
+
