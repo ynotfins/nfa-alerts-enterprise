@@ -3,29 +3,35 @@ package com.emergency.alerts.feature.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.emergency.alerts.core.designsystem.components.NFABottomDestination
 import com.emergency.alerts.core.designsystem.components.NFABottomNavBar
 import com.emergency.alerts.core.designsystem.components.NFAEmptyState
 import com.emergency.alerts.core.designsystem.components.NFAErrorState
+import com.emergency.alerts.core.designsystem.components.NFAIconButton
 import com.emergency.alerts.core.designsystem.components.NFAIncidentCard
-import com.emergency.alerts.core.designsystem.components.NFAIncidentCardData
 import com.emergency.alerts.core.designsystem.components.NFALoadingState
 import com.emergency.alerts.core.designsystem.components.NFATopBar
 import com.emergency.alerts.core.designsystem.components.NFAUserRole
 import com.emergency.alerts.core.designsystem.components.nfaRoleNavigationConfig
 import com.emergency.alerts.core.designsystem.theme.NFATheme
-import com.emergency.alerts.domain.model.HomeFeedIncident
 
 @Composable
 fun HomeFeedScreen(
@@ -35,16 +41,40 @@ fun HomeFeedScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val navigationConfig = nfaRoleNavigationConfig(NFAUserRole.fromRaw(role))
+    var showFilterSheet by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             NFATopBar(
                 title = "Incidents",
-                subtitle = when (navigationConfig.role) {
-                    NFAUserRole.Admin -> "Admin / Supe command feed"
-                    NFAUserRole.Supe -> "Supervisor incident feed"
-                    NFAUserRole.Chaser -> "Live responder incident feed"
+                trailingContent = {
+                    val successState = uiState as? HomeFeedUiState.Success
+                    Row {
+                        NFAIconButton(
+                            icon = Icons.Default.Visibility,
+                            contentDescription = "Show hidden alerts",
+                            onClick = viewModel::onRestoreHidden,
+                            tint = NFATheme.colors.profile,
+                            containerColor = if ((successState?.filterOptions?.hiddenCount ?: 0) > 0) {
+                                NFATheme.colors.profile.copy(alpha = 0.12f)
+                            } else {
+                                NFATheme.colors.mutedSurface
+                            },
+                            borderColor = NFATheme.colors.cardBorder,
+                            size = 34
+                        )
+                        NFAIconButton(
+                            icon = Icons.Default.FilterList,
+                            contentDescription = "Open Home filters",
+                            onClick = { showFilterSheet = true },
+                            modifier = Modifier.padding(start = NFATheme.spacing.xs),
+                            tint = NFATheme.colors.accentBlue,
+                            containerColor = NFATheme.colors.accentBlue.copy(alpha = 0.12f),
+                            borderColor = NFATheme.colors.cardBorder,
+                            size = 34
+                        )
+                    }
                 }
             )
         },
@@ -83,11 +113,18 @@ fun HomeFeedScreen(
                         ) {
                             items(
                                 items = state.incidents,
-                                key = { it.incident.id }
+                                key = { it.readStateKey }
                             ) { feedIncident ->
                                 NFAIncidentCard(
                                     data = feedIncident.toCardData(),
-                                    onClick = { onIncidentClick(feedIncident.incident.id) },
+                                    onClick = {
+                                        viewModel.onIncidentOpened(feedIncident)
+                                        onIncidentClick(feedIncident.incident.id)
+                                    },
+                                    onFavoriteClick = { viewModel.onFavoriteToggle(feedIncident) },
+                                    onBookmarkClick = { viewModel.onBookmarkToggle(feedIncident) },
+                                    onSilentClick = { viewModel.onSilentToggle(feedIncident) },
+                                    onHideClick = { viewModel.onHideToggle(feedIncident) },
                                     modifier = Modifier.padding(bottom = NFATheme.spacing.cardGap)
                                 )
                             }
@@ -97,32 +134,16 @@ fun HomeFeedScreen(
             }
         }
     }
-}
 
-private fun HomeFeedIncident.toCardData(): NFAIncidentCardData {
-    val incidentData = incident
-    val location = incidentData.location
-    val cleanedDepartmentCode = incidentData.departmentNumber
-        .map { it.replace(Regex("(?i)BNNDESK\\s*"), "") }
-        .map(String::trim)
-        .filter(String::isNotBlank)
-        .joinToString(" ")
-    val cleanedMessage = incidentData.description.replace(Regex("(?i)BNNDESK\\s*"), "").trim()
-    val savedAt = if (incidentData.updatedAt > 0L) incidentData.updatedAt else incidentData.createdAt
-
-    return NFAIncidentCardData(
-        incidentId = incidentData.id,
-        savedAtMillis = savedAt,
-        distanceMiles = distanceMiles,
-        state = location.state,
-        county = location.county,
-        city = location.city,
-        address = location.address,
-        alertType = incidentData.type.uppercase(),
-        alertMessage = cleanedMessage,
-        departmentCode = cleanedDepartmentCode.ifBlank { null },
-        alertId = incidentData.alertId?.takeIf { it.isNotBlank() }?.let { "#$it" },
-        severityLabel = incidentData.alarmLevel,
-        isImportant = incidentData.alarmLevel != null || incidentData.type.equals("fire", ignoreCase = true)
-    )
+    val successState = uiState as? HomeFeedUiState.Success
+    if (showFilterSheet && successState != null) {
+        HomeFeedFilterSheet(
+            filters = successState.preferences.filters,
+            highAlertConfig = successState.preferences.highAlertConfig,
+            options = successState.filterOptions,
+            onDismiss = { showFilterSheet = false },
+            onFiltersChange = viewModel::updateFilters,
+            onHighAlertConfigChange = viewModel::updateHighAlertConfig
+        )
+    }
 }

@@ -13,6 +13,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.NFAAlerts">
 
+        <!-- Display-only Maps SDK key. Do not use this for geocoding; backend owns geocoding. -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${googleMapsApiKey}" />
+
         <service
             android:name=".data.messaging.NFAAlertsMessagingService"
             android:exported="false">

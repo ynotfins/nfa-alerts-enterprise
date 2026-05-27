@@ -109,7 +109,7 @@ fun nfaRoleNavigationConfig(role: NFAUserRole): NFARoleNavigationConfig {
             destination = NFABottomDestination.Chasers,
             icon = Icons.Default.Person,
             contentDescription = "Chasers",
-            tint = NFATheme.colors.neutralNav,
+            tint = NFATheme.colors.chasers,
             enabled = false,
             visibleFor = allRoles
         ),
@@ -117,7 +117,7 @@ fun nfaRoleNavigationConfig(role: NFAUserRole): NFARoleNavigationConfig {
             destination = NFABottomDestination.Chat,
             icon = Icons.Default.Email,
             contentDescription = "Chat",
-            tint = NFATheme.colors.neutralNav,
+            tint = NFATheme.colors.chat,
             enabled = false,
             visibleFor = allRoles
         ),
@@ -125,7 +125,7 @@ fun nfaRoleNavigationConfig(role: NFAUserRole): NFARoleNavigationConfig {
             destination = NFABottomDestination.Profile,
             icon = Icons.Default.Person,
             contentDescription = "Profile",
-            tint = NFATheme.colors.neutralNav,
+            tint = NFATheme.colors.profile,
             enabled = false,
             visibleFor = allRoles
         )
@@ -165,44 +165,48 @@ fun NFABottomNavBar(
         ) {
             items.forEach { item ->
                 val selected = item.destination == selectedDestination
-                val iconBackground = if (selected) {
-                    NFATheme.colors.navSelectedSurface.copy(alpha = if (item.enabled) 1f else 0.8f)
-                } else {
-                    Color.Transparent
-                }
-                Box(
-                    modifier = Modifier
-                        .width(44.dp)
-                        .size(if (selected) 44.dp else 40.dp)
-                        .then(
-                            if (item.enabled) {
-                                Modifier.clickable { onDestinationSelected(item.destination) }
-                            } else {
-                                Modifier
-                            }
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Surface(
-                        shape = NFATheme.shapes.iconButton,
-                        color = iconBackground,
-                        border = if (selected) {
-                            BorderStroke(1.dp, item.tint.copy(alpha = 0.12f))
+                val showsIncidentsPill = selected && item.destination == NFABottomDestination.Incidents
+                val itemModifier = Modifier
+                    .width(44.dp)
+                    .size(if (showsIncidentsPill) 44.dp else 40.dp)
+                    .then(
+                        if (item.enabled) {
+                            Modifier.clickable { onDestinationSelected(item.destination) }
                         } else {
-                            null
+                            Modifier
                         }
+                    )
+                val iconTint = if (selected) {
+                    item.tint
+                } else {
+                    item.tint.copy(alpha = if (item.enabled) 0.92f else 0.76f)
+                }
+
+                if (showsIncidentsPill) {
+                    Surface(
+                        modifier = itemModifier,
+                        shape = NFATheme.shapes.iconButton,
+                        color = NFATheme.colors.navSelectedSurface,
+                        border = BorderStroke(1.dp, NFATheme.colors.accentBlue.copy(alpha = 0.18f))
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(if (selected) 44.dp else 40.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
+                        Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = item.icon,
                                 contentDescription = item.contentDescription,
-                                tint = if (selected) item.tint else item.tint.copy(alpha = if (item.enabled) 0.92f else 0.76f)
+                                tint = iconTint
                             )
                         }
+                    }
+                } else {
+                    Box(
+                        modifier = itemModifier,
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = item.contentDescription,
+                            tint = iconTint
+                        )
                     }
                 }
             }

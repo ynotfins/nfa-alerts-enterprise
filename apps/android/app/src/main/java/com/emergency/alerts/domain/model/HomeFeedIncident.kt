@@ -7,5 +7,10 @@ data class HomeFeedIncident(
     val isHidden: Boolean,
     val isMuted: Boolean,
     val hasViewed: Boolean,
-    val distanceMiles: Double?
+    val distanceMiles: Double?,
+    val latestUpdateTimestamp: Long,
+    val readStateKey: String,
+    val lastSeenTimestamp: Long?,
+    val isUnread: Boolean,
+    val updateCount: Int
 )

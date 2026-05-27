@@ -3,41 +3,117 @@ package com.emergency.alerts.feature.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emergency.alerts.core.result.Result
+import com.emergency.alerts.domain.model.HighAlertConfig
 import com.emergency.alerts.domain.model.HomeFeedIncident
+import com.emergency.alerts.domain.model.HomeFeedFilters
+import com.emergency.alerts.domain.model.HomeFeedPreferences
+import com.emergency.alerts.domain.usecase.MarkHomeFeedIncidentSeenUseCase
 import com.emergency.alerts.domain.usecase.ObserveHomeFeedUseCase
+import com.emergency.alerts.domain.repository.HomeFeedPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 sealed interface HomeFeedUiState {
     data object Loading : HomeFeedUiState
-    data class Success(val incidents: List<HomeFeedIncident>) : HomeFeedUiState
+    data class Success(
+        val incidents: List<HomeFeedIncident>,
+        val preferences: HomeFeedPreferences,
+        val filterOptions: HomeFeedFilterOptions
+    ) : HomeFeedUiState
     data class Error(val message: String) : HomeFeedUiState
 }
 
 @HiltViewModel
 class HomeFeedViewModel @Inject constructor(
-    observeHomeFeedUseCase: ObserveHomeFeedUseCase
+    observeHomeFeedUseCase: ObserveHomeFeedUseCase,
+    private val markHomeFeedIncidentSeenUseCase: MarkHomeFeedIncidentSeenUseCase,
+    private val homeFeedPreferencesRepository: HomeFeedPreferencesRepository
 ) : ViewModel() {
 
     companion object {
         private const val STOP_TIMEOUT_MILLIS = 5000L
     }
 
-    val uiState: StateFlow<HomeFeedUiState> = observeHomeFeedUseCase(activeOnly = true)
-        .map { result ->
-            when (result) {
-                is Result.Loading -> HomeFeedUiState.Loading
-                is Result.Error -> HomeFeedUiState.Error(result.exception.localizedMessage ?: "Failed to load incidents")
-                is Result.Success -> HomeFeedUiState.Success(result.data)
-            }
-        }
+    private val preferencesState = homeFeedPreferencesRepository.observePreferences()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-            initialValue = HomeFeedUiState.Loading
+            initialValue = HomeFeedPreferences()
         )
+
+    val uiState: StateFlow<HomeFeedUiState> = combine(
+        observeHomeFeedUseCase(activeOnly = true),
+        preferencesState
+    ) { result, preferences ->
+        when (result) {
+            is Result.Loading -> HomeFeedUiState.Loading
+            is Result.Error -> HomeFeedUiState.Error(
+                result.exception.localizedMessage ?: "Failed to load incidents"
+            )
+            is Result.Success -> {
+                HomeFeedUiState.Success(
+                    incidents = result.data.toVisibleHomeFeed(preferences),
+                    preferences = preferences,
+                    filterOptions = result.data.toFilterOptions(preferences)
+                )
+            }
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+        initialValue = HomeFeedUiState.Loading
+    )
+
+    fun onIncidentOpened(incident: HomeFeedIncident) {
+        viewModelScope.launch {
+            markHomeFeedIncidentSeenUseCase(incident)
+        }
+    }
+
+    fun onFavoriteToggle(incident: HomeFeedIncident) {
+        viewModelScope.launch {
+            homeFeedPreferencesRepository.toggleFavorite(incident.readStateKey)
+        }
+    }
+
+    fun onBookmarkToggle(incident: HomeFeedIncident) {
+        viewModelScope.launch {
+            homeFeedPreferencesRepository.toggleBookmark(incident.readStateKey)
+        }
+    }
+
+    fun onSilentToggle(incident: HomeFeedIncident) {
+        viewModelScope.launch {
+            homeFeedPreferencesRepository.toggleSilent(incident.readStateKey)
+        }
+    }
+
+    fun onHideToggle(incident: HomeFeedIncident) {
+        viewModelScope.launch {
+            homeFeedPreferencesRepository.toggleHidden(incident.readStateKey)
+        }
+    }
+
+    fun onRestoreHidden() {
+        viewModelScope.launch {
+            homeFeedPreferencesRepository.clearHidden()
+        }
+    }
+
+    fun updateFilters(filters: HomeFeedFilters) {
+        viewModelScope.launch {
+            homeFeedPreferencesRepository.setFilters(filters)
+        }
+    }
+
+    fun updateHighAlertConfig(config: HighAlertConfig) {
+        viewModelScope.launch {
+            homeFeedPreferencesRepository.setHighAlertConfig(config)
+        }
+    }
 }

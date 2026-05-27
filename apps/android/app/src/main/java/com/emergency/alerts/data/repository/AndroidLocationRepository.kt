@@ -52,20 +52,20 @@ class AndroidLocationRepository @Inject constructor(
         val locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 result.lastLocation?.let { loc ->
-                    trySend(
-                        Result.Success(
-                            DeviceLocation(
-                                lat = loc.latitude,
-                                lng = loc.longitude,
-                                accuracy = loc.accuracy
-                            )
-                        )
-                    )
+                    trySend(loc.toDeviceLocationResult())
                 }
             }
         }
 
         try {
+            fusedLocationClient.lastLocation
+                .addOnSuccessListener { loc ->
+                    loc?.let { trySend(it.toDeviceLocationResult()) }
+                }
+                .addOnFailureListener { error ->
+                    Timber.w(error, "Unable to read last known device location")
+                }
+
             fusedLocationClient.requestLocationUpdates(
                 locationRequest,
                 locationCallback,
@@ -96,4 +96,14 @@ class AndroidLocationRepository @Inject constructor(
         ) == PackageManager.PERMISSION_GRANTED
         return fineLocation || coarseLocation
     }
+}
+
+private fun android.location.Location.toDeviceLocationResult(): Result<DeviceLocation> {
+    return Result.Success(
+        DeviceLocation(
+            lat = latitude,
+            lng = longitude,
+            accuracy = accuracy
+        )
+    )
 }

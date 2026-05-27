@@ -25,7 +25,6 @@ internal fun HomeFeedIncident.toCardData(): NFAIncidentCardData {
     return NFAIncidentCardData(
         incidentId = incidentData.id,
         dateTimeMillis = latestUpdateTimestamp,
-        isUpdated = incidentData.updatedAt > incidentData.createdAt,
         distanceMiles = distanceMiles,
         inlineBodyText = inlineBodyText,
         isUnread = isUnread,
@@ -38,6 +37,7 @@ internal fun HomeFeedIncident.toCardData(): NFAIncidentCardData {
 
 private fun HomeFeedIncident.buildAlertHeadline(): String {
     val incidentData = incident
+    // Headline/category stays tied to normalized Firestore fields only.
     val severityText = incidentData.alarmLevel.cleanHomeFeedText()
     val typeText = incidentData.type.cleanHomeFeedText().humanizeFeedToken()
     val normalizedSeverity = severityText.humanizeFeedToken()

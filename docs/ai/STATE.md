@@ -1,8 +1,37 @@
 # NFA Alerts — AI State
 
-**Last updated**: 2026-05-19
-**Session type**: AGENT Executioner — parser contract and Android field alignment
-**Status**: COMPLETE — backend parser contract hardened
+**Last updated**: 2026-05-26
+**Session type**: AGENT Executioner — enterprise context snapshot and restore point
+**Status**: COMPLETE — context snapshot refreshed and Android restore-point validation passed
+
+---
+
+## What happened this session (2026-05-26 — Enterprise Context Snapshot and Restore Point)
+
+Created a full root enterprise context snapshot for the rebuild and prepared the branch for a GitHub restore point after Android Home feed polish.
+
+1. **Repo identity confirmed**: Verified repo root `D:/github/nfa-alerts-enterprise` and branch `feature/android-infrastructure-wiring`.
+2. **Root context refreshed**: Fully rewrote `CONTEXT_BLOCK.md` with current enterprise identity, tool ownership, Android/Home state, parser/backend boundaries, Firestore/rules direction, High Alert, maps/distance, ERPNext/CRM, subscriptions, secrets, next steps, and source references.
+3. **Android parser boundary preserved**: Confirmed `apps/android/AGENTS.md` already contains the stricter `HomeFeedCardFormatter.kt` rule: Home builds from normalized Firestore fields, must not infer alert type/category from description, and emojis are additive only.
+4. **Memory guide aligned**: Updated `openmemory.md` so the project index no longer mentions description heuristics as acceptable presentation hints.
+5. **Validation passed**: `./gradlew.bat assembleDebug` and `./gradlew.bat testDebugUnitTest` passed from `apps/android`. `adb devices` found `emulator-5554`; debug APK install and launcher smoke test passed.
+
+### Restore Point Evidence
+
+| Check | Result |
+| --- | --- |
+| `git rev-parse --show-toplevel` | PASS — `D:/github/nfa-alerts-enterprise` |
+| `git status --short --branch` | PASS — on `feature/android-infrastructure-wiring...origin/feature/android-infrastructure-wiring` |
+| `./gradlew.bat assembleDebug` from `apps/android` | PASS |
+| `./gradlew.bat testDebugUnitTest` from `apps/android` | PASS |
+| `adb install -r apps/android/app/build/outputs/apk/debug/app-debug.apk` | PASS |
+| `adb shell monkey -p com.emergency.alerts -c android.intent.category.LAUNCHER 1` | PASS |
+
+### Restore Point Caveats
+
+1. **Preserved dirty tree**: Existing Android implementation changes, untracked local scripts, screenshots, generated outputs, and agent skill files were preserved unless deliberately staged for the restore point.
+2. **No Firebase side effects**: No Firebase deploy and no production Firebase data mutation were performed.
+3. **No Android code authored by Cursor in this pass**: This pass refreshed context and validation state; it did not implement the remaining Home icon/distance layout fixes.
 
 ---
 

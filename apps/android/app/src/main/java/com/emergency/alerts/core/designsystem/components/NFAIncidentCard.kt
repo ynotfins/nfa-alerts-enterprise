@@ -8,15 +8,20 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationsOff
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -37,37 +42,35 @@ import java.util.Locale
 @Immutable
 data class NFAIncidentCardData(
     val incidentId: String,
-    val savedAtMillis: Long,
+    val dateTimeMillis: Long,
     val distanceMiles: Double?,
-    val state: String,
-    val county: String?,
-    val city: String,
-    val address: String,
-    val alertType: String,
-    val alertMessage: String,
-    val departmentCode: String?,
-    val alertId: String?,
-    val severityLabel: String?,
-    val isImportant: Boolean
+    val inlineBodyText: String,
+    val isUnread: Boolean,
+    val updateCount: Int,
+    val isFavorite: Boolean,
+    val isBookmarked: Boolean,
+    val isSilent: Boolean
 )
 
 @Composable
 fun NFAIncidentCard(
     data: NFAIncidentCardData,
     onClick: () -> Unit,
+    onFavoriteClick: () -> Unit,
+    onBookmarkClick: () -> Unit,
+    onSilentClick: () -> Unit,
+    onHideClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val timeString = rememberSavedTime(data.savedAtMillis)
-    val bodyLines = buildList {
-        add(data.state)
-        data.county?.takeIf { it.isNotBlank() }?.let(::add)
-        data.city.takeIf { it.isNotBlank() }?.let(::add)
-        data.address.takeIf { it.isNotBlank() }?.let(::add)
-        add(data.alertType)
-        data.alertMessage.takeIf { it.isNotBlank() }?.let(::add)
-        data.departmentCode?.takeIf { it.isNotBlank() }?.let(::add)
-        data.alertId?.takeIf { it.isNotBlank() }?.let { add(it) }
-    }.joinToString(separator = "\n")
+    val dateTimeLabel = rememberDateTimeLabel(
+        dateTimeMillis = data.dateTimeMillis
+    )
+    val bodyColor = if (data.isUnread) {
+        MaterialTheme.colorScheme.onSurface
+    } else {
+        NFATheme.colors.textSecondary
+    }
+    val updateIndicatorFraction = updateIndicatorFraction(data.updateCount)
 
     Surface(
         modifier = modifier
@@ -88,15 +91,18 @@ fun NFAIncidentCard(
                 Box(
                     modifier = Modifier
                         .fillMaxHeight()
-                        .width(NFATheme.spacing.xxs)
-                        .background(
-                            if (data.isImportant) {
-                                NFATheme.colors.accentBlue
-                            } else {
-                                NFATheme.colors.divider
-                            }
+                        .width(NFATheme.spacing.xs),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (updateIndicatorFraction > 0f) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight(updateIndicatorFraction)
+                                .width(NFATheme.spacing.xxs)
+                                .background(NFATheme.colors.accentBlue)
                         )
-                )
+                    }
+                }
 
                 Column(
                     modifier = Modifier
@@ -109,56 +115,81 @@ fun NFAIncidentCard(
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        horizontalArrangement = Arrangement.spacedBy(NFATheme.spacing.sm),
+                        verticalAlignment = Alignment.Top
                     ) {
-                        Text(
-                            text = timeString,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = NFATheme.colors.textSecondary,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        NFADistanceLabel(
-                            distanceMiles = data.distanceMiles,
-                            modifier = Modifier.width(58.dp)
-                        )
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            horizontalArrangement = Arrangement.spacedBy(NFATheme.spacing.xs),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = dateTimeLabel,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            NFADistanceLabel(
+                                distanceMiles = data.distanceMiles,
+                                modifier = Modifier.width(58.dp)
+                            )
+                        }
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(
+                                NFATheme.spacing.xs,
+                                Alignment.End
+                            ),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CardActionIcon(
+                                active = data.isFavorite,
+                                tint = NFATheme.colors.favorite,
+                                activeIcon = Icons.Default.Favorite,
+                                inactiveIcon = Icons.Default.FavoriteBorder,
+                                contentDescription = "Favorite alert",
+                                onClick = onFavoriteClick
+                            )
+                            CardActionIcon(
+                                active = data.isBookmarked,
+                                tint = NFATheme.colors.notifications,
+                                activeIcon = Icons.Default.Bookmark,
+                                inactiveIcon = Icons.Default.BookmarkBorder,
+                                contentDescription = "Bookmark alert",
+                                onClick = onBookmarkClick
+                            )
+                            CardActionIcon(
+                                active = data.isSilent,
+                                tint = NFATheme.colors.notifications,
+                                activeIcon = Icons.Default.NotificationsOff,
+                                inactiveIcon = Icons.Default.Notifications,
+                                contentDescription = "Silence notifications for this alert",
+                                onClick = onSilentClick
+                            )
+                            CardActionIcon(
+                                active = false,
+                                tint = NFATheme.colors.accentBlue,
+                                activeIcon = Icons.Default.VisibilityOff,
+                                inactiveIcon = Icons.Default.VisibilityOff,
+                                contentDescription = "Hide alert from Home",
+                                onClick = onHideClick
+                            )
+                        }
                     }
 
                     Text(
-                        text = bodyLines,
+                        text = data.inlineBodyText,
                         style = MaterialTheme.typography.bodyMedium.copy(
                             lineHeight = 19.sp
                         ),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.SemiBold,
+                        color = bodyColor,
+                        fontWeight = FontWeight.Normal,
                         maxLines = 7,
                         overflow = TextOverflow.Ellipsis
                     )
 
-                    if (!data.severityLabel.isNullOrBlank()) {
-                        NFASeverityBadge(label = data.severityLabel)
-                    }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .padding(
-                            end = NFATheme.spacing.md,
-                            top = NFATheme.spacing.cardVertical,
-                            bottom = NFATheme.spacing.cardVertical
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    NFAIconButton(
-                        icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = "View incident details",
-                        onClick = onClick,
-                        tint = NFATheme.colors.textSecondary,
-                        containerColor = NFATheme.colors.mutedSurface,
-                        borderColor = NFATheme.colors.cardBorder,
-                        size = 40
-                    )
                 }
             }
 
@@ -175,8 +206,38 @@ fun NFAIncidentCard(
     }
 }
 
-@Composable
-private fun rememberSavedTime(savedAtMillis: Long): String {
+private fun rememberDateTimeLabel(
+    dateTimeMillis: Long
+) : String {
     val formatter = SimpleDateFormat("MM/dd/yy hh:mm a", Locale.getDefault())
-    return formatter.format(Date(savedAtMillis))
+    return formatter.format(Date(dateTimeMillis))
+}
+
+private fun updateIndicatorFraction(updateCount: Int): Float {
+    if (updateCount <= 0) return 0f
+    return (updateCount.coerceAtMost(5).toFloat() / 5f)
+}
+
+@Composable
+private fun CardActionIcon(
+    active: Boolean,
+    tint: androidx.compose.ui.graphics.Color,
+    activeIcon: androidx.compose.ui.graphics.vector.ImageVector,
+    inactiveIcon: androidx.compose.ui.graphics.vector.ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        androidx.compose.material3.Icon(
+            imageVector = if (active) activeIcon else inactiveIcon,
+            contentDescription = contentDescription,
+            tint = if (active) tint else tint.copy(alpha = 0.88f),
+            modifier = Modifier.size(20.dp)
+        )
+    }
 }

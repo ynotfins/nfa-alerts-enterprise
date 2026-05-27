@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -9,6 +11,17 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use(::load)
+    }
+}
+
+val googleMapsApiKey = providers.gradleProperty("NFA_MAPS_API_KEY")
+    .orElse(localProperties.getProperty("NFA_MAPS_API_KEY", ""))
+    .get()
+
 android {
     namespace = "com.emergency.alerts"
     compileSdk = 36
@@ -19,6 +32,10 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+
+        // Supply a dev-only Maps SDK key through ~/.gradle/gradle.properties or local.properties.
+        // Never commit a real key. Use package name + SHA restricted Android keys only.
+        manifestPlaceholders["googleMapsApiKey"] = googleMapsApiKey
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -48,6 +65,7 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
@@ -82,7 +100,12 @@ dependencies {
 
     // Location
     implementation(libs.play.services.location)
+    implementation(libs.play.services.maps)
+    implementation(libs.google.maps.compose)
 
     // Timber
     implementation(libs.timber)
+
+    // Local persistence
+    implementation(libs.datastore.preferences)
 }
