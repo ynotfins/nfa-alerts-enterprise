@@ -429,3 +429,22 @@ Inspected or cross-referenced for this snapshot:
 - `apps/web/src/lib/db.ts`
 - `firebase/firestore.rules`
 - `firebase/firestore.indexes.json`
+
+## Design System Architecture: Mobile & Web Parity
+
+### Color Library & UI Tokens
+- All UI screens must use the app design tokens defined in `core/designsystem/tokens/NFAColors.kt` and Material 3 theme wrappers in `core/designsystem/theme`.
+- Do not hardcode `Color(0xFF...)` inside feature screens or local component files.
+- New color values must be added as named design tokens first.
+- Alert states must map consistently across Android and the live Next.js/PWA design:
+  - Critical Alert = Red token
+  - Warning Alert = Yellow token
+  - Informational/Sync = Blue token
+- Bottom navigation and action icons must use named role tokens, not local hex values.
+
+### Cross-Platform Component Duplication
+- Create modular reusable components before screen-specific layouts.
+- Android reusable UI belongs under `core/designsystem/components`.
+- Feature screens should compose design-system components, not redefine padding, shapes, shadows, typography, or icon color rules.
+- Before creating a new page, check the Home screen blueprint and reuse its spacing, card shape, elevation, typography, and icon token patterns.
+- Home card styling is the foundation for Details, Favorites, Route, Notifications, Chasers, Chat, and Profile screens.

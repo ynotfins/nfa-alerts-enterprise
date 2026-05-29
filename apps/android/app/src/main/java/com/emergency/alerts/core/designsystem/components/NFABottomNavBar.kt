@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Notifications
@@ -78,7 +78,7 @@ fun nfaRoleNavigationConfig(role: NFAUserRole): NFARoleNavigationConfig {
             destination = NFABottomDestination.Incidents,
             icon = Icons.AutoMirrored.Filled.List,
             contentDescription = "Incidents",
-            tint = NFATheme.colors.accentBlue,
+            tint = NFATheme.colors.navIncidents,
             enabled = true,
             visibleFor = allRoles
         ),
@@ -86,7 +86,7 @@ fun nfaRoleNavigationConfig(role: NFAUserRole): NFARoleNavigationConfig {
             destination = NFABottomDestination.Favorites,
             icon = Icons.Default.FavoriteBorder,
             contentDescription = "Favorites",
-            tint = NFATheme.colors.favorite,
+            tint = NFATheme.colors.navFavorites,
             enabled = false,
             visibleFor = allRoles
         ),
@@ -94,7 +94,7 @@ fun nfaRoleNavigationConfig(role: NFAUserRole): NFARoleNavigationConfig {
             destination = NFABottomDestination.Route,
             icon = Icons.Default.Place,
             contentDescription = "Route",
-            tint = NFATheme.colors.route,
+            tint = NFATheme.colors.navRoute,
             enabled = false,
             visibleFor = allRoles
         ),
@@ -102,7 +102,7 @@ fun nfaRoleNavigationConfig(role: NFAUserRole): NFARoleNavigationConfig {
             destination = NFABottomDestination.Notifications,
             icon = Icons.Default.Notifications,
             contentDescription = "Notifications",
-            tint = NFATheme.colors.notifications,
+            tint = NFATheme.colors.navNotifications,
             enabled = false,
             visibleFor = allRoles
         ),
@@ -110,15 +110,15 @@ fun nfaRoleNavigationConfig(role: NFAUserRole): NFARoleNavigationConfig {
             destination = NFABottomDestination.Chasers,
             icon = Icons.Default.Groups,
             contentDescription = "Chasers",
-            tint = NFATheme.colors.chasers,
+            tint = NFATheme.colors.navChasers,
             enabled = false,
             visibleFor = allRoles
         ),
         NFABottomNavItem(
             destination = NFABottomDestination.Chat,
-            icon = Icons.Default.Email,
+            icon = Icons.AutoMirrored.Filled.Chat,
             contentDescription = "Chat",
-            tint = NFATheme.colors.chat,
+            tint = NFATheme.colors.navChat,
             enabled = false,
             visibleFor = allRoles
         ),
@@ -126,7 +126,7 @@ fun nfaRoleNavigationConfig(role: NFAUserRole): NFARoleNavigationConfig {
             destination = NFABottomDestination.Profile,
             icon = Icons.Default.Person,
             contentDescription = "Profile",
-            tint = NFATheme.colors.profile,
+            tint = NFATheme.colors.navProfile,
             enabled = false,
             visibleFor = allRoles
         )
@@ -188,7 +188,7 @@ fun NFABottomNavBar(
                         modifier = itemModifier,
                         shape = NFATheme.shapes.iconButton,
                         color = NFATheme.colors.navSelectedSurface,
-                        border = BorderStroke(1.dp, NFATheme.colors.accentBlue.copy(alpha = 0.18f))
+                        border = BorderStroke(1.dp, NFATheme.colors.navIncidents.copy(alpha = 0.18f))
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(

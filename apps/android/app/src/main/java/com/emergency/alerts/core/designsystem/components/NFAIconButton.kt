@@ -25,12 +25,13 @@ fun NFAIconButton(
     borderColor: Color = Color.Transparent,
     size: Int = 38
 ) {
+    val showContainer = containerColor.alpha > 0f || borderColor.alpha > 0f
     Surface(
         modifier = modifier,
         shape = NFATheme.shapes.iconButton,
         color = containerColor,
-        shadowElevation = NFATheme.elevation.subtle,
-        border = BorderStroke(1.dp, borderColor)
+        shadowElevation = if (showContainer) NFATheme.elevation.subtle else NFATheme.elevation.none,
+        border = if (borderColor.alpha > 0f) BorderStroke(1.dp, borderColor) else null
     ) {
         Box(
             modifier = Modifier

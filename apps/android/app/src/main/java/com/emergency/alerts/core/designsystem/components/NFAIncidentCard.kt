@@ -161,7 +161,7 @@ fun NFAIncidentCard(
                         ) {
                             CardActionIcon(
                                 active = data.isFavorite,
-                                tint = NFATheme.colors.favorite,
+                                tint = NFATheme.colors.actionFavorite,
                                 activeIcon = Icons.Default.Favorite,
                                 inactiveIcon = Icons.Default.FavoriteBorder,
                                 contentDescription = "Favorite alert",
@@ -169,7 +169,7 @@ fun NFAIncidentCard(
                             )
                             CardActionIcon(
                                 active = data.isBookmarked,
-                                tint = NFATheme.colors.bookmark,
+                                tint = NFATheme.colors.actionBookmark,
                                 activeIcon = Icons.Default.Bookmark,
                                 inactiveIcon = Icons.Default.BookmarkBorder,
                                 contentDescription = "Bookmark alert",
@@ -177,7 +177,7 @@ fun NFAIncidentCard(
                             )
                             CardActionIcon(
                                 active = data.isSilent,
-                                tint = NFATheme.colors.notifications,
+                                tint = NFATheme.colors.actionSilent,
                                 activeIcon = Icons.Default.NotificationsOff,
                                 inactiveIcon = Icons.Default.Notifications,
                                 contentDescription = "Silence notifications for this alert",
@@ -185,7 +185,7 @@ fun NFAIncidentCard(
                             )
                             CardActionIcon(
                                 active = false,
-                                tint = NFATheme.colors.accentBlue,
+                                tint = NFATheme.colors.actionHidden,
                                 activeIcon = Icons.Default.VisibilityOff,
                                 inactiveIcon = Icons.Default.VisibilityOff,
                                 contentDescription = "Hide alert from Home",

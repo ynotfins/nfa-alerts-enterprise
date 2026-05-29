@@ -7,9 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import com.emergency.alerts.core.designsystem.theme.NFATheme
-import kotlin.math.roundToInt
-
-private const val DISTANCE_ROUNDING_SCALE = 10.0
+import kotlin.math.ceil
 
 @Composable
 fun NFADistanceLabel(
@@ -30,15 +28,8 @@ fun NFADistanceLabel(
 }
 
 private fun Double?.toCompactDistanceLabel(): String {
-    if (this == null) return "-- m"
+    if (this == null) return "--mi"
 
-    val roundedToTenth = (this * DISTANCE_ROUNDING_SCALE).roundToInt() / DISTANCE_ROUNDING_SCALE
-    val wholeMiles = roundedToTenth.toInt().toDouble() == roundedToTenth
-
-    return if (wholeMiles) {
-        "${roundedToTenth.toInt()}m"
-    } else {
-        "${roundedToTenth}m"
-    }
+    return "${ceil(this).toInt()}mi"
 }
 

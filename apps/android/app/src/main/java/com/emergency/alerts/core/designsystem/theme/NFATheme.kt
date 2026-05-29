@@ -59,6 +59,7 @@ private val LocalNFAElevation = staticCompositionLocalOf { DefaultNFAElevation }
 private val LocalNFAExtendedColors = staticCompositionLocalOf {
     nfaPaletteForPreset(NFAThemePreset.Light.storageValue, false).extended
 }
+private val LocalNFAIsDarkTheme = staticCompositionLocalOf { false }
 private val LocalNFAThemeSelection = staticCompositionLocalOf { NFAThemeSelection() }
 
 @Stable
@@ -82,6 +83,11 @@ object NFATheme {
         @Composable
         @ReadOnlyComposable
         get() = LocalNFAExtendedColors.current
+
+    val isDarkTheme: Boolean
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalNFAIsDarkTheme.current
 
     val selection: NFAThemeSelection
         @Composable
@@ -116,6 +122,7 @@ fun NFAAlertsTheme(
         LocalNFAShapes provides DefaultNFAShapes,
         LocalNFAElevation provides DefaultNFAElevation,
         LocalNFAExtendedColors provides palette.extended,
+        LocalNFAIsDarkTheme provides resolvedDarkTheme,
         LocalNFAThemeSelection provides selection
     ) {
         MaterialTheme(

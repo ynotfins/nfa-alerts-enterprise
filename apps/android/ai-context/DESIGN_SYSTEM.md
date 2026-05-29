@@ -20,13 +20,28 @@ The Android app is an emergency operations tool. It should be dark-first for fie
 
 Dark-first base:
 
-- Background: near-black navy/charcoal.
-- Surface: elevated dark slate cards with subtle borders.
+- Background: `#000000` to `#050505`, with `#050505` as the preferred default app background token.
+- Surface: `#121212` dark cards with `#151515` elevated surfaces and `#2A2A2A` subtle borders.
 - Primary: emergency operations blue, matching the PWA's blue app bar and primary buttons.
-- Text primary: high-contrast off-white.
-- Text secondary: muted blue-gray.
+- Text primary: `#FFFFFF`.
+- Text secondary: `#B8B8B8`.
 - Divider/border: low-contrast slate.
 - Scrim: black with strong opacity for bottom sheets and dialogs.
+
+Locked accent palette:
+
+- Blue `#508FF8`
+- Red `#D81800`
+- Orange `#FF7000`
+- Green `#00A858`
+- Purple `#6840B8`
+- Yellow `#F4B400`
+
+Implementation rules:
+
+- Android UI must use named semantic tokens from `core/designsystem/tokens/NFAColors.kt`.
+- Do not hardcode `Color(0xFF...)` values in feature screens or reusable components.
+- Action, navigation, and alert colors should resolve through semantic roles such as favorites, route, notifications, chasers, profile, and alert severity.
 
 Severity palette:
 
@@ -124,6 +139,8 @@ Android Studio should define theme tokens before screen work:
 - Typography roles matching the hierarchy above.
 - Shared shape tokens for rows, cards, pills, and bottom sheets.
 - Icon mapping to Material Symbols or app vector assets.
+- Dark mode must stay tokenized even while the app is temporarily forced to light mode in `MainActivity`; later toggles should flow through `NFATheme` instead of bypassing it.
+- Optional rainbow accent borders/strokes must be opt-in design-system utilities, never automatic global card styling.
 
 Do not rely on default Material colors for alarm severity. Emergency meaning must be explicit and consistent.
 
