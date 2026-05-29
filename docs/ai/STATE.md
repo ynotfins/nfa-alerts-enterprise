@@ -1,8 +1,34 @@
 # NFA Alerts — AI State
 
-**Last updated**: 2026-05-26
-**Session type**: AGENT Executioner — enterprise context snapshot and restore point
-**Status**: COMPLETE — context snapshot refreshed and Android restore-point validation passed
+**Last updated**: 2026-05-27
+**Session type**: AGENT Executioner — local Cursor MCP setup
+**Status**: COMPLETE — Composio MCP added to local Cursor config and repo docs aligned
+
+---
+
+## What happened this session (2026-05-27 — Composio Cursor MCP Setup)
+
+Configured Cursor to use Composio via the vendor-recommended HTTP MCP endpoint from `https://composio.dev/cursor`.
+
+1. **Global Cursor MCP updated**: Added a `composio` HTTP MCP entry to `C:\Users\ynotf\.cursor\mcp.json` pointing at `https://connect.composio.dev/mcp`.
+2. **Auth flow kept vendor-standard**: Did not add auth headers to the config because the Composio Cursor setup page specifies OAuth-based connection handling.
+3. **Repo docs aligned**: Updated `docs/ai/CURSOR_MCP_AND_TOOLS.md` to document the Composio MCP entry, expected usage, and the preference for Composio over browser automation when supported.
+4. **Project state recorded**: Logged this setup in `docs/ai/STATE.md` so future agent sessions can discover the local MCP addition without re-auditing machine config.
+
+### Composio Setup Evidence
+
+| Check | Result |
+| --- | --- |
+| `https://composio.dev/cursor` instructions | PASS — vendor page specifies HTTP MCP at `https://connect.composio.dev/mcp` with no auth headers |
+| `C:\Users\ynotf\.cursor\mcp.json` | PASS — `composio` entry added |
+| `docs/ai/CURSOR_MCP_AND_TOOLS.md` | PASS — Composio section added |
+| `docs/ai/STATE.md` | PASS — session recorded |
+
+### Composio Setup Caveats
+
+1. **Reload required**: Cursor should be reloaded before the new MCP server appears in the tools list.
+2. **First-use auth is still manual**: App connections happen through Composio's OAuth flow and dashboard, not via static headers in local config.
+3. **No repo code changes**: This session updated local MCP config and documentation only; app code, Firebase data, and deployment state were unchanged.
 
 ---
 

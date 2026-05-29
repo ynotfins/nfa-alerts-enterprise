@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import timber.log.Timber
 import javax.inject.Inject
 
 class ObserveHomeFeedUseCase @Inject constructor(
@@ -45,22 +44,6 @@ class ObserveHomeFeedUseCase @Inject constructor(
             
             val incidents = (incidentsResult as? Result.Success)?.data ?: emptyList()
             val flags = (flagsResult as? Result.Success)?.data ?: emptyList()
-
-            val newestIncomingIncident = incidents.maxWithOrNull(homeFeedIncidentComparator)
-            if (newestIncomingIncident != null) {
-                Timber.d(
-                    "UseCase incoming incidents=%d flags=%d newestIncoming id=%s alertId=%s createdAt=%d updatedAt=%d status=%s",
-                    incidents.size,
-                    flags.size,
-                    newestIncomingIncident.id,
-                    newestIncomingIncident.alertId,
-                    newestIncomingIncident.createdAt,
-                    newestIncomingIncident.updatedAt,
-                    newestIncomingIncident.status
-                )
-            } else {
-                Timber.d("UseCase incoming incidents=0 flags=%d", flags.size)
-            }
             
             // Note: Don't treat a location error as a feed error, just ignore the location
             val deviceLocation = (locationResult as? Result.Success)?.data
@@ -96,21 +79,6 @@ class ObserveHomeFeedUseCase @Inject constructor(
                     updateCount = updateCount
                 )
             }.sortedWith(homeFeedComparator)
-
-            val newestFeedIncident = feed.firstOrNull()
-            if (newestFeedIncident != null) {
-                Timber.d(
-                    "UseCase feed size=%d deduped=%d newestFeed id=%s alertId=%s latest=%d createdAt=%d hidden=%s muted=%s",
-                    feed.size,
-                    newestByKey.size,
-                    newestFeedIncident.incident.id,
-                    newestFeedIncident.incident.alertId,
-                    newestFeedIncident.latestUpdateTimestamp,
-                    newestFeedIncident.incident.createdAt,
-                    newestFeedIncident.isHidden,
-                    newestFeedIncident.isMuted
-                )
-            }
             
             Result.Success(feed)
         }

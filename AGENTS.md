@@ -18,3 +18,27 @@ Read `docs/ai/CLOUD_AGENTS.md` and `docs/ai/AGENT_OPERATING_MODE.md` before impl
 - Never commit `.env*` files except `.env.example`, service account JSON, Bitwarden tokens, or logs containing secret values.
 - `.env.example` is the only allowed env-file exception and is valid only when every assignment is exactly `KEY=` with nothing after `=`. Flag placeholder-like values such as `your-key-here`, `example`, `changeme`, fake tokens, or real tokens.
 - Real values belong only in Cursor Cloud Agents My Secrets, GitHub Actions secrets, or VPS `.env.production.local`.
+
+# UI Architecture Rules
+
+The Home Feed screen is the canonical design reference.
+
+All new screens must inherit:
+
+- spacing scale
+- typography scale
+- shape system
+- elevation system
+- icon sizing
+- action placement
+- card architecture
+
+Do not create alternate card styles.
+
+Do not create alternate padding systems.
+
+Do not hardcode colors.
+
+All colors originate from NFAColors.kt.
+
+All screens must compose reusable design-system components.

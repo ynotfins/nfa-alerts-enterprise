@@ -50,36 +50,8 @@ class FirestoreIncidentRepository @Inject constructor(
             }
 
             if (snapshot != null) {
-                Timber.d(
-                    "Home snapshot path=incidents size=%d fromCache=%s hasPendingWrites=%s activeOnly=%s",
-                    snapshot.size(),
-                    snapshot.metadata.isFromCache,
-                    snapshot.metadata.hasPendingWrites(),
-                    activeOnly
-                )
                 val incidents = snapshot.documents.mapNotNull { doc ->
                     doc.toObject(IncidentDto::class.java)?.toDomain(doc.id)
-                }
-                val newestIncident = incidents.maxWithOrNull(
-                    compareBy<Incident>({ it.updatedAt.coerceAtLeast(0L) }, { it.createdAt.coerceAtLeast(0L) })
-                )
-                if (newestIncident != null) {
-                    Timber.d(
-                        "Home newest mapped incident id=%s alertId=%s createdAt=%d updatedAt=%d type=%s status=%s",
-                        newestIncident.id,
-                        newestIncident.alertId,
-                        newestIncident.createdAt,
-                        newestIncident.updatedAt,
-                        newestIncident.type,
-                        newestIncident.status
-                    )
-                    Timber.d(
-                        "Home newest mapped location state=%s county=%s city=%s address=%s",
-                        newestIncident.location.state,
-                        newestIncident.location.county,
-                        newestIncident.location.city,
-                        newestIncident.location.address
-                    )
                 }
                 trySend(Result.Success(incidents))
             }

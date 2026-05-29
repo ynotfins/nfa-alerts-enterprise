@@ -12,6 +12,7 @@ import com.emergency.alerts.domain.model.HomeDistanceFilterOption
 import com.emergency.alerts.domain.model.HomeFeedFilters
 import com.emergency.alerts.domain.model.HomeFeedPreferences
 import com.emergency.alerts.domain.model.HomeUpdateFilterOption
+import com.emergency.alerts.domain.model.isActive
 import com.emergency.alerts.domain.repository.HomeFeedPreferencesRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -28,21 +29,27 @@ class DataStoreHomeFeedPreferencesRepository @Inject constructor(
 
     override fun observePreferences(): Flow<HomeFeedPreferences> {
         return context.homeFeedPreferencesDataStore.data.map { preferences ->
+            val hasUserModifiedFilters = preferences[booleanPreferencesKey(KEY_FILTERS_USER_MODIFIED)] ?: false
+
             HomeFeedPreferences(
                 favoriteAlertKeys = preferences[stringSetPreferencesKey(KEY_FAVORITES)].orEmpty(),
                 bookmarkAlertKeys = preferences[stringSetPreferencesKey(KEY_BOOKMARKS)].orEmpty(),
                 silentAlertKeys = preferences[stringSetPreferencesKey(KEY_SILENT)].orEmpty(),
                 hiddenAlertKeys = preferences[stringSetPreferencesKey(KEY_HIDDEN)].orEmpty(),
-                filters = HomeFeedFilters(
-                    selectedAlertTypes = preferences[stringSetPreferencesKey(KEY_FILTER_TYPES)].orEmpty(),
-                    distanceFilter = preferences[stringPreferencesKey(KEY_FILTER_DISTANCE)]
-                        .toDistanceFilter(),
-                    updateFilter = preferences[stringPreferencesKey(KEY_FILTER_UPDATES)]
-                        .toUpdateFilter(),
-                    keywordQuery = preferences[stringPreferencesKey(KEY_FILTER_KEYWORD)].orEmpty(),
-                    selectedDepartmentCodes = preferences[stringSetPreferencesKey(KEY_FILTER_DEPARTMENTS)].orEmpty(),
-                    highAlertOnly = preferences[booleanPreferencesKey(KEY_FILTER_HIGH_ALERT_ONLY)] ?: false
-                ),
+                filters = if (hasUserModifiedFilters) {
+                    HomeFeedFilters(
+                        selectedAlertTypes = preferences[stringSetPreferencesKey(KEY_FILTER_TYPES)].orEmpty(),
+                        distanceFilter = preferences[stringPreferencesKey(KEY_FILTER_DISTANCE)]
+                            .toDistanceFilter(),
+                        updateFilter = preferences[stringPreferencesKey(KEY_FILTER_UPDATES)]
+                            .toUpdateFilter(),
+                        keywordQuery = preferences[stringPreferencesKey(KEY_FILTER_KEYWORD)].orEmpty(),
+                        selectedDepartmentCodes = preferences[stringSetPreferencesKey(KEY_FILTER_DEPARTMENTS)].orEmpty(),
+                        highAlertOnly = preferences[booleanPreferencesKey(KEY_FILTER_HIGH_ALERT_ONLY)] ?: false
+                    )
+                } else {
+                    HomeFeedFilters()
+                },
                 highAlertConfig = HighAlertConfig(
                     enabled = preferences[booleanPreferencesKey(KEY_HIGH_ALERT_ENABLED)] ?: false,
                     selectedAlertTypes = preferences[stringSetPreferencesKey(KEY_HIGH_ALERT_TYPES)].orEmpty(),
@@ -88,6 +95,7 @@ class DataStoreHomeFeedPreferencesRepository @Inject constructor(
             preferences[stringPreferencesKey(KEY_FILTER_KEYWORD)] = filters.keywordQuery
             preferences[stringSetPreferencesKey(KEY_FILTER_DEPARTMENTS)] = filters.selectedDepartmentCodes
             preferences[booleanPreferencesKey(KEY_FILTER_HIGH_ALERT_ONLY)] = filters.highAlertOnly
+            preferences[booleanPreferencesKey(KEY_FILTERS_USER_MODIFIED)] = filters.isActive()
         }
     }
 
@@ -106,6 +114,24 @@ class DataStoreHomeFeedPreferencesRepository @Inject constructor(
             preferences[booleanPreferencesKey(KEY_HIGH_ALERT_VIBRATION)] = config.vibrationEnabled
             preferences[booleanPreferencesKey(KEY_HIGH_ALERT_SIREN)] = config.sirenEnabled
             preferences[booleanPreferencesKey(KEY_HIGH_ALERT_STROBE)] = config.flashlightStrobeEnabled
+        }
+    }
+
+    override suspend fun resetFilters() {
+        context.homeFeedPreferencesDataStore.edit { preferences ->
+            preferences[stringSetPreferencesKey(KEY_FILTER_TYPES)] = emptySet()
+            preferences[stringPreferencesKey(KEY_FILTER_DISTANCE)] = HomeDistanceFilterOption.Any.name
+            preferences[stringPreferencesKey(KEY_FILTER_UPDATES)] = HomeUpdateFilterOption.Any.name
+            preferences[stringPreferencesKey(KEY_FILTER_KEYWORD)] = ""
+            preferences[stringSetPreferencesKey(KEY_FILTER_DEPARTMENTS)] = emptySet()
+            preferences[booleanPreferencesKey(KEY_FILTER_HIGH_ALERT_ONLY)] = false
+            preferences[booleanPreferencesKey(KEY_FILTERS_USER_MODIFIED)] = false
+
+            preferences[stringSetPreferencesKey(KEY_HIGH_ALERT_TYPES)] = emptySet()
+            preferences[stringSetPreferencesKey(KEY_HIGH_ALERT_KEYWORDS)] = emptySet()
+            preferences[stringSetPreferencesKey(KEY_HIGH_ALERT_DEPARTMENTS)] = emptySet()
+            preferences.remove(intPreferencesKey(KEY_HIGH_ALERT_MAX_DISTANCE))
+            preferences[intPreferencesKey(KEY_HIGH_ALERT_MIN_UPDATES)] = 0
         }
     }
 
@@ -141,6 +167,7 @@ class DataStoreHomeFeedPreferencesRepository @Inject constructor(
         private const val KEY_FILTER_KEYWORD = "home_filter_keyword"
         private const val KEY_FILTER_DEPARTMENTS = "home_filter_departments"
         private const val KEY_FILTER_HIGH_ALERT_ONLY = "home_filter_high_alert_only"
+        private const val KEY_FILTERS_USER_MODIFIED = "home_filters_user_modified"
         private const val KEY_HIGH_ALERT_ENABLED = "home_high_alert_enabled"
         private const val KEY_HIGH_ALERT_TYPES = "home_high_alert_types"
         private const val KEY_HIGH_ALERT_KEYWORDS = "home_high_alert_keywords"

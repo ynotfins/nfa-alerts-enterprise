@@ -28,13 +28,16 @@ import com.emergency.alerts.domain.model.HighAlertConfig
 import com.emergency.alerts.domain.model.HomeDistanceFilterOption
 import com.emergency.alerts.domain.model.HomeFeedFilters
 import com.emergency.alerts.domain.model.HomeUpdateFilterOption
+import com.emergency.alerts.domain.model.isActive
 
 @Composable
 fun HomeFeedFilterSheet(
     filters: HomeFeedFilters,
     highAlertConfig: HighAlertConfig,
     options: HomeFeedFilterOptions,
+    canResetFilters: Boolean,
     onDismiss: () -> Unit,
+    onResetFilters: () -> Unit,
     onFiltersChange: (HomeFeedFilters) -> Unit,
     onHighAlertConfigChange: (HighAlertConfig) -> Unit
 ) {
@@ -58,12 +61,20 @@ fun HomeFeedFilterSheet(
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold
                 )
-                TextButton(onClick = {
-                    onFiltersChange(HomeFeedFilters())
-                    onHighAlertConfigChange(HighAlertConfig())
-                }) {
-                    Text("Clear all")
+                TextButton(
+                    onClick = onResetFilters,
+                    enabled = canResetFilters
+                ) {
+                    Text("Reset filters")
                 }
+            }
+
+            if (filters.isActive()) {
+                Text(
+                    text = "Home is currently showing a filtered incident feed.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = NFATheme.colors.textSecondary
+                )
             }
 
             OutlinedTextField(

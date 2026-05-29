@@ -21,4 +21,6 @@ interface HomeFeedPreferencesRepository {
     suspend fun setFilters(filters: HomeFeedFilters)
 
     suspend fun setHighAlertConfig(config: HighAlertConfig)
+
+    suspend fun resetFilters()
 }

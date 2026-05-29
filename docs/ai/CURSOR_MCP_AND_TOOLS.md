@@ -2,7 +2,7 @@
 
 This document catalogs all Model Context Protocol (MCP) servers and tools configured for the NFA Alerts v2 project.
 
-**Last updated:** 2026-04-24
+**Last updated:** 2026-05-27
 
 **Global MCP config location:** `C:\Users\ynotf\.cursor\mcp.json`
 
@@ -370,6 +370,37 @@ This document catalogs all Model Context Protocol (MCP) servers and tools config
 
 ---
 
+### 13. Composio MCP
+
+**Status:** Installed and configured  
+**Type:** HTTP-based MCP server  
+**Authentication:** OAuth via Composio connection flow
+
+**Configuration:**
+
+```json
+"composio": {
+  "type": "http",
+  "url": "https://connect.composio.dev/mcp"
+}
+```
+
+**Features:**
+
+- Connect third-party SaaS tools through one MCP endpoint
+- OAuth-based app linking without storing auth headers in `mcp.json`
+- Faster, narrower-scoped access than browser automation for supported apps
+- Broad app catalog for GitHub, Google Workspace, Slack, CRM, and support workflows
+
+**Usage guidelines:**
+
+- Prefer Composio tools over browser automation when the needed app is supported
+- Do not add auth headers to the Cursor MCP config; Composio handles OAuth interactively
+- After adding the server, reload Cursor so the new MCP appears in the tools list
+- Use the Composio dashboard at `https://dashboard.composio.dev` to connect apps as needed
+
+---
+
 ## MCP Server Priority for NFA Alerts v2
 
 For this Next.js/Firebase PWA project, prioritize these MCP servers:
@@ -393,6 +424,7 @@ For this Next.js/Firebase PWA project, prioritize these MCP servers:
 9. **GitHub MCP** - When doing repo operations (branches, PRs)
 10. **Playwright MCP** - When testing is in scope
 11. **filesystem** - When external file operations are needed
+12. **Composio** - When a supported SaaS integration is better served by app-scoped tools than browser automation
 
 ---
 

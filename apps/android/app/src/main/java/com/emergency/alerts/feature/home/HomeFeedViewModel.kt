@@ -11,12 +11,15 @@ import com.emergency.alerts.domain.usecase.MarkHomeFeedIncidentSeenUseCase
 import com.emergency.alerts.domain.usecase.ObserveHomeFeedUseCase
 import com.emergency.alerts.domain.repository.HomeFeedPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 sealed interface HomeFeedUiState {
@@ -30,6 +33,7 @@ sealed interface HomeFeedUiState {
 }
 
 @HiltViewModel
+@OptIn(ExperimentalCoroutinesApi::class)
 class HomeFeedViewModel @Inject constructor(
     observeHomeFeedUseCase: ObserveHomeFeedUseCase,
     private val markHomeFeedIncidentSeenUseCase: MarkHomeFeedIncidentSeenUseCase,
@@ -47,8 +51,13 @@ class HomeFeedViewModel @Inject constructor(
             initialValue = HomeFeedPreferences()
         )
 
+    private val locationRefreshToken = MutableStateFlow(0)
+
+    private val feedState = locationRefreshToken
+        .flatMapLatest { observeHomeFeedUseCase(activeOnly = true) }
+
     val uiState: StateFlow<HomeFeedUiState> = combine(
-        observeHomeFeedUseCase(activeOnly = true),
+        feedState,
         preferencesState
     ) { result, preferences ->
         when (result) {
@@ -57,41 +66,10 @@ class HomeFeedViewModel @Inject constructor(
                 result.exception.localizedMessage ?: "Failed to load incidents"
             )
             is Result.Success -> {
-                val visibleIncidents = result.data.toVisibleHomeFeed(preferences)
-                val filterOptions = result.data.toFilterOptions(preferences)
-                val newestVisible = visibleIncidents.firstOrNull()
-                Timber.d(
-                    "ViewModel visible=%d raw=%d hiddenCount=%d favoriteKeys=%d bookmarkKeys=%d silentKeys=%d hiddenKeys=%d typeFilters=%d selectedTypes=%s deptFilters=%d selectedDepartments=%s keyword=%s distance=%s updates=%s highAlertOnly=%s highAlertEnabled=%s highAlertTypes=%d selectedHighAlertTypes=%s highAlertKeywords=%d selectedHighAlertKeywords=%s highAlertDepartments=%d selectedHighAlertDepartments=%s newestVisibleId=%s newestVisibleAlertId=%s newestVisibleLatest=%s",
-                    visibleIncidents.size,
-                    result.data.size,
-                    filterOptions.hiddenCount,
-                    preferences.favoriteAlertKeys.size,
-                    preferences.bookmarkAlertKeys.size,
-                    preferences.silentAlertKeys.size,
-                    preferences.hiddenAlertKeys.size,
-                    preferences.filters.selectedAlertTypes.size,
-                    preferences.filters.selectedAlertTypes,
-                    preferences.filters.selectedDepartmentCodes.size,
-                    preferences.filters.selectedDepartmentCodes,
-                    preferences.filters.keywordQuery,
-                    preferences.filters.distanceFilter.name,
-                    preferences.filters.updateFilter.name,
-                    preferences.filters.highAlertOnly,
-                    preferences.highAlertConfig.enabled,
-                    preferences.highAlertConfig.selectedAlertTypes.size,
-                    preferences.highAlertConfig.selectedAlertTypes,
-                    preferences.highAlertConfig.selectedKeywords.size,
-                    preferences.highAlertConfig.selectedKeywords,
-                    preferences.highAlertConfig.selectedDepartments.size,
-                    preferences.highAlertConfig.selectedDepartments,
-                    newestVisible?.incident?.id,
-                    newestVisible?.incident?.alertId,
-                    newestVisible?.latestUpdateTimestamp
-                )
                 HomeFeedUiState.Success(
-                    incidents = visibleIncidents,
+                    incidents = result.data.toVisibleHomeFeed(preferences),
                     preferences = preferences,
-                    filterOptions = filterOptions
+                    filterOptions = result.data.toFilterOptions(preferences)
                 )
             }
         }
@@ -147,5 +125,15 @@ class HomeFeedViewModel @Inject constructor(
         viewModelScope.launch {
             homeFeedPreferencesRepository.setHighAlertConfig(config)
         }
+    }
+
+    fun resetFilters() {
+        viewModelScope.launch {
+            homeFeedPreferencesRepository.resetFilters()
+        }
+    }
+
+    fun onLocationPermissionUpdated() {
+        locationRefreshToken.update { current -> current + 1 }
     }
 }

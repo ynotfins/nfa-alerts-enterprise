@@ -45,3 +45,25 @@ data class HomeFeedPreferences(
     val filters: HomeFeedFilters = HomeFeedFilters(),
     val highAlertConfig: HighAlertConfig = HighAlertConfig()
 )
+
+fun HomeFeedFilters.isActive(): Boolean {
+    return selectedAlertTypes.isNotEmpty() ||
+        distanceFilter != HomeDistanceFilterOption.Any ||
+        updateFilter != HomeUpdateFilterOption.Any ||
+        keywordQuery.isNotBlank() ||
+        selectedDepartmentCodes.isNotEmpty() ||
+        highAlertOnly
+}
+
+fun HighAlertConfig.hasHomeNarrowingCriteria(): Boolean {
+    return selectedAlertTypes.isNotEmpty() ||
+        selectedKeywords.isNotEmpty() ||
+        selectedDepartments.isNotEmpty() ||
+        maxDistanceMiles != null ||
+        minUpdateCount > 0
+}
+
+fun HomeFeedPreferences.canResetFilters(): Boolean {
+    return filters.isActive() || highAlertConfig.hasHomeNarrowingCriteria()
+}
+
